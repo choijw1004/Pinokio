@@ -69,7 +69,7 @@ public class MailService {
         msgg += "인증 번호 확인 후<br>";
         msgg += "이메일 인증을 완료해 주세요.";
         msgg += "</td></tr>";
-        msgg += "<tr><td style=\"font-size: 17px; vertical-align: bottom; height: 27px;\">안녕하세요? \"Style With us\"입니다.</td></tr>";
+        msgg += "<tr><td style=\"font-size: 17px; vertical-align: bottom; height: 27px;\">안녕하세요? \"Pinokio\"입니다.</td></tr>";
         msgg += "<tr><td colspan=\"2\" style=\"font-size: 13px; word    -spacing: -1px; height: 30px;\">아래 인증번호를 입력하시고 계속 진행해 주세요.</td></tr></tbody></table>";
         msgg += "</td></tr>";
         msgg += "<tr><td style=\"padding: 39px 196px 70px;\">";
