@@ -42,6 +42,12 @@ public class Pos extends BaseEntity {
     @Column(nullable = false)
     private String password;
 
+    @Builder
+    public Pos(String email, String password) {
+        this.email = email;
+        this.password = password;
+    }
+
     public void updatePassword(String password) {
         this.password = password;
     }

@@ -1,4 +1,4 @@
-package com.example.pinokkio.handler;
+package com.example.pinokkio.exception;
 
 import lombok.Builder;
 import lombok.Getter;

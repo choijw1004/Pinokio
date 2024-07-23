@@ -91,7 +91,7 @@ public class JwtTokenProvider {
     }
 
     /**
-     * JWT 로부터 username 과 role 을 얻어온다.
+     * AccessToken 로부터 Authentication 객체를 얻어온다.
      */
     public Authentication getAuthentication(String token) {
         log.info("[getAuthentication] 토큰 인증 정보 조회 시작");
@@ -103,10 +103,31 @@ public class JwtTokenProvider {
         return new UsernamePasswordAuthenticationToken(customUserDetail, token, customUserDetail.getAuthorities());
     }
 
+    /**
+     * AccessToken 에서 유저정보 추출
+     */
+    public CustomUserDetail getUserFromAccessToken(String accessToken) {
+        try {
+            String email = getEmailFromToken(accessToken);
+            String role = getRoleFromToken(accessToken);
+            return customUserDetailService.loadUserByUsernameAndRole(email, role);
+        } catch (ExpiredJwtException e) {
+            String email = e.getClaims().getSubject();
+            String role = (String) e.getClaims().get("role");
+            return customUserDetailService.loadUserByUsernameAndRole(email, role);
+        }
+    }
+
+    /**
+     * AccessToken 에서 Email 추출
+     */
     public String getEmailFromToken(String token) {
         return Jwts.parser().setSigningKey(secretKey).parseClaimsJws(token).getBody().getSubject();
     }
 
+    /**
+     * AccessToken 에서 Role 추출
+     */
     public String getRoleFromToken(String token) {
         return (String) Jwts.parser().setSigningKey(secretKey).parseClaimsJws(token).getBody().get("role");
     }
