@@ -13,14 +13,13 @@ import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
 
 import java.nio.charset.StandardCharsets;
-import java.security.SignatureException;
 import java.util.Base64;
 import java.util.Date;
 
 @Component
 @RequiredArgsConstructor
 @Slf4j
-public class JwtTokenProvider {
+public class JwtProvider {
 
     private final CustomUserDetailService customUserDetailService;
     private final long accessValidTime = 1000L * 60 * 60;    // 액세스 토큰 유효 시간 60분

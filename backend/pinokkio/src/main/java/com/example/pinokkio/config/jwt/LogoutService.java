@@ -15,15 +15,15 @@ import org.springframework.stereotype.Service;
 @Slf4j
 public class LogoutService implements LogoutHandler {
 
-    private final JwtTokenProvider jwtTokenProvider;
+    private final JwtProvider jwtProvider;
     private final RedisUtil redisUtil;
 
     @Override
     public void logout(HttpServletRequest request, HttpServletResponse response,
                        Authentication authentication) {
 
-        String accessToken = jwtTokenProvider.resolveAccessToken(request);
-        CustomUserDetail customUserDetail = jwtTokenProvider.getUserFromAccessToken(accessToken);
+        String accessToken = jwtProvider.resolveAccessToken(request);
+        CustomUserDetail customUserDetail = jwtProvider.getUserFromAccessToken(accessToken);
 
         // AccessToken 의 해시값을 생성 -> Role 은 다른데 username 이 같은 경우를 방지
         String tokenHash = DigestUtils.sha256Hex(accessToken);
