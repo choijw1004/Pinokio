@@ -32,6 +32,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 log.info("if 문 진입");
                 Authentication authentication = jwtProvider.getAuthentication(accessToken);
                 SecurityContextHolder.getContext().setAuthentication(authentication);
+                log.info("if 문 종료");
+                log.info("authentication={}", authentication);
             }
         } catch (Exception e) {
             log.info("예외발생");

@@ -44,6 +44,7 @@ public class SecurityConfig {
 
     private final String[] POST_PERMIT_API_URL = {
             "/register/**",
+            "/login/**",
             "/refresh",
             "/users/auth/token/"
     };

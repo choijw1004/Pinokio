@@ -24,6 +24,7 @@ public class CustomUserDetailService implements UserDetailsService {
      */
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
+        log.info("loadUserByUsername");
         throw new UsernameNotFoundException("사용자 역할을 지정하여 사용해야 합니다.");
     }
 
@@ -31,6 +32,7 @@ public class CustomUserDetailService implements UserDetailsService {
      * 커스텀 loadUserByUsernameAndRole
      */
     public CustomUserDetail loadUserByUsernameAndRole(String email, String role) throws UsernameNotFoundException {
+        log.info("loadUserByUsernameAndRole");
         switch (role) {
             case "ROLE_POS":
                 return posRepository.findByEmail(email)
