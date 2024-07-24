@@ -41,6 +41,13 @@ public class Kiosk {
     @Column(nullable = false)
     private String password;
 
+    @Builder
+    public Kiosk(Pos pos, String email, String password) {
+        this.pos = pos;
+        this.email = email;
+        this.password = password;
+    }
+
     public void updatePassword(String newPassword) {
         this.password = newPassword;
     }

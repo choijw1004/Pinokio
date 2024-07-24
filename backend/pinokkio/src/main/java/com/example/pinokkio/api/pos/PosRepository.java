@@ -1,5 +1,6 @@
 package com.example.pinokkio.api.pos;
 
+import com.example.pinokkio.api.pos.code.Code;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;
@@ -20,4 +21,5 @@ public interface PosRepository extends JpaRepository<Pos, UUID> {
      * @return 가입 여부 정보
      */
     boolean existsByEmail(String email);
+
 }
