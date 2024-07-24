@@ -43,6 +43,7 @@ public class SecurityConfig {
     };
 
     private final String[] POST_PERMIT_API_URL = {
+            "/register/**",
             "/refresh",
             "/users/auth/token/"
     };
@@ -73,7 +74,6 @@ public class SecurityConfig {
                 .authorizeRequests(c -> c.requestMatchers(SWAGGER_URL).permitAll()
                         .requestMatchers(HttpMethod.GET, GET_PERMIT_API_URL).permitAll()
                         .requestMatchers(HttpMethod.POST, POST_PERMIT_API_URL).permitAll()
-                        .requestMatchers("/register/**").permitAll()
                         .requestMatchers(POS_API_URL).hasRole("POS")
                         .requestMatchers(TELLER_API_URL).hasRole("TELLER")
                         .requestMatchers(KIOSK_API_URL).hasRole("KIOSK")
