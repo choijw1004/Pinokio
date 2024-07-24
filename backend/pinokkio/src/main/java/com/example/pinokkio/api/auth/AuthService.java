@@ -22,7 +22,6 @@ import java.util.Date;
     @RequiredArgsConstructor
     public class AuthService {
 
-
         private final JwtTokenProvider jwtTokenProvider;
         private final AuthenticationManagerBuilder authenticationManagerBuilder;
         private final RedisUtil redisUtil;

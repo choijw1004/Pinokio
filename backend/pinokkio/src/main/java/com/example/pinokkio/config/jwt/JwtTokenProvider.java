@@ -1,5 +1,7 @@
 package com.example.pinokkio.config.jwt;
 
+import com.example.pinokkio.exception.auth.ExpiredTokenException;
+import com.example.pinokkio.exception.auth.TokenNotValidException;
 import io.jsonwebtoken.*;
 import jakarta.annotation.PostConstruct;
 import jakarta.servlet.http.HttpServletRequest;
@@ -116,6 +118,21 @@ public class JwtTokenProvider {
             String role = (String) e.getClaims().get("role");
             return customUserDetailService.loadUserByUsernameAndRole(email, role);
         }
+    }
+
+    /**
+     * AccessToken의 유효성 + 만료여부 체크
+     */
+    public boolean validateToken(String token) {
+        log.info("[validateToken] 토큰 유효 체크 시작");
+        try {
+            Jwts.parser().setSigningKey(secretKey).parseClaimsJws(token);
+        } catch (ExpiredJwtException e) {
+            throw new ExpiredTokenException();
+        } catch (MalformedJwtException e) {
+            throw new TokenNotValidException();
+        }
+        return true;
     }
 
     /**
