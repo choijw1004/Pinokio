@@ -10,4 +10,5 @@ public class SignUpTellerRequest {
     private String code;
     private String username;
     private String password;
+    private String confirmPassword;
 }

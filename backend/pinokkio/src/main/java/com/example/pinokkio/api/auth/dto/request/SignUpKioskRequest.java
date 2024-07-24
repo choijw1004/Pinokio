@@ -8,6 +8,4 @@ import lombok.*;
 @NoArgsConstructor(access = AccessLevel.PROTECTED, force = true)
 public class SignUpKioskRequest {
     private String posId;
-    private String username;
-    private String password;
 }

@@ -43,7 +43,8 @@ public class Pos extends BaseEntity {
     private String password;
 
     @Builder
-    public Pos(String email, String password) {
+    public Pos(Code code, String email, String password) {
+        this.code = code;
         this.email = email;
         this.password = password;
     }

@@ -45,4 +45,12 @@ public class Teller extends BaseEntity {
     @Column(nullable = false)
     private int amount;
 
+    @Builder
+    public Teller(Code code, String email, String password, int amount) {
+        this.code = code;
+        this.email = email;
+        this.password = password;
+        this.amount = amount;
+    }
+
 }

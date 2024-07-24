@@ -5,15 +5,21 @@ import com.example.pinokkio.api.auth.dto.request.SignUpKioskRequest;
 import com.example.pinokkio.api.auth.dto.request.SignUpPosRequest;
 import com.example.pinokkio.api.auth.dto.request.SignUpTellerRequest;
 import com.example.pinokkio.api.kiosk.KioskRepository;
+import com.example.pinokkio.api.mail.MailService;
+import com.example.pinokkio.api.pos.Pos;
 import com.example.pinokkio.api.pos.PosRepository;
 import com.example.pinokkio.api.pos.code.Code;
 import com.example.pinokkio.api.pos.code.CodeRepository;
+import com.example.pinokkio.api.teller.Teller;
 import com.example.pinokkio.api.teller.TellerRepository;
 import com.example.pinokkio.config.RedisUtil;
 import com.example.pinokkio.config.jwt.JwtTokenProvider;
+import com.example.pinokkio.exception.badInput.PasswordBadInputException;
 import com.example.pinokkio.exception.base.AuthenticationException;
 
+import com.example.pinokkio.exception.confilct.EmailConflictException;
 import com.example.pinokkio.exception.notFound.CodeNotFoundException;
+import jakarta.mail.MessagingException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.digest.DigestUtils;
@@ -21,12 +27,15 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.UnsupportedEncodingException;
 import java.util.Date;
-import java.util.Optional;
+import java.util.Map;
 import java.util.UUID;
+import java.util.function.Predicate;
 
 @Slf4j
 @Service
@@ -43,25 +52,49 @@ public class AuthService {
     private final KioskRepository kioskRepository;
     private final TellerRepository tellerRepository;
 
-
-    // 회원가입 로직 구현
+    /**
+     * 가맹 코드, 이메일, 비밀번호, 비밀번호 확인 정보를 바탕으로 회원가입을 진행한다.
+     * @param signUpPosRequest 포스 회원가입을 위한 Dto
+     */
     @Transactional
     public void registerPos(SignUpPosRequest signUpPosRequest) {
-        //코드 UUID 검증
-        UUID codeId = UUID.fromString(signUpPosRequest.getCode());
-        Code code = codeRepository.findById(codeId).orElseThrow(() -> new CodeNotFoundException(codeId));
-
-        //이메일 중복 검증
-        String email
+        Code requestCode = checkValidateCode(signUpPosRequest.getCode());
+        checkDuplicateEmail(signUpPosRequest.getUsername(), "ROLE_POS");
+        checkConfirmPassword(signUpPosRequest.getPassword(), signUpPosRequest.getConfirmPassword());
+        Pos pos = Pos.builder()
+                .email(signUpPosRequest.getUsername())
+                .password(passwordEncode(signUpPosRequest.getPassword()))
+                .code(requestCode)
+                .build();
+        posRepository.save(pos);
     }
 
+    /**
+     * 가맹 코드, 이메일, 비밀번호, 비밀번호 확인 정보를 바탕으로 회원가입을 진행한다.
+     * @param signUpTellerRequest 상담원 회원가입을 위한 Dto
+     */
     public void registerTeller(SignUpTellerRequest signUpTellerRequest) {
-        // 회원가입 로직 구현
+        Code requestCode = checkValidateCode(signUpTellerRequest.getCode());
+        checkDuplicateEmail(signUpTellerRequest.getUsername(), "ROLE_TELLER");
+        checkConfirmPassword(signUpTellerRequest.getPassword(), signUpTellerRequest.getConfirmPassword());
+        Teller teller = Teller.builder()
+                .email(signUpTellerRequest.getUsername())
+                .password(passwordEncode(signUpTellerRequest.getPassword()))
+                .code(requestCode)
+                .build();
+        tellerRepository.save(teller);
     }
 
+    /**
+     *
+     * @param signUpKioskRequest 키오스크 회원가입을 위한 Dto
+     */
     public void registerKiosk(SignUpKioskRequest signUpKioskRequest) {
         // 회원가입 로직 구현
     }
+
+
+
 
     @Transactional
     public AuthToken loginPos(LoginRequest loginRequest) {
@@ -134,7 +167,11 @@ public class AuthService {
     }
 
     /**
-     * refreshToken -> Redis
+     * 토큰 정보를 기반으로 리프레시 토큰을 Redis 에 저장한다.
+     * @param username      유저 아이디(email)
+     * @param role          유저 타입
+     * @param accessToken   엑세스 토큰 정보
+     * @param refreshToken  리프레시 토큰 정보
      */
     private void saveRefreshTokenToRedis(String username, String role, String accessToken, String refreshToken) {
         String key = "refreshToken:" + username + ":" + role + ":" + DigestUtils.sha256Hex(accessToken);
@@ -142,17 +179,53 @@ public class AuthService {
         log.info("[AuthService] 리프레시 토큰을 Redis에 저장: {}", key);
     }
 
-    public boolean duplicateEmail(String email, String role) {
-        if(role.equals("ROLE_POS")) {
+    /**
+     * 아이디 중복인 경우 EmailConflictException 을 발생시킨다.
+     * @param email 이메일
+     * @param role  유저 타입
+     */
+    public void checkDuplicateEmail(String email, String role) {
+        Map<String, Predicate<String>> roleCheckers = Map.of(
+                "ROLE_POS", posRepository::existsByEmail,
+                "ROLE_TELLER", tellerRepository::existsByEmail,
+                "ROLE_KIOSK", kioskRepository::existsByEmail
+        );
 
+        Predicate<String> emailChecker = roleCheckers.get(role);
+        if (emailChecker != null && emailChecker.test(email)) {
+            throw new EmailConflictException(email);
         }
-        else if(role.equals("ROLE_TELLER")) {
-
-        }
-        else {
-
-        }
-        return true;
     }
+
+    /**
+     * 코드가 유효하지 않은 경우 CodeNotFoundException 을 발생시킨다.
+     * @param code 코드
+     */
+    public Code checkValidateCode(String code) {
+        UUID codeId = UUID.fromString(code);
+        return codeRepository
+                .findById(codeId)
+                .orElseThrow(() -> new CodeNotFoundException(codeId.toString()));
+    }
+
+    /**
+     * 입력받은 두 비밀번호가 같지 않으면 PasswordBadInputException 을 발생시킨다.
+     * @param password          비밀번호
+     * @param confirmPassword   비밀번호 확인
+     */
+    public void checkConfirmPassword(String password, String confirmPassword) {
+        if(!password.equals(confirmPassword)) throw new PasswordBadInputException(password);
+    }
+
+    /**
+     * BCryptPasswordEncoder 로 비밀번호를 암호화한다.
+     * @param password 비밀번호
+     * @return 암호화된 비밀번호
+     */
+    public String passwordEncode(String password) {
+        BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+        return passwordEncoder.encode(password);
+    }
+
 
 }
