@@ -6,8 +6,8 @@ import lombok.*;
 @Setter
 @RequiredArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED, force = true)
-public class TellerAuthRequest {
-    private String code;
+public class SignUpKioskRequest {
+    private String posId;
     private String username;
     private String password;
 }

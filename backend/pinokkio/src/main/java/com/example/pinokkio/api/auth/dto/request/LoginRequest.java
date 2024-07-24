@@ -6,8 +6,7 @@ import lombok.*;
 @Setter
 @RequiredArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED, force = true)
-public class PosAuthRequest {
-    private String code;
+public class LoginRequest {
     private String username;
     private String password;
 }
