@@ -6,7 +6,6 @@ import com.example.pinokkio.api.auth.dto.request.SignUpPosRequest;
 import com.example.pinokkio.api.auth.dto.request.SignUpTellerRequest;
 import com.example.pinokkio.api.kiosk.Kiosk;
 import com.example.pinokkio.api.kiosk.KioskRepository;
-import com.example.pinokkio.api.mail.MailService;
 import com.example.pinokkio.api.pos.Pos;
 import com.example.pinokkio.api.pos.PosRepository;
 import com.example.pinokkio.api.pos.code.Code;
@@ -14,14 +13,13 @@ import com.example.pinokkio.api.pos.code.CodeRepository;
 import com.example.pinokkio.api.teller.Teller;
 import com.example.pinokkio.api.teller.TellerRepository;
 import com.example.pinokkio.config.RedisUtil;
-import com.example.pinokkio.config.jwt.JwtTokenProvider;
+import com.example.pinokkio.config.jwt.JwtProvider;
 import com.example.pinokkio.exception.badInput.PasswordBadInputException;
 import com.example.pinokkio.exception.base.AuthenticationException;
 
 import com.example.pinokkio.exception.confilct.EmailConflictException;
 import com.example.pinokkio.exception.notFound.CodeNotFoundException;
 import com.example.pinokkio.exception.notFound.PosNotFoundException;
-import jakarta.mail.MessagingException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.digest.DigestUtils;
@@ -48,7 +46,7 @@ import java.util.function.Predicate;
 public class AuthService {
 
     private final RedisUtil redisUtil;
-    private final JwtTokenProvider jwtTokenProvider;
+    private final JwtProvider jwtProvider;
     private final AuthenticationManagerBuilder authenticationManagerBuilder;
 
     private final CodeRepository codeRepository;
@@ -127,8 +125,8 @@ public class AuthService {
             Authentication authentication = authenticationManagerBuilder.getObject().authenticate(authenticationToken);
             SecurityContextHolder.getContext().setAuthentication(authentication);
 
-            String accessToken = jwtTokenProvider.createAccessToken(authentication.getName(), "ROLE_POS", new Date());
-            String refreshToken = jwtTokenProvider.createRefreshToken(new Date());
+            String accessToken = jwtProvider.createAccessToken(authentication.getName(), "ROLE_POS", new Date());
+            String refreshToken = jwtProvider.createRefreshToken(new Date());
             // 리프레시 토큰을 Redis에 저장
             saveRefreshTokenToRedis(authentication.getName(), "POS_ROLE", accessToken, refreshToken);
             return new AuthToken(accessToken, refreshToken);
@@ -149,8 +147,8 @@ public class AuthService {
             Authentication authentication = authenticationManagerBuilder.getObject().authenticate(authenticationToken);
             SecurityContextHolder.getContext().setAuthentication(authentication);
 
-            String accessToken = jwtTokenProvider.createAccessToken(authentication.getName(), "ROLE_KIOSK", new Date());
-            String refreshToken = jwtTokenProvider.createRefreshToken(new Date());
+            String accessToken = jwtProvider.createAccessToken(authentication.getName(), "ROLE_KIOSK", new Date());
+            String refreshToken = jwtProvider.createRefreshToken(new Date());
             // 리프레시 토큰을 Redis에 저장
             saveRefreshTokenToRedis(authentication.getName(), "KIOSK_ROLE", accessToken, refreshToken);
             return new AuthToken(accessToken, refreshToken);
@@ -170,8 +168,8 @@ public class AuthService {
             Authentication authentication = authenticationManagerBuilder.getObject().authenticate(authenticationToken);
             SecurityContextHolder.getContext().setAuthentication(authentication);
 
-            String accessToken = jwtTokenProvider.createAccessToken(authentication.getName(), "ROLE_TELLER", new Date());
-            String refreshToken = jwtTokenProvider.createRefreshToken(new Date());
+            String accessToken = jwtProvider.createAccessToken(authentication.getName(), "ROLE_TELLER", new Date());
+            String refreshToken = jwtProvider.createRefreshToken(new Date());
             // 리프레시 토큰을 Redis에 저장
             saveRefreshTokenToRedis(authentication.getName(), "TELLER_ROLE", accessToken, refreshToken);
             return new AuthToken(accessToken, refreshToken);

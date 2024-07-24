@@ -18,17 +18,17 @@ import java.io.IOException;
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
-    private final JwtTokenProvider jwtTokenProvider;
+    private final JwtProvider jwtProvider;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
 
-        String accessToken = jwtTokenProvider.resolveAccessToken(request);
+        String accessToken = jwtProvider.resolveAccessToken(request);
         log.info("[JwtAuthenticationFilter] AccessToken 값 추출 완료: {}", accessToken);
 
         try {
-            if (accessToken != null && jwtTokenProvider.validateToken(accessToken)) {
-                Authentication authentication = jwtTokenProvider.getAuthentication(accessToken);
+            if (accessToken != null && jwtProvider.validateToken(accessToken)) {
+                Authentication authentication = jwtProvider.getAuthentication(accessToken);
                 SecurityContextHolder.getContext().setAuthentication(authentication);
             }
         } catch (Exception e) {
