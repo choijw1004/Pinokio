@@ -84,6 +84,8 @@ public class AuthService {
      * 가맹 코드, 이메일, 비밀번호, 비밀번호 확인 정보를 바탕으로 회원가입을 진행한다.
      * @param signUpTellerRequest 상담원 회원가입을 위한 Dto
      */
+    // TODO 여기에 @Transactional 안붙인 전용수 구박
+    @Transactional
     public void registerTeller(SignUpTellerRequest signUpTellerRequest) {
         Code requestCode = checkValidateCode(signUpTellerRequest.getCode());
         checkDuplicateEmail(signUpTellerRequest.getUsername(), "ROLE_TELLER");
@@ -94,6 +96,7 @@ public class AuthService {
                 .code(requestCode)
                 .build();
         tellerRepository.save(teller);
+        log.info("SAVE TELLER: {}", teller);
     }
 
     /**
@@ -101,6 +104,8 @@ public class AuthService {
      * password = 숫자 4자리
      * @param signUpKioskRequest 키오스크 회원가입을 위한 Dto
      */
+    // TODO 여기에 @Transactional 안붙인 전용수 구박
+    @Transactional
     public void registerKiosk(SignUpKioskRequest signUpKioskRequest) {
         String posId = signUpKioskRequest.getPosId();
         Pos findPos = posRepository
@@ -132,9 +137,6 @@ public class AuthService {
             log.info("new email: {}", posEmail);
             log.info("authToken: {}", authenticationToken);
 
-            // 추가된 로그
-            log.info("authenticationManagerBuilder: {}", authenticationManagerBuilder);
-
             Authentication authentication = authenticationManagerBuilder.getObject().authenticate(authenticationToken);
             log.info("authenticate 완료: {}", authentication);
 
@@ -159,18 +161,26 @@ public class AuthService {
     @Transactional
     public AuthToken loginKiosk(LoginRequest loginRequest) {
         try {
+            Role role = Role.K;
+            String kioskEmail = role + loginRequest.getUsername();
+
             UsernamePasswordAuthenticationToken authenticationToken =
                     new UsernamePasswordAuthenticationToken(
-                            loginRequest.getUsername(),
+                            kioskEmail,
                             loginRequest.getPassword()
                     );
+            log.info("new email: {}", kioskEmail);
+            log.info("authToken: {}", authenticationToken);
 
             Authentication authentication = authenticationManagerBuilder.getObject().authenticate(authenticationToken);
+            log.info("authenticate 완료: {}", authentication);
+
             SecurityContextHolder.getContext().setAuthentication(authentication);
 
-            String accessToken = jwtProvider.createAccessToken(authentication.getName(), "ROLE_KIOSK", new Date());
+            String accessToken = jwtProvider.createAccessToken(authentication.getName(), role.getValue(), new Date());
             String refreshToken = jwtProvider.createRefreshToken(new Date());
             // 리프레시 토큰을 Redis에 저장
+            // TODO KIOSK_ROLE인지 ROLE_KIOSK인지 물어보기 POS는 지금 ROLE_POS로 변경되어있음
             saveRefreshTokenToRedis(authentication.getName(), "KIOSK_ROLE", accessToken, refreshToken);
             return new AuthToken(accessToken, refreshToken);
         } catch (AuthenticationException e) {
@@ -181,15 +191,23 @@ public class AuthService {
     @Transactional
     public AuthToken loginTeller(LoginRequest loginRequest) {
         try {
+            Role role = Role.T;
+            String tellerEmail = role + loginRequest.getUsername();
+
             UsernamePasswordAuthenticationToken authenticationToken =
                     new UsernamePasswordAuthenticationToken(
-                            loginRequest.getUsername(),
+                            tellerEmail,
                             loginRequest.getPassword()
                     );
+            log.info("new email: {}", tellerEmail);
+            log.info("authToken: {}", authenticationToken);
+
             Authentication authentication = authenticationManagerBuilder.getObject().authenticate(authenticationToken);
+            log.info("authenticate 완료: {}", authentication);
+
             SecurityContextHolder.getContext().setAuthentication(authentication);
 
-            String accessToken = jwtProvider.createAccessToken(authentication.getName(), "ROLE_TELLER", new Date());
+            String accessToken = jwtProvider.createAccessToken(authentication.getName(), role.getValue(), new Date());
             String refreshToken = jwtProvider.createRefreshToken(new Date());
             // 리프레시 토큰을 Redis에 저장
             saveRefreshTokenToRedis(authentication.getName(), "TELLER_ROLE", accessToken, refreshToken);
