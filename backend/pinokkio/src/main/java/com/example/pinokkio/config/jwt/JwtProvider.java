@@ -10,6 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
 import java.nio.charset.StandardCharsets;
@@ -91,14 +92,21 @@ public class JwtProvider {
         return null;
     }
 
+    private String getNewInput(String token) {
+        String email = getEmailFromToken(token);
+        Role role = Role.valueOf(getRoleFromToken(token));
+
+        return (role + email);
+    }
+
+
     /**
      * AccessToken 로부터 Authentication 객체를 얻어온다.
      */
     public Authentication getAuthentication(String token) {
         log.info("[getAuthentication] 토큰 인증 정보 조회 시작");
-        String email = getEmailFromToken(token);
-        String role = getRoleFromToken(token);
-        CustomUserDetail customUserDetail = customUserDetailService.loadUserByUsernameAndRole(email, role);
+        String newInput = getNewInput(token);
+        UserDetails customUserDetail = customUserDetailService.loadUserByUsername(newInput);
 
         log.info("[getAuthentication] 토큰 인증 정보 조회 완료, UserDetails User Email : {}", customUserDetail.getUsername());
         return new UsernamePasswordAuthenticationToken(customUserDetail, token, customUserDetail.getAuthorities());
@@ -107,15 +115,16 @@ public class JwtProvider {
     /**
      * AccessToken 에서 유저정보 추출
      */
-    public CustomUserDetail getUserFromAccessToken(String accessToken) {
+    public UserDetails getUserFromAccessToken(String accessToken) {
         try {
-            String email = getEmailFromToken(accessToken);
-            String role = getRoleFromToken(accessToken);
-            return customUserDetailService.loadUserByUsernameAndRole(email, role);
+            String newInput = getNewInput(accessToken);
+            return customUserDetailService.loadUserByUsername(newInput);
         } catch (ExpiredJwtException e) {
             String email = e.getClaims().getSubject();
             String role = (String) e.getClaims().get("role");
-            return customUserDetailService.loadUserByUsernameAndRole(email, role);
+            Role roleEnum = Role.valueOf(role);
+            String newInput = roleEnum + email;
+            return customUserDetailService.loadUserByUsername(newInput);
         }
     }
 

@@ -14,6 +14,7 @@ import com.example.pinokkio.api.teller.Teller;
 import com.example.pinokkio.api.teller.TellerRepository;
 import com.example.pinokkio.config.RedisUtil;
 import com.example.pinokkio.config.jwt.JwtProvider;
+import com.example.pinokkio.config.jwt.Role;
 import com.example.pinokkio.exception.badInput.PasswordBadInputException;
 import com.example.pinokkio.exception.base.AuthenticationException;
 
@@ -28,6 +29,7 @@ import org.springframework.security.config.annotation.authentication.builders.Au
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -44,6 +46,8 @@ import java.util.function.Predicate;
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class AuthService {
+
+    private final PasswordEncoder passwordEncoder;
 
     private final RedisUtil redisUtil;
     private final JwtProvider jwtProvider;
@@ -117,23 +121,40 @@ public class AuthService {
     @Transactional
     public AuthToken loginPos(LoginRequest loginRequest) {
         try {
+            Role role = Role.P;
+            String posEmail = role + loginRequest.getUsername();
+
             UsernamePasswordAuthenticationToken authenticationToken =
                     new UsernamePasswordAuthenticationToken(
-                            loginRequest.getUsername(),
+                            posEmail,
                             loginRequest.getPassword()
                     );
+            log.info("new email: {}", posEmail);
+            log.info("authToken: {}", authenticationToken);
+
+            // 추가된 로그
+            log.info("authenticationManagerBuilder: {}", authenticationManagerBuilder);
+
             Authentication authentication = authenticationManagerBuilder.getObject().authenticate(authenticationToken);
+            log.info("authenticate 완료: {}", authentication);
+
             SecurityContextHolder.getContext().setAuthentication(authentication);
 
-            String accessToken = jwtProvider.createAccessToken(authentication.getName(), "ROLE_POS", new Date());
+            String accessToken = jwtProvider.createAccessToken(authentication.getName(), role.getValue(), new Date());
             String refreshToken = jwtProvider.createRefreshToken(new Date());
             // 리프레시 토큰을 Redis에 저장
-            saveRefreshTokenToRedis(authentication.getName(), "POS_ROLE", accessToken, refreshToken);
+            saveRefreshTokenToRedis(authentication.getName(), role.getValue(), accessToken, refreshToken);
+
             return new AuthToken(accessToken, refreshToken);
         } catch (AuthenticationException e) {
+            log.error("POS 인증 실패", e);
             throw new AuthenticationException("POS 인증 실패", e.getMessage());
+        } catch (Exception e) {
+            log.error("인증 과정에서 예외 발생", e);
+            throw new RuntimeException("인증 과정에서 예외 발생", e);
         }
     }
+
 
     @Transactional
     public AuthToken loginKiosk(LoginRequest loginRequest) {
@@ -235,7 +256,6 @@ public class AuthService {
      * @return 암호화된 비밀번호
      */
     public String passwordEncode(String password) {
-        BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
         return passwordEncoder.encode(password);
     }
 
