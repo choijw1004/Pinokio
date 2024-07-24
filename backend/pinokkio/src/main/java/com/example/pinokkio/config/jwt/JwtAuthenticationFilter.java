@@ -27,16 +27,18 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         log.info("[JwtAuthenticationFilter] AccessToken 값 추출 완료: {}", accessToken);
 
         try {
+            log.info("try 문 진입");
             if (accessToken != null && jwtTokenProvider.validateToken(accessToken)) {
+                log.info("if 문 진입");
                 Authentication authentication = jwtTokenProvider.getAuthentication(accessToken);
                 SecurityContextHolder.getContext().setAuthentication(authentication);
             }
         } catch (Exception e) {
-            // AccessToken 이 만료된 경우 GET /refresh 로 재발급
-            // GET /refresh 에서 RefreshToken 도 만료된 것을 확인하면 강제 로그아웃 요청
+            log.info("예외발생");
             request.setAttribute("exception", e);
         }
 
+        log.info("doFilter");
         filterChain.doFilter(request, response);
     }
 }

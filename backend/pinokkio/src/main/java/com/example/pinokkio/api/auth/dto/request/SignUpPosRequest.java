@@ -4,7 +4,6 @@ import lombok.*;
 
 @Getter
 @Setter
-@RequiredArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED, force = true)
 public class SignUpPosRequest {
     private String code;
