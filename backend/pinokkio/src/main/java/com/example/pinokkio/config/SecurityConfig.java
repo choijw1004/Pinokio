@@ -35,7 +35,6 @@ public class SecurityConfig {
     private final CustomAccessDeniedHandler customAccessDeniedHandler;
 
     private static final String[] SWAGGER_URL = {
-
     };
 
     private final String[] GET_PERMIT_API_URL = {

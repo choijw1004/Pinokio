@@ -25,4 +25,8 @@ public class Code {
     @Column(nullable = false, unique = true)
     private String name;
 
+    public Code(String name) {
+        this.name = name;
+    }
+
 }
