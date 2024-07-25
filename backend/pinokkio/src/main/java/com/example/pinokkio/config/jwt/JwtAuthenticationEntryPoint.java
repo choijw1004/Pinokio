@@ -27,6 +27,7 @@ public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
         if (request.getAttribute("exception") == null) {
             log.info("[commence] 인증 실패로 response.sendError 발생");
             log.info("[request URI] {}", request.getRequestURI());
+            log.info("[authException] {}", authException.getMessage());
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             response.setContentType("application/text");
             response.setCharacterEncoding("utf-8");
