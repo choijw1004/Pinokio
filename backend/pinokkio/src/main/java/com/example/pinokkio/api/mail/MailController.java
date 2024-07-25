@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
@@ -23,8 +24,8 @@ public class MailController {
 
     /**
      * 이메일로 인증 번호를 전송한다.
-     * @param mailRequest   이메일을 포함한 요청 객체
-     * @return              성공 20O OK , 실패 500 ERROR
+     * @param mailRequest 이메일을 포함한 요청 객체
+     * @return 성공 20O OK , 실패 500 ERROR
      */
     @PostMapping("/api/mail/send")
     public ResponseEntity<?> sendMail(@RequestBody MailRequest mailRequest) {
@@ -40,10 +41,10 @@ public class MailController {
 
     /**
      * 인증 번호가 유효한지 확인한다.
-     * @param mailAuthRequest   사용자 입력 인증 번호
-     * @return                  인증 번호의 유효성 여부
+     * @param mailAuthRequest 사용자 입력 인증 번호
+     * @return 인증 번호의 유효성 여부
      */
-    @PostMapping("/api/mail/check-auth")
+    @GetMapping("/api/mail/check-auth")
     public ResponseEntity<MailAuthResponse> checkAuth(@RequestBody MailAuthRequest mailAuthRequest) {
         boolean isAuthenticated = mailService.isAuthenticated(mailAuthRequest.getAuthNum());
         return ResponseEntity.ok(new MailAuthResponse(isAuthenticated));
