@@ -14,6 +14,7 @@ import com.example.pinokkio.api.teller.Teller;
 import com.example.pinokkio.api.teller.TellerRepository;
 import com.example.pinokkio.config.RedisUtil;
 import com.example.pinokkio.config.jwt.JwtProvider;
+import com.example.pinokkio.config.jwt.Role;
 import com.example.pinokkio.exception.badInput.PasswordBadInputException;
 import com.example.pinokkio.exception.base.AuthenticationException;
 import com.example.pinokkio.exception.confilct.EmailConflictException;
@@ -72,7 +73,7 @@ public class AuthService {
         checkConfirmPassword(signUpPosRequest.getPassword(), signUpPosRequest.getConfirmPassword());
         Pos pos = Pos.builder()
                 .email(signUpPosRequest.getUsername())
-                .password(passwordEncoder.encode(signUpPosRequest.getPassword()))
+                .password(passwordEncode(signUpPosRequest.getPassword()))
                 .code(requestCode)
                 .build();
         posRepository.save(pos);
@@ -83,16 +84,18 @@ public class AuthService {
      *
      * @param signUpTellerRequest 상담원 회원가입을 위한 Dto
      */
+    @Transactional
     public void registerTeller(SignUpTellerRequest signUpTellerRequest) {
         Code requestCode = checkValidateCode(signUpTellerRequest.getCode());
         checkDuplicateEmail(signUpTellerRequest.getUsername(), "ROLE_TELLER");
         checkConfirmPassword(signUpTellerRequest.getPassword(), signUpTellerRequest.getConfirmPassword());
         Teller teller = Teller.builder()
                 .email(signUpTellerRequest.getUsername())
-                .password(passwordEncoder.encode(signUpTellerRequest.getPassword()))
+                .password(passwordEncode(signUpTellerRequest.getPassword()))
                 .code(requestCode)
                 .build();
         tellerRepository.save(teller);
+        log.info("SAVE TELLER: {}", teller);
     }
 
     /**
@@ -101,6 +104,7 @@ public class AuthService {
      *
      * @param signUpKioskRequest 키오스크 회원가입을 위한 Dto
      */
+    @Transactional
     public void registerKiosk(SignUpKioskRequest signUpKioskRequest) {
         String posId = signUpKioskRequest.getPosId();
         Pos findPos = posRepository
@@ -113,7 +117,7 @@ public class AuthService {
         Kiosk kiosk = Kiosk.builder()
                 .pos(findPos)
                 .email(randomEmail)
-                .password(passwordEncoder.encode(randomPassword))
+                .password(passwordEncode(randomPassword))
                 .build();
         kioskRepository.save(kiosk);
     }
@@ -121,46 +125,61 @@ public class AuthService {
     @Transactional
     public AuthToken loginPos(LoginRequest loginRequest) {
         try {
-
-            String Pusername = "P" + loginRequest.getUsername();
+            Role role = Role.P;
+            String posEmail = role + loginRequest.getUsername();
 
             UsernamePasswordAuthenticationToken authenticationToken =
                     new UsernamePasswordAuthenticationToken(
-                            Pusername,
+                            posEmail,
                             loginRequest.getPassword()
                     );
-            Authentication authentication = authenticationManagerBuilder.getObject().authenticate(authenticationToken);
+            log.info("new email: {}", posEmail);
+            log.info("authToken: {}", authenticationToken);
 
-            log.info("Authenticated user: {}", authentication.getPrincipal());
+            Authentication authentication = authenticationManagerBuilder.getObject().authenticate(authenticationToken);
+            log.info("authenticate 완료: {}", authentication);
+
             SecurityContextHolder.getContext().setAuthentication(authentication);
 
-            log.info("토큰 발급 중 ,,");
-            String accessToken = jwtProvider.createAccessToken(authentication.getName(), "ROLE_POS", new Date());
+            String accessToken = jwtProvider.createAccessToken(authentication.getName(), role.getValue(), new Date());
             String refreshToken = jwtProvider.createRefreshToken(new Date());
             // 리프레시 토큰을 Redis에 저장
-            saveRefreshTokenToRedis(authentication.getName(), "POS_ROLE", accessToken, refreshToken);
+            saveRefreshTokenToRedis(authentication.getName(), role.getValue(), accessToken, refreshToken);
+
             return new AuthToken(accessToken, refreshToken);
         } catch (AuthenticationException e) {
+            log.error("POS 인증 실패", e);
             throw new AuthenticationException("POS 인증 실패", e.getMessage());
+        } catch (Exception e) {
+            log.error("인증 과정에서 예외 발생", e);
+            throw new RuntimeException("인증 과정에서 예외 발생", e);
         }
     }
+
 
     @Transactional
     public AuthToken loginKiosk(LoginRequest loginRequest) {
         try {
+            Role role = Role.K;
+            String kioskEmail = role + loginRequest.getUsername();
+
             UsernamePasswordAuthenticationToken authenticationToken =
                     new UsernamePasswordAuthenticationToken(
-                            loginRequest.getUsername(),
+                            kioskEmail,
                             loginRequest.getPassword()
                     );
+            log.info("new email: {}", kioskEmail);
+            log.info("authToken: {}", authenticationToken);
 
             Authentication authentication = authenticationManagerBuilder.getObject().authenticate(authenticationToken);
+            log.info("authenticate 완료: {}", authentication);
+
             SecurityContextHolder.getContext().setAuthentication(authentication);
 
-            String accessToken = jwtProvider.createAccessToken(authentication.getName(), "ROLE_KIOSK", new Date());
+            String accessToken = jwtProvider.createAccessToken(authentication.getName(), role.getValue(), new Date());
             String refreshToken = jwtProvider.createRefreshToken(new Date());
             // 리프레시 토큰을 Redis에 저장
-            saveRefreshTokenToRedis(authentication.getName(), "KIOSK_ROLE", accessToken, refreshToken);
+            saveRefreshTokenToRedis(authentication.getName(), role.getValue(), accessToken, refreshToken);
             return new AuthToken(accessToken, refreshToken);
         } catch (AuthenticationException e) {
             throw new AuthenticationException("KIOSK 인증 실패", e.getMessage());
@@ -170,18 +189,26 @@ public class AuthService {
     @Transactional
     public AuthToken loginTeller(LoginRequest loginRequest) {
         try {
+            Role role = Role.T;
+            String tellerEmail = role + loginRequest.getUsername();
+
             UsernamePasswordAuthenticationToken authenticationToken =
                     new UsernamePasswordAuthenticationToken(
-                            loginRequest.getUsername(),
+                            tellerEmail,
                             loginRequest.getPassword()
                     );
+            log.info("new email: {}", tellerEmail);
+            log.info("authToken: {}", authenticationToken);
+
             Authentication authentication = authenticationManagerBuilder.getObject().authenticate(authenticationToken);
+            log.info("authenticate 완료: {}", authentication);
+
             SecurityContextHolder.getContext().setAuthentication(authentication);
 
-            String accessToken = jwtProvider.createAccessToken(authentication.getName(), "ROLE_TELLER", new Date());
+            String accessToken = jwtProvider.createAccessToken(authentication.getName(), role.getValue(), new Date());
             String refreshToken = jwtProvider.createRefreshToken(new Date());
             // 리프레시 토큰을 Redis에 저장
-            saveRefreshTokenToRedis(authentication.getName(), "TELLER_ROLE", accessToken, refreshToken);
+            saveRefreshTokenToRedis(authentication.getName(), role.getValue(), accessToken, refreshToken);
             return new AuthToken(accessToken, refreshToken);
         } catch (AuthenticationException e) {
             throw new AuthenticationException("TELLER 인증 실패", e.getMessage());
@@ -244,6 +271,16 @@ public class AuthService {
     }
 
     /**
+     * BCryptPasswordEncoder 로 비밀번호를 암호화한다.
+     *
+     * @param password 비밀번호
+     * @return 암호화된 비밀번호
+     */
+    public String passwordEncode(String password) {
+        return passwordEncoder.encode(password);
+    }
+
+    /**
      * 입력받은 포스의 키오스크 아이디를 랜덤으로 생성한다.
      *
      * @param pos 키오스크의 출처 포스
@@ -260,7 +297,6 @@ public class AuthService {
 
     /**
      * 숫자 4자리 비밀번호를 랜덤 생성한다.
-     *
      * @return 숫자 4자리 비밀번호
      */
     public String randomPassword() {

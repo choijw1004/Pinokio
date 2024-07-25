@@ -1,5 +1,6 @@
 package com.example.pinokkio.config;
 
+import com.example.pinokkio.config.jwt.CustomUserDetailService;
 import com.example.pinokkio.config.jwt.JwtAuthenticationFilter;
 import com.example.pinokkio.config.jwt.LogoutService;
 import com.example.pinokkio.handler.CustomAccessDeniedHandler;
@@ -31,8 +32,14 @@ public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final AuthenticationEntryPoint authenticationEntryPoint;
+    private final CustomUserDetailService customUserDetailService;
     private final LogoutService logoutService;
     private final CustomAccessDeniedHandler customAccessDeniedHandler;
+
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
 
     private static final String[] SWAGGER_URL = {
     };
@@ -40,12 +47,14 @@ public class SecurityConfig {
     private final String[] GET_PERMIT_API_URL = {
             "/",
             "/refresh",
+            "/api/mail/check-auth"
     };
 
     private final String[] POST_PERMIT_API_URL = {
             "/register/pos",
             "/register/teller",
             "/login/**",
+            "/api/mail/send",
             "/refresh",
             "/users/auth/token/"
     };
@@ -61,13 +70,6 @@ public class SecurityConfig {
     private final String[] KIOSK_API_URL = {
             "/kiosk/**"
     };
-
-
-    @Bean
-    public PasswordEncoder bCryptPasswordEncoder() {
-
-        return new BCryptPasswordEncoder();
-    }
 
 
     @Bean

@@ -23,7 +23,7 @@ public class LogoutService implements LogoutHandler {
                        Authentication authentication) {
 
         String accessToken = jwtProvider.resolveAccessToken(request);
-        CustomUserDetail customUserDetail = jwtProvider.getUserFromAccessToken(accessToken);
+        CustomUserDetail customUserDetail = (CustomUserDetail) jwtProvider.getUserFromAccessToken(accessToken);
 
         // AccessToken 의 해시값을 생성 -> Role 은 다른데 username 이 같은 경우를 방지
         String tokenHash = DigestUtils.sha256Hex(accessToken);
