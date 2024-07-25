@@ -13,6 +13,8 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
@@ -34,6 +36,11 @@ public class SecurityConfig {
     private final LogoutService logoutService;
     private final CustomAccessDeniedHandler customAccessDeniedHandler;
 
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
+
     private static final String[] SWAGGER_URL = {
     };
 
@@ -43,7 +50,9 @@ public class SecurityConfig {
     };
 
     private final String[] POST_PERMIT_API_URL = {
-            "/register/**",
+            "/register/pos",
+            "/register/teller",
+            "/login/**",
             "/refresh",
             "/users/auth/token/"
     };

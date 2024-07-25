@@ -15,10 +15,10 @@ public class InitService implements ApplicationListener<ContextRefreshedEvent> {
 
     @Override
     public void onApplicationEvent(ContextRefreshedEvent event) {
-        codeRepository.save(new Code("맥도날드"));
-        codeRepository.save(new Code("롯데리아"));
-        codeRepository.save(new Code("KFC"));
-        codeRepository.save(new Code("맘스터치"));
-        codeRepository.save(new Code("버거킹"));
+//        codeRepository.save(new Code("맥도날드"));
+//        codeRepository.save(new Code("롯데리아"));
+//        codeRepository.save(new Code("KFC"));
+//        codeRepository.save(new Code("맘스터치"));
+//        codeRepository.save(new Code("버거킹"));
     }
 }
