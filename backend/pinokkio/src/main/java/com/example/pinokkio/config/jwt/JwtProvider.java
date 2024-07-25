@@ -10,6 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
 import java.nio.charset.StandardCharsets;
@@ -96,9 +97,8 @@ public class JwtProvider {
      */
     public Authentication getAuthentication(String token) {
         log.info("[getAuthentication] 토큰 인증 정보 조회 시작");
-        String email = getEmailFromToken(token);
-        String role = getRoleFromToken(token);
-        CustomUserDetail customUserDetail = customUserDetailService.loadUserByUsernameAndRole(email, role);
+        String newInput = parseAndFormatRoleEmail(token);
+        UserDetails customUserDetail = customUserDetailService.loadUserByUsername(newInput);
 
         log.info("[getAuthentication] 토큰 인증 정보 조회 완료, UserDetails User Email : {}", customUserDetail.getUsername());
         return new UsernamePasswordAuthenticationToken(customUserDetail, token, customUserDetail.getAuthorities());
@@ -107,15 +107,16 @@ public class JwtProvider {
     /**
      * AccessToken 에서 유저정보 추출
      */
-    public CustomUserDetail getUserFromAccessToken(String accessToken) {
+    public UserDetails getUserFromAccessToken(String accessToken) {
         try {
-            String email = getEmailFromToken(accessToken);
-            String role = getRoleFromToken(accessToken);
-            return customUserDetailService.loadUserByUsernameAndRole(email, role);
+            String newInput = parseAndFormatRoleEmail(accessToken);
+            return customUserDetailService.loadUserByUsername(newInput);
         } catch (ExpiredJwtException e) {
             String email = e.getClaims().getSubject();
             String role = (String) e.getClaims().get("role");
-            return customUserDetailService.loadUserByUsernameAndRole(email, role);
+            Role roleEnum = Role.valueOf(role);
+            String newInput = roleEnum + email;
+            return customUserDetailService.loadUserByUsername(newInput);
         }
     }
 
@@ -148,4 +149,21 @@ public class JwtProvider {
         return (String) Jwts.parser().setSigningKey(secretKey).parseClaimsJws(token).getBody().get("role");
     }
 
+    /**
+     * 토큰으로부터 이메일(아이디)값과 role 값을 파싱해 "R + 이메일" 형태로 제공
+     * R 
+     * - "P" : ROLE_POS
+     * - "K" : ROLE_KIOSK
+     * - "T" : ROLE_TELLER
+     */
+    private String parseAndFormatRoleEmail(String token) {
+        String email = getEmailFromToken(token);
+        String role = getRoleFromToken(token);
+        log.info("[parseToken] email: {}, role: {}", email, role);
+        Role parseRole = Role.fromValue(role);
+
+        String parseToken = parseRole + email;
+        log.info("[reformat parseToken] parseToken: {}", parseToken);
+        return parseToken;
+    }
 }

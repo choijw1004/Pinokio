@@ -36,7 +36,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 log.info("authentication={}", authentication);
             }
         } catch (Exception e) {
-            log.info("예외발생");
+            log.info("예외발생: {}", e.getMessage());
             request.setAttribute("exception", e);
         }
 

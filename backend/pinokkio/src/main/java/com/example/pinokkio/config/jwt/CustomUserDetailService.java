@@ -19,37 +19,68 @@ public class CustomUserDetailService implements UserDetailsService {
     private final KioskRepository kioskRepository;
     private final TellerRepository tellerRepository;
 
-    /**
-     * 더이상 사용되지 않는다.
-     */
     @Override
-    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        log.info("loadUserByUsername");
-        throw new UsernameNotFoundException("사용자 역할을 지정하여 사용해야 합니다.");
-    }
+    public UserDetails loadUserByUsername(String input) throws UsernameNotFoundException {
+        log.info("입력 값: {}", input);
 
-    /**
-     * 커스텀 loadUserByUsernameAndRole
-     */
-    public CustomUserDetail loadUserByUsernameAndRole(String email, String role) throws UsernameNotFoundException {
-        log.info("loadUserByUsernameAndRole");
+        // 입력 값에서 역할과 이메일 분리
+        String inputRole = input.substring(0, 1);
+        String email = input.substring(1);
+
+        log.info("입력 역할: {}", inputRole);
+        log.info("입력 이메일: {}", email);
+
+        // 역할을 Enum으로 변환
+        Role role;
+        try {
+            role = Role.valueOf(inputRole);
+        } catch (IllegalArgumentException e) {
+            log.error("잘못된 역할 입력: {}", inputRole, e);
+            throw new UsernameNotFoundException("잘못된 역할 입력: " + inputRole, e);
+        }
+
+        log.info("변환된 역할: {}", role);
+
+        // 역할에 따른 사용자 검색 및 반환
         switch (role) {
-            case "ROLE_POS":
+            case P:
+                log.info("POS 사용자 검색 중...");
                 return posRepository.findByEmail(email)
-                        .map(pos -> new CustomUserDetail(pos.getEmail(), pos.getPassword(), role))
-                        .orElseThrow(() -> new UsernameNotFoundException(email + " : POS 사용자 존재하지 않음"));
+                        .map(pos -> {
+                            log.info("POS 사용자 발견: {}", pos.getEmail());
+                            return new CustomUserDetail(pos.getEmail(), pos.getPassword(), role.getValue());
+                        })
+                        .orElseThrow(() -> {
+                            log.error("{} : POS 사용자 존재하지 않음", email);
+                            return new UsernameNotFoundException(email + " : POS 사용자 존재하지 않음");
+                        });
 
-            case "ROLE_KIOSK":
+            case K:
+                log.info("KIOSK 사용자 검색 중...");
                 return kioskRepository.findByEmail(email)
-                        .map(kiosk -> new CustomUserDetail(kiosk.getEmail(), kiosk.getPassword(), role))
-                        .orElseThrow(() -> new UsernameNotFoundException(email + " : KIOSK 사용자 존재하지 않음"));
+                        .map(kiosk -> {
+                            log.info("KIOSK 사용자 발견: {}", kiosk.getEmail());
+                            return new CustomUserDetail(kiosk.getEmail(), kiosk.getPassword(), role.getValue());
+                        })
+                        .orElseThrow(() -> {
+                            log.error("{} : KIOSK 사용자 존재하지 않음", email);
+                            return new UsernameNotFoundException(email + " : KIOSK 사용자 존재하지 않음");
+                        });
 
-            case "ROLE_TELLER":
+            case T:
+                log.info("TELLER 사용자 검색 중...");
                 return tellerRepository.findByEmail(email)
-                        .map(teller -> new CustomUserDetail(teller.getEmail(), teller.getPassword(), role))
-                        .orElseThrow(() -> new UsernameNotFoundException(email + " : TELLER 사용자 존재하지 않음"));
+                        .map(teller -> {
+                            log.info("TELLER 사용자 발견: {}", teller.getEmail());
+                            return new CustomUserDetail(teller.getEmail(), teller.getPassword(), role.getValue());
+                        })
+                        .orElseThrow(() -> {
+                            log.error("{} : TELLER 사용자 존재하지 않음", email);
+                            return new UsernameNotFoundException(email + " : TELLER 사용자 존재하지 않음");
+                        });
 
             default:
+                log.error("알 수 없는 역할: {}", role);
                 throw new UsernameNotFoundException(role + " : 알 수 없는 역할");
         }
     }
