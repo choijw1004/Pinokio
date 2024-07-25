@@ -1,6 +1,5 @@
 package com.example.pinokkio.config;
 
-import com.example.pinokkio.config.jwt.CustomUserDetailService;
 import com.example.pinokkio.config.jwt.JwtAuthenticationFilter;
 import com.example.pinokkio.config.jwt.LogoutService;
 import com.example.pinokkio.handler.CustomAccessDeniedHandler;
@@ -13,6 +12,8 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
@@ -30,7 +31,6 @@ public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final AuthenticationEntryPoint authenticationEntryPoint;
-    private final CustomUserDetailService customUserDetailService;
     private final LogoutService logoutService;
     private final CustomAccessDeniedHandler customAccessDeniedHandler;
 
@@ -43,7 +43,9 @@ public class SecurityConfig {
     };
 
     private final String[] POST_PERMIT_API_URL = {
-            "/register/**",
+            "/register/pos",
+            "/register/teller",
+            "/login/**",
             "/refresh",
             "/users/auth/token/"
     };
@@ -59,6 +61,13 @@ public class SecurityConfig {
     private final String[] KIOSK_API_URL = {
             "/kiosk/**"
     };
+
+
+    @Bean
+    public PasswordEncoder bCryptPasswordEncoder() {
+
+        return new BCryptPasswordEncoder();
+    }
 
 
     @Bean
