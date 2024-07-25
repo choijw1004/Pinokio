@@ -17,7 +17,6 @@ import com.example.pinokkio.config.jwt.JwtProvider;
 import com.example.pinokkio.config.jwt.Role;
 import com.example.pinokkio.exception.badInput.PasswordBadInputException;
 import com.example.pinokkio.exception.base.AuthenticationException;
-
 import com.example.pinokkio.exception.confilct.EmailConflictException;
 import com.example.pinokkio.exception.notFound.CodeNotFoundException;
 import com.example.pinokkio.exception.notFound.PosNotFoundException;
@@ -28,7 +27,6 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -65,6 +63,7 @@ public class AuthService {
 
     /**
      * 가맹 코드, 이메일, 비밀번호, 비밀번호 확인 정보를 바탕으로 회원가입을 진행한다.
+     *
      * @param signUpPosRequest 포스 회원가입을 위한 Dto
      */
     @Transactional
@@ -82,9 +81,9 @@ public class AuthService {
 
     /**
      * 가맹 코드, 이메일, 비밀번호, 비밀번호 확인 정보를 바탕으로 회원가입을 진행한다.
+     *
      * @param signUpTellerRequest 상담원 회원가입을 위한 Dto
      */
-    // TODO 여기에 @Transactional 안붙인 전용수 구박
     @Transactional
     public void registerTeller(SignUpTellerRequest signUpTellerRequest) {
         Code requestCode = checkValidateCode(signUpTellerRequest.getCode());
@@ -102,9 +101,9 @@ public class AuthService {
     /**
      * email = 코드 이름 + 숫자 4자리
      * password = 숫자 4자리
+     *
      * @param signUpKioskRequest 키오스크 회원가입을 위한 Dto
      */
-    // TODO 여기에 @Transactional 안붙인 전용수 구박
     @Transactional
     public void registerKiosk(SignUpKioskRequest signUpKioskRequest) {
         String posId = signUpKioskRequest.getPosId();
@@ -180,8 +179,7 @@ public class AuthService {
             String accessToken = jwtProvider.createAccessToken(authentication.getName(), role.getValue(), new Date());
             String refreshToken = jwtProvider.createRefreshToken(new Date());
             // 리프레시 토큰을 Redis에 저장
-            // TODO KIOSK_ROLE인지 ROLE_KIOSK인지 물어보기 POS는 지금 ROLE_POS로 변경되어있음
-            saveRefreshTokenToRedis(authentication.getName(), "KIOSK_ROLE", accessToken, refreshToken);
+            saveRefreshTokenToRedis(authentication.getName(), role.getValue(), accessToken, refreshToken);
             return new AuthToken(accessToken, refreshToken);
         } catch (AuthenticationException e) {
             throw new AuthenticationException("KIOSK 인증 실패", e.getMessage());
@@ -210,7 +208,7 @@ public class AuthService {
             String accessToken = jwtProvider.createAccessToken(authentication.getName(), role.getValue(), new Date());
             String refreshToken = jwtProvider.createRefreshToken(new Date());
             // 리프레시 토큰을 Redis에 저장
-            saveRefreshTokenToRedis(authentication.getName(), "TELLER_ROLE", accessToken, refreshToken);
+            saveRefreshTokenToRedis(authentication.getName(), role.getValue(), accessToken, refreshToken);
             return new AuthToken(accessToken, refreshToken);
         } catch (AuthenticationException e) {
             throw new AuthenticationException("TELLER 인증 실패", e.getMessage());
@@ -219,10 +217,11 @@ public class AuthService {
 
     /**
      * 토큰 정보를 기반으로 리프레시 토큰을 Redis 에 저장한다.
-     * @param username      유저 아이디(email)
-     * @param role          유저 타입
-     * @param accessToken   엑세스 토큰 정보
-     * @param refreshToken  리프레시 토큰 정보
+     *
+     * @param username     유저 아이디(email)
+     * @param role         유저 타입
+     * @param accessToken  엑세스 토큰 정보
+     * @param refreshToken 리프레시 토큰 정보
      */
     private void saveRefreshTokenToRedis(String username, String role, String accessToken, String refreshToken) {
         String key = "refreshToken:" + username + ":" + role + ":" + DigestUtils.sha256Hex(accessToken);
@@ -232,6 +231,7 @@ public class AuthService {
 
     /**
      * 아이디 중복인 경우 EmailConflictException 을 발생시킨다.
+     *
      * @param email 이메일
      * @param role  유저 타입
      */
@@ -250,6 +250,7 @@ public class AuthService {
 
     /**
      * 코드가 유효하지 않은 경우 CodeNotFoundException 을 발생시킨다.
+     *
      * @param code 코드
      */
     public Code checkValidateCode(String code) {
@@ -261,15 +262,17 @@ public class AuthService {
 
     /**
      * 입력받은 두 비밀번호가 같지 않으면 PasswordBadInputException 을 발생시킨다.
-     * @param password          비밀번호
-     * @param confirmPassword   비밀번호 확인
+     *
+     * @param password        비밀번호
+     * @param confirmPassword 비밀번호 확인
      */
     public void checkConfirmPassword(String password, String confirmPassword) {
-        if(!password.equals(confirmPassword)) throw new PasswordBadInputException(password);
+        if (!password.equals(confirmPassword)) throw new PasswordBadInputException(password);
     }
 
     /**
      * BCryptPasswordEncoder 로 비밀번호를 암호화한다.
+     *
      * @param password 비밀번호
      * @return 암호화된 비밀번호
      */
@@ -279,6 +282,7 @@ public class AuthService {
 
     /**
      * 입력받은 포스의 키오스크 아이디를 랜덤으로 생성한다.
+     *
      * @param pos 키오스크의 출처 포스
      * @return 랜덤 생성된 키오스크 아이디
      */
