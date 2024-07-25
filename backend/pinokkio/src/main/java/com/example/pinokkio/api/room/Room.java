@@ -19,19 +19,19 @@ public class Room extends BaseEntity {
     @Id
     @GeneratedValue
     @Column(columnDefinition = "BINARY(16)", name = "room_id")
-    private UUID id;
+    private UUID roomId;
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "teller_id")
     private Teller teller;
 
     @ColumnDefault("0")
-    private Integer numberOfPeople;
+    private Integer numberOfCustomers;
 
     @Builder
-    public Room(UUID id, Teller teller, Integer numberOfPeople) {
-        this.id = id;
+    public Room(UUID roomId, Teller teller, Integer numberOfCustomers) {
+        this.roomId = roomId;
         this.teller = teller;
-        this.numberOfPeople = numberOfPeople;
+        this.numberOfCustomers = numberOfCustomers;
     }
 }
