@@ -47,12 +47,14 @@ public class SecurityConfig {
     private final String[] GET_PERMIT_API_URL = {
             "/",
             "/refresh",
+            "/api/mail/check-auth"
     };
 
     private final String[] POST_PERMIT_API_URL = {
             "/register/pos",
             "/register/teller",
             "/login/**",
+            "/api/mail/send",
             "/refresh",
             "/users/auth/token/"
     };
