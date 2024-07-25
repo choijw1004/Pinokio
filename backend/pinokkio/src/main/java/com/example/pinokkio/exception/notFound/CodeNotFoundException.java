@@ -6,6 +6,6 @@ import java.util.Map;
 
 public class CodeNotFoundException extends NotFoundException {
     public CodeNotFoundException(String codeId) {
-        super("CODE_01", "아이디에 부합한 카테고리를 찾을 수 없습니다.", Map.of("codeId", String.valueOf(codeId)));
+        super("CODE_01", "아이디에 부합한 코드를 찾을 수 없습니다.", Map.of("codeId", String.valueOf(codeId)));
     }
 }
