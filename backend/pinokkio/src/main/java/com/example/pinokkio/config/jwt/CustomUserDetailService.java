@@ -19,32 +19,26 @@ public class CustomUserDetailService implements UserDetailsService {
     private final KioskRepository kioskRepository;
     private final TellerRepository tellerRepository;
 
-    /**
-     * 더이상 사용되지 않는다.
-     */
     @Override
-    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        throw new UsernameNotFoundException("사용자 역할을 지정하여 사용해야 합니다.");
-    }
+    public UserDetails loadUserByUsername(String input) throws UsernameNotFoundException {
 
-    /**
-     * 커스텀 loadUserByUsernameAndRole
-     */
-    public CustomUserDetail loadUserByUsernameAndRole(String email, String role) throws UsernameNotFoundException {
+        char role = input.charAt(0);
+        String email = input.substring(1);
+        log.info("role: " + role + " email: " + email);
         switch (role) {
-            case "ROLE_POS":
+            case 'P':
                 return posRepository.findByEmail(email)
-                        .map(pos -> new CustomUserDetail(pos.getEmail(), pos.getPassword(), role))
+                        .map(pos -> new CustomUserDetail(pos.getEmail(), pos.getPassword(), "ROLE_POS"))
                         .orElseThrow(() -> new UsernameNotFoundException(email + " : POS 사용자 존재하지 않음"));
 
-            case "ROLE_KIOSK":
+            case 'K':
                 return kioskRepository.findByEmail(email)
-                        .map(kiosk -> new CustomUserDetail(kiosk.getEmail(), kiosk.getPassword(), role))
+                        .map(kiosk -> new CustomUserDetail(kiosk.getEmail(), kiosk.getPassword(), "ROLE_KIOSK"))
                         .orElseThrow(() -> new UsernameNotFoundException(email + " : KIOSK 사용자 존재하지 않음"));
 
-            case "ROLE_TELLER":
+            case 'T':
                 return tellerRepository.findByEmail(email)
-                        .map(teller -> new CustomUserDetail(teller.getEmail(), teller.getPassword(), role))
+                        .map(teller -> new CustomUserDetail(teller.getEmail(), teller.getPassword(), "ROLE_TELLER"))
                         .orElseThrow(() -> new UsernameNotFoundException(email + " : TELLER 사용자 존재하지 않음"));
 
             default:
