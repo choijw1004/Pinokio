@@ -26,7 +26,10 @@ public class MailService {
     private final RedisUtil redisUtil;
 
 
-    //난수 생성후 Redis 에 5분간 저장
+    /**
+     * 이메일 인증 용도로 사용되는 랜덤 인증번호를 생성하여 반환한다.
+     * @return 랜덤으로 생성된 인증번호
+     */
     private String createCode() {
         int leftLimit = 48;
         int rightLimit = 122;
@@ -44,7 +47,13 @@ public class MailService {
     }
 
 
-    //메일 양식 작성
+    /**
+     * 수신 이메일 대상으로 하는 메시지를 생성한다.
+     * @param email                         수신 이메일
+     * @return                              생성된 메시지
+     * @throws MessagingException           이메일 메시지 생성 중 오류가 발생한 경우
+     * @throws UnsupportedEncodingException 이메일 메시지의 인코딩이 지원되지 않는 경우
+     */
     public MimeMessage createEmailForm(String email) throws MessagingException, UnsupportedEncodingException {
 
         String authNum = createCode();
@@ -87,7 +96,13 @@ public class MailService {
         return message;
     }
 
-    //메일 전송
+    /**
+     * 수신 이메일 대상으로 인증 번호를 전송한다.
+     * @param toEmail                       수신 이메일
+     * @return                              랜덤으로 생성된 인증 번호
+     * @throws MessagingException           이메일 메시지 생성 중 오류가 발생한 경우
+     * @throws UnsupportedEncodingException 이메일 메시지의 인코딩이 지원되지 않는 경우
+     */
     public String sendEmail(String toEmail) throws MessagingException, UnsupportedEncodingException {
         log.info("sendEmail()");
         MimeMessage emailForm = createEmailForm(toEmail);
@@ -95,9 +110,17 @@ public class MailService {
         log.info(String.valueOf(emailForm));
         javaMailSender.send(emailForm);
         log.info("send()");
-
-        //Redis 에서 인증번호 가져오기
         return redisUtil.getData(emailForm.getSubject());
+    }
+
+    /**
+     * 주어진 인증 번호가 유효한지 확인한다.
+     * @param authNum   인증 번호
+     * @return          인증 확인 유무
+     */
+    public boolean isAuthenticated(String authNum) {
+        String findData = redisUtil.getData(authNum);
+        return findData != null;
     }
 
 }

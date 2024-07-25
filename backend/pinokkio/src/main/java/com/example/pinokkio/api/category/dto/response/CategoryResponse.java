@@ -2,10 +2,12 @@ package com.example.pinokkio.api.category.dto.response;
 
 import com.example.pinokkio.api.category.Category;
 import lombok.Getter;
+import lombok.Setter;
 
 import java.util.UUID;
 
 @Getter
+@Setter
 public class CategoryResponse {
     private final UUID id;
     private final String name;
