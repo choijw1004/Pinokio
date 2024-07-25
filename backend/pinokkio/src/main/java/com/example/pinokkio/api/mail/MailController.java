@@ -27,11 +27,11 @@ public class MailController {
      * @return              성공 20O OK , 실패 500 ERROR
      */
     @PostMapping("/api/mail/send")
-    public ResponseEntity<String> sendMail(@RequestBody MailRequest mailRequest) {
+    public ResponseEntity<?> sendMail(@RequestBody MailRequest mailRequest) {
         try {
             String authNum = mailService.sendEmail(mailRequest.getEmail());
             log.info("Auth Number: {}", authNum);
-            return ResponseEntity.ok(authNum);
+            return ResponseEntity.ok().build();
         } catch (MessagingException | UnsupportedEncodingException e) {
             log.error("Failed to send email: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to send email");
