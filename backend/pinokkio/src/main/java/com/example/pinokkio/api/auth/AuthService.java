@@ -16,7 +16,6 @@ import com.example.pinokkio.config.RedisUtil;
 import com.example.pinokkio.config.jwt.JwtProvider;
 import com.example.pinokkio.exception.badInput.PasswordBadInputException;
 import com.example.pinokkio.exception.base.AuthenticationException;
-
 import com.example.pinokkio.exception.confilct.EmailConflictException;
 import com.example.pinokkio.exception.notFound.CodeNotFoundException;
 import com.example.pinokkio.exception.notFound.PosNotFoundException;
@@ -27,7 +26,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -45,6 +44,8 @@ import java.util.function.Predicate;
 @Transactional(readOnly = true)
 public class AuthService {
 
+    private final PasswordEncoder passwordEncoder;
+
     private final RedisUtil redisUtil;
     private final JwtProvider jwtProvider;
     private final AuthenticationManagerBuilder authenticationManagerBuilder;
@@ -61,6 +62,7 @@ public class AuthService {
 
     /**
      * 가맹 코드, 이메일, 비밀번호, 비밀번호 확인 정보를 바탕으로 회원가입을 진행한다.
+     *
      * @param signUpPosRequest 포스 회원가입을 위한 Dto
      */
     @Transactional
@@ -70,7 +72,7 @@ public class AuthService {
         checkConfirmPassword(signUpPosRequest.getPassword(), signUpPosRequest.getConfirmPassword());
         Pos pos = Pos.builder()
                 .email(signUpPosRequest.getUsername())
-                .password(passwordEncode(signUpPosRequest.getPassword()))
+                .password(passwordEncoder.encode(signUpPosRequest.getPassword()))
                 .code(requestCode)
                 .build();
         posRepository.save(pos);
@@ -78,6 +80,7 @@ public class AuthService {
 
     /**
      * 가맹 코드, 이메일, 비밀번호, 비밀번호 확인 정보를 바탕으로 회원가입을 진행한다.
+     *
      * @param signUpTellerRequest 상담원 회원가입을 위한 Dto
      */
     public void registerTeller(SignUpTellerRequest signUpTellerRequest) {
@@ -86,7 +89,7 @@ public class AuthService {
         checkConfirmPassword(signUpTellerRequest.getPassword(), signUpTellerRequest.getConfirmPassword());
         Teller teller = Teller.builder()
                 .email(signUpTellerRequest.getUsername())
-                .password(passwordEncode(signUpTellerRequest.getPassword()))
+                .password(passwordEncoder.encode(signUpTellerRequest.getPassword()))
                 .code(requestCode)
                 .build();
         tellerRepository.save(teller);
@@ -95,6 +98,7 @@ public class AuthService {
     /**
      * email = 코드 이름 + 숫자 4자리
      * password = 숫자 4자리
+     *
      * @param signUpKioskRequest 키오스크 회원가입을 위한 Dto
      */
     public void registerKiosk(SignUpKioskRequest signUpKioskRequest) {
@@ -109,7 +113,7 @@ public class AuthService {
         Kiosk kiosk = Kiosk.builder()
                 .pos(findPos)
                 .email(randomEmail)
-                .password(passwordEncode(randomPassword))
+                .password(passwordEncoder.encode(randomPassword))
                 .build();
         kioskRepository.save(kiosk);
     }
@@ -117,14 +121,20 @@ public class AuthService {
     @Transactional
     public AuthToken loginPos(LoginRequest loginRequest) {
         try {
+
+            String Pusername = "P" + loginRequest.getUsername();
+
             UsernamePasswordAuthenticationToken authenticationToken =
                     new UsernamePasswordAuthenticationToken(
-                            loginRequest.getUsername(),
+                            Pusername,
                             loginRequest.getPassword()
                     );
             Authentication authentication = authenticationManagerBuilder.getObject().authenticate(authenticationToken);
+
+            log.info("Authenticated user: {}", authentication.getPrincipal());
             SecurityContextHolder.getContext().setAuthentication(authentication);
 
+            log.info("토큰 발급 중 ,,");
             String accessToken = jwtProvider.createAccessToken(authentication.getName(), "ROLE_POS", new Date());
             String refreshToken = jwtProvider.createRefreshToken(new Date());
             // 리프레시 토큰을 Redis에 저장
@@ -180,10 +190,11 @@ public class AuthService {
 
     /**
      * 토큰 정보를 기반으로 리프레시 토큰을 Redis 에 저장한다.
-     * @param username      유저 아이디(email)
-     * @param role          유저 타입
-     * @param accessToken   엑세스 토큰 정보
-     * @param refreshToken  리프레시 토큰 정보
+     *
+     * @param username     유저 아이디(email)
+     * @param role         유저 타입
+     * @param accessToken  엑세스 토큰 정보
+     * @param refreshToken 리프레시 토큰 정보
      */
     private void saveRefreshTokenToRedis(String username, String role, String accessToken, String refreshToken) {
         String key = "refreshToken:" + username + ":" + role + ":" + DigestUtils.sha256Hex(accessToken);
@@ -193,6 +204,7 @@ public class AuthService {
 
     /**
      * 아이디 중복인 경우 EmailConflictException 을 발생시킨다.
+     *
      * @param email 이메일
      * @param role  유저 타입
      */
@@ -211,6 +223,7 @@ public class AuthService {
 
     /**
      * 코드가 유효하지 않은 경우 CodeNotFoundException 을 발생시킨다.
+     *
      * @param code 코드
      */
     public Code checkValidateCode(String code) {
@@ -222,25 +235,17 @@ public class AuthService {
 
     /**
      * 입력받은 두 비밀번호가 같지 않으면 PasswordBadInputException 을 발생시킨다.
-     * @param password          비밀번호
-     * @param confirmPassword   비밀번호 확인
+     *
+     * @param password        비밀번호
+     * @param confirmPassword 비밀번호 확인
      */
     public void checkConfirmPassword(String password, String confirmPassword) {
-        if(!password.equals(confirmPassword)) throw new PasswordBadInputException(password);
-    }
-
-    /**
-     * BCryptPasswordEncoder 로 비밀번호를 암호화한다.
-     * @param password 비밀번호
-     * @return 암호화된 비밀번호
-     */
-    public String passwordEncode(String password) {
-        BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
-        return passwordEncoder.encode(password);
+        if (!password.equals(confirmPassword)) throw new PasswordBadInputException(password);
     }
 
     /**
      * 입력받은 포스의 키오스크 아이디를 랜덤으로 생성한다.
+     *
      * @param pos 키오스크의 출처 포스
      * @return 랜덤 생성된 키오스크 아이디
      */
@@ -255,6 +260,7 @@ public class AuthService {
 
     /**
      * 숫자 4자리 비밀번호를 랜덤 생성한다.
+     *
      * @return 숫자 4자리 비밀번호
      */
     public String randomPassword() {
