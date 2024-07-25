@@ -22,7 +22,6 @@ public class MailService {
 
     @Value("${spring.mail.username}")
     private String configEmail;
-
     private final JavaMailSender javaMailSender;
     private final RedisUtil redisUtil;
 
@@ -90,13 +89,13 @@ public class MailService {
 
     //메일 전송
     public String sendEmail(String toEmail) throws MessagingException, UnsupportedEncodingException {
-        log.info("sendEamil 호출");
-        //메일전송에 필요한 정보 설정
+        log.info("sendEmail()");
         MimeMessage emailForm = createEmailForm(toEmail);
-        log.info("createEmailForm 호출");
+        log.info("createEmailForm()");
         log.info(String.valueOf(emailForm));
         javaMailSender.send(emailForm);
-        log.info("send호출");
+        log.info("send()");
+
         //Redis 에서 인증번호 가져오기
         return redisUtil.getData(emailForm.getSubject());
     }
