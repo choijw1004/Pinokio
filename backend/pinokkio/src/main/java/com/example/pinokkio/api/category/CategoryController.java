@@ -5,6 +5,9 @@ import com.example.pinokkio.api.category.dto.response.CategoryResponse;
 import com.example.pinokkio.api.category.dto.response.GroupCategoryResponse;
 import java.util.List;
 import java.util.UUID;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -14,8 +17,11 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
+@Slf4j
+@RequiredArgsConstructor
 @RestController
 public class CategoryController {
+
     private final CategoryService categoryService;
 
     @GetMapping({"/pos/categories"})
@@ -36,7 +42,4 @@ public class CategoryController {
         return ResponseEntity.noContent().build();
     }
 
-    public CategoryController(final CategoryService categoryService) {
-        this.categoryService = categoryService;
-    }
 }

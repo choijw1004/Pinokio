@@ -18,21 +18,29 @@ public class CategoryService {
 
     private final CategoryRepository categoryRepository;
 
+    public Category getCategory(UUID id) {
+        return categoryRepository
+                .findById(id)
+                .orElseThrow(() -> new CategoryNotFoundException(id.toString()));
+    }
+
     public List<Category> getGroupCategories() {
-        return this.categoryRepository.findAll();
+        return categoryRepository.findAll();
     }
 
     @Transactional
     public Category createCategory(String categoryName) {
-        Category category = Category.builder().name(categoryName).build();
-        return (Category)this.categoryRepository.save(category);
+        Category category = Category.builder()
+                .name(categoryName)
+                .build();
+        return categoryRepository.save(category);
     }
 
     @Transactional
     public void deleteCategory(UUID id) {
-        Category category = (Category) this.categoryRepository.findById(id).orElseThrow(() -> {
-            return new CategoryNotFoundException(id);
-        });
+        Category category = categoryRepository
+                .findById(id
+                ).orElseThrow(()-> new CategoryNotFoundException(id.toString()));
         this.categoryRepository.delete(category);
     }
 

@@ -2,20 +2,12 @@ package com.example.pinokkio.api.item.dto.request;
 
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Positive;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.Setter;
 import org.springframework.web.multipart.MultipartFile;
 
-@Setter
 @Getter
-@AllArgsConstructor
-public class ItemRequest {
+public class UpdateItemRequest {
 
-    @NotEmpty(message = "posId는 필수 값입니다.")
-    private String posId;
-    @NotEmpty(message = "categoryId는 필수 값입니다.")
-    private String categoryId;
     @Positive(message = "amount는 양수여야 합니다.")
     private int price;
     @Positive(message = "amount는 양수여야 합니다.")
@@ -26,5 +18,4 @@ public class ItemRequest {
     private String detail;
 
     private MultipartFile file;
-
 }

@@ -14,7 +14,6 @@ import java.util.UUID;
 @Table(name = "category")
 @Builder
 @Getter
-@Setter(AccessLevel.PROTECTED)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 public class Category extends BaseEntity {

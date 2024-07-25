@@ -13,7 +13,6 @@ import java.util.UUID;
 @Entity
 @Table(name = "item")
 @Getter
-@Setter(AccessLevel.PROTECTED)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 public class Item extends BaseEntity {

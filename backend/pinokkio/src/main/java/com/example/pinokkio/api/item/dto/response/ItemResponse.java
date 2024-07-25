@@ -6,8 +6,9 @@ import java.util.UUID;
 
 @Getter
 public class ItemResponse {
-    private final UUID posId;
-    private final UUID categoryId;
+
+    private final String posId;
+    private final String categoryId;
     private final int price;
     private final int amount;
     private final String name;
@@ -17,8 +18,8 @@ public class ItemResponse {
     private final String isSoldOut;
 
     public ItemResponse(Item item) {
-        this.posId = item.getPos().getId();
-        this.categoryId = item.getCategory().getId();
+        this.posId = String.valueOf(item.getPos().getId());
+        this.categoryId = String.valueOf(item.getCategory().getId());
         this.price = item.getPrice();
         this.amount = item.getAmount();
         this.name = item.getName();
