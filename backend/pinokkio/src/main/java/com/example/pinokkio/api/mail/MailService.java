@@ -28,6 +28,7 @@ public class MailService {
 
     /**
      * 이메일 인증 용도로 사용되는 랜덤 인증번호를 생성하여 반환한다.
+     *
      * @return 랜덤으로 생성된 인증번호
      */
     private String createCode() {
@@ -49,14 +50,13 @@ public class MailService {
 
     /**
      * 수신 이메일 대상으로 하는 메시지를 생성한다.
-     * @param email                         수신 이메일
-     * @return                              생성된 메시지
+     *
+     * @param email 수신 이메일
+     * @return 생성된 메시지
      * @throws MessagingException           이메일 메시지 생성 중 오류가 발생한 경우
      * @throws UnsupportedEncodingException 이메일 메시지의 인코딩이 지원되지 않는 경우
      */
-    public MimeMessage createEmailForm(String email) throws MessagingException, UnsupportedEncodingException {
-
-        String authNum = createCode();
+    public MimeMessage createEmailForm(String email, String authNum) throws MessagingException, UnsupportedEncodingException {
         log.info("authNum ={}", authNum);
 
         String title = "Pinokkio 인증 번호 안내";
@@ -91,35 +91,40 @@ public class MailService {
 
         //보내는 이메일 및 메타데이터
         message.setText(msgg, "utf-8", "html");
-        message.setFrom(new InternetAddress(configEmail,"Pinokkio"));
+        message.setFrom(new InternetAddress(configEmail, "Pinokkio"));
         log.info("metadata 생성");
         return message;
     }
 
     /**
      * 수신 이메일 대상으로 인증 번호를 전송한다.
-     * @param toEmail                       수신 이메일
-     * @return                              랜덤으로 생성된 인증 번호
+     *
+     * @param toEmail 수신 이메일
+     * @return 랜덤으로 생성된 인증 번호
      * @throws MessagingException           이메일 메시지 생성 중 오류가 발생한 경우
      * @throws UnsupportedEncodingException 이메일 메시지의 인코딩이 지원되지 않는 경우
      */
     public String sendEmail(String toEmail) throws MessagingException, UnsupportedEncodingException {
         log.info("sendEmail()");
-        MimeMessage emailForm = createEmailForm(toEmail);
+        String authNum = createCode();
+        MimeMessage emailForm = createEmailForm(toEmail, authNum);
         log.info("createEmailForm()");
         log.info(String.valueOf(emailForm));
         javaMailSender.send(emailForm);
         log.info("send()");
-        return redisUtil.getData(emailForm.getSubject());
+        log.info("[sendEmail] return {}", redisUtil.getData(authNum));
+        return redisUtil.getData(authNum);
     }
 
     /**
      * 주어진 인증 번호가 유효한지 확인한다.
-     * @param authNum   인증 번호
-     * @return          인증 확인 유무
+     *
+     * @param authNum 인증 번호
+     * @return 인증 확인 유무
      */
     public boolean isAuthenticated(String authNum) {
         String findData = redisUtil.getData(authNum);
+        log.info("[isAuthenticated] authNum: {}, findData: {}", authNum, findData);
         return findData != null;
     }
 
