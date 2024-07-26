@@ -1,14 +1,19 @@
 package com.example.pinokkio.api.category;
 
 
+import com.example.pinokkio.api.pos.Pos;
+import com.example.pinokkio.api.pos.PosRepository;
 import com.example.pinokkio.exception.notFound.CategoryNotFoundException;
 import java.util.List;
 import java.util.UUID;
 
+import com.example.pinokkio.exception.notFound.PosNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 @Service
 @Slf4j
@@ -17,31 +22,50 @@ import org.springframework.transaction.annotation.Transactional;
 public class CategoryService {
 
     private final CategoryRepository categoryRepository;
+    private final PosRepository posRepository;
 
-    public Category getCategory(UUID id) {
-        return categoryRepository
-                .findById(id)
-                .orElseThrow(() -> new CategoryNotFoundException(id.toString()));
+    /**
+     * 특정 포스의 카테고리 목록 조회
+     */
+    public List<Category> getGroupCategories(UUID posId) {
+        return categoryRepository.findAllByPosId(posId);
     }
 
-    public List<Category> getGroupCategories() {
-        return categoryRepository.findAll();
-    }
-
+    /**
+     * 특정 포스의 카테고리 생성
+     */
     @Transactional
-    public Category createCategory(String categoryName) {
+    public Category createCategory(String name, UUID posId) {
+        Pos pos = posRepository
+                .findById(posId)
+                .orElseThrow(() -> new PosNotFoundException(posId.toString()));
         Category category = Category.builder()
-                .name(categoryName)
+                .name(name)
+                .pos(pos)
                 .build();
         return categoryRepository.save(category);
     }
 
+    /**
+     * 특정 포스의 카테고리 삭제
+     */
     @Transactional
-    public void deleteCategory(UUID id) {
-        Category category = categoryRepository
-                .findById(id
-                ).orElseThrow(()-> new CategoryNotFoundException(id.toString()));
-        this.categoryRepository.delete(category);
+    public void deleteCategory(UUID categoryId, UUID posId) {
+        //소유권 검증
+        validateCategory(categoryId, posId);
+        categoryRepository.deleteByPosIdAndCategoryId(categoryId, posId);
+    }
+
+    /**
+     * 카테고리 검증 함수
+     * 해당 카테고리가 입력받은 포스의 카테고리인지 검증한다.
+     * @param categoryId 카테고리 식별자
+     * @param posId 포스 식별자
+     */
+    public void validateCategory(UUID categoryId, UUID posId) {
+        if (!categoryRepository.existsByPosIdAndCategoryId(posId, categoryId)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "카테고리가 해당 포스에 존재하지 않습니다.");
+        }
     }
 
 }

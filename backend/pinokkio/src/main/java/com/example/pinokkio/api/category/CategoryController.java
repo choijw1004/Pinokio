@@ -26,22 +26,25 @@ public class CategoryController {
     private final CategoryService categoryService;
 
     /**
-     * 모든 카테고리 조회
+     * 특정 포스의 모든 카테고리 조회
      */
     @PreAuthorize("hasRole('ROLE_POS')")
-    @GetMapping({"/pos/categories"})
-    public ResponseEntity<?> getAllCategories() {
-        List<Category> categoryList = this.categoryService.getGroupCategories();
+    @GetMapping({"/pos/{posId}/categories"})
+    public ResponseEntity<?> getAllCategories(
+            @PathVariable String posId) {
+        List<Category> categoryList = categoryService.getGroupCategories(toUUID(posId));
         return new ResponseEntity<>(new GroupCategoryResponse(categoryList), HttpStatus.OK);
     }
 
     /**
-     * 카테고리 생성
+     * 특정 포스의 카테고리 생성
      */
     @PreAuthorize("hasRole('ROLE_POS')")
-    @PostMapping({"/pos/categories"})
-    public ResponseEntity<?> makeCategory(@RequestBody CategoryRequest categoryRequest) {
-        Category category = this.categoryService.createCategory(categoryRequest.getName());
+    @PostMapping({"/pos/{posId}/categories"})
+    public ResponseEntity<?> makeCategory(
+            @PathVariable String posId,
+            @RequestBody CategoryRequest categoryRequest) {
+        Category category = this.categoryService.createCategory(categoryRequest.getName(), toUUID(posId));
         return new ResponseEntity<>(new CategoryResponse(category), HttpStatus.CREATED);
     }
 
@@ -49,10 +52,19 @@ public class CategoryController {
      * 카테고리 삭제
      */
     @PreAuthorize("hasRole('ROLE_POS')")
-    @DeleteMapping({"pos/categories/{categoryId}"})
-    public ResponseEntity<?> deleteCategory(@PathVariable UUID categoryId) {
-        this.categoryService.deleteCategory(categoryId);
+    @DeleteMapping({"pos/{posId}/categories/{categoryId}"})
+    public ResponseEntity<?> deleteCategory(
+            @PathVariable String posId,
+            @PathVariable String categoryId) {
+        categoryService.deleteCategory(toUUID(categoryId), toUUID(posId));
         return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * String to UUID
+     */
+    public UUID toUUID(String input) {
+        return UUID.fromString(input);
     }
 
 }

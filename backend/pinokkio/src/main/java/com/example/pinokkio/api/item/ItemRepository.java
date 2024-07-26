@@ -54,7 +54,9 @@ public interface ItemRepository extends JpaRepository<Item, UUID> {
      * @param posId 포스 아이디
      */
     @Modifying(clearAutomatically = true, flushAutomatically = true)
-    @Query("DELETE FROM Item i WHERE i.id = :itemId AND i.pos.id = :posId")
+    @Query("DELETE FROM Item i " +
+            "WHERE i.id = :itemId " +
+            "AND i.pos.id = :posId")
     void deleteByItemIdAndPosId(@Param("itemId") UUID itemId, @Param("posId") UUID posId);
 
 
@@ -63,7 +65,9 @@ public interface ItemRepository extends JpaRepository<Item, UUID> {
      * @param posId 포스 아이디
      * @return 특정 posId를 가진 모든 아이템 리스트
      */
-    @Query("SELECT i FROM Item i WHERE i.pos.id = :posId")
+    @Query("SELECT i " +
+            "FROM Item i " +
+            "WHERE i.pos.id = :posId")
     List<Item> findAllByPosId(@Param("posId") UUID posId);
 
 }
