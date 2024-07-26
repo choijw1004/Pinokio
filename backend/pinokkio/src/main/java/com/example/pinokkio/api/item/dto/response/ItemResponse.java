@@ -18,8 +18,8 @@ public class ItemResponse {
     private final String isSoldOut;
 
     public ItemResponse(Item item) {
-        this.posId = String.valueOf(item.getPos().getId());
-        this.categoryId = String.valueOf(item.getCategory().getId());
+        this.posId = item.getPos().getId().toString();
+        this.categoryId = item.getCategory().getId().toString();
         this.price = item.getPrice();
         this.amount = item.getAmount();
         this.name = item.getName();

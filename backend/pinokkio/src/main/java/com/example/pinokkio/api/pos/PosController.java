@@ -17,11 +17,20 @@ public class PosController {
     private final PosService posService;
     private final JwtProvider jwtProvider;
 
+    /**
+     * 요청한 포스의 자기 정보 조회
+     * [가맹점 이름, 포스 ID, 포스 이메일]
+     */
     @PreAuthorize("hasRole('ROLE_POS')")
     @GetMapping("/pos/my-info")
     public ResponseEntity<?> getPos() {
         PosResponse posResponse = posService.getMyPosInfo(jwtProvider.getCurrentUserEmail());
         return ResponseEntity.ok(posResponse);
     }
+
+
+
+
+
 
 }
