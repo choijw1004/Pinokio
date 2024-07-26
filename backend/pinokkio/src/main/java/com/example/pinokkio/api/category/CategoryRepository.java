@@ -36,6 +36,10 @@ public interface CategoryRepository extends JpaRepository<Category, UUID> {
      * @param categoryId 카테고리 ID
      * @return 존재 여부
      */
-    boolean existsByPosIdAndCategoryId(UUID posId, UUID categoryId);
+    @Query("SELECT COUNT(c) > 0 " +
+            "FROM Category c " +
+            "WHERE c.pos.id = :posId " +
+            "AND c.id = :categoryId")
+    boolean existsByPosIdAndCategoryId(@Param("posId") UUID posId, @Param("categoryId") UUID categoryId);
 
 }
