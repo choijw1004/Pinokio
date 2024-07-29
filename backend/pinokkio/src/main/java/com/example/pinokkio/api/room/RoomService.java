@@ -25,6 +25,7 @@ import java.util.function.Function;
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class RoomService {
+    //TODO: 불필요한 메서드 제거 및 추가
 
     private final int MAX_CAPACITY = 3;
 
@@ -70,7 +71,6 @@ public class RoomService {
         String roomId = getAvailableRoom();
         log.info("[enterRoom] available roomId: {}", roomId);
 
-        //TODO 토큰 생성 시 바로 입장하는지 확인, 아니라면 noc 증가시키는 로직은 분리해야 함
         Room room = getEntityById(roomRepository, roomId, RoomNotFoundException::new);
         room.setNumberOfCustomers(room.getNumberOfCustomers() + 1);
         roomRepository.save(room);
@@ -94,8 +94,7 @@ public class RoomService {
         }
 
         log.info("[getAvailableRoom] 모든 방이 {}명 상담 중", MAX_CAPACITY);
-        //TODO 상담 불가한 경우의 예외 생성
-        throw new RuntimeException("상담 가능한 방이 없습니다.");
+        return "";
     }
 
     @Transactional
