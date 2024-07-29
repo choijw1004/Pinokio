@@ -1,6 +1,5 @@
 package com.example.pinokkio.config;
 
-import com.example.pinokkio.config.jwt.CustomUserDetailService;
 import com.example.pinokkio.config.jwt.JwtAuthenticationFilter;
 import com.example.pinokkio.config.jwt.LogoutService;
 import com.example.pinokkio.handler.CustomAccessDeniedHandler;
@@ -32,7 +31,6 @@ public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final AuthenticationEntryPoint authenticationEntryPoint;
-    private final CustomUserDetailService customUserDetailService;
     private final LogoutService logoutService;
     private final CustomAccessDeniedHandler customAccessDeniedHandler;
 
