@@ -114,8 +114,8 @@ public class RoomController {
                     content = @Content(schema = @Schema(implementation = RoomResponse.class)))
     })
     @PreAuthorize("hasRole('ROLE_KIOSK')")
-    @PostMapping("/kiosk/{kioskId}/request-consultation")
-    public ResponseEntity<RoomResponse> requestConsultation(
+    @PostMapping("/kiosk/{kioskId}/request-enter")
+    public ResponseEntity<RoomResponse> requestEnterRoom(
             @Parameter(description = "Kiosk ID", example = "123e4567-e89b-12d3-a456-426614174000")
             @PathVariable String kioskId) {
         log.info("Requesting consultation for kiosk: {}", kioskId);
