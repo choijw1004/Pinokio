@@ -40,6 +40,11 @@ public class SecurityConfig {
     }
 
     private static final String[] SWAGGER_URL = {
+            "/v3/api-docs/**",
+            "/swagger-ui/**",
+            "/swagger-ui.html",
+            "/swagger-resources/**",
+            "/api-docs/**"
     };
 
     private final String[] GET_PERMIT_API_URL = {

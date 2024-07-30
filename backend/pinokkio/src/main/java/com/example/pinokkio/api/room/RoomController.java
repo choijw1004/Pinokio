@@ -2,155 +2,105 @@ package com.example.pinokkio.api.room;
 
 import com.example.pinokkio.api.room.dto.request.RoomEnterRequest;
 import com.example.pinokkio.api.room.dto.request.RoomInfo;
+import com.example.pinokkio.api.room.dto.response.MeetingResponse;
 import io.livekit.server.AccessToken;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Collections;
-import java.util.Map;
-
-@CrossOrigin(origins = "*") // 추후 수정
+@CrossOrigin(origins = "*") // 추후 수정 예정
 @RestController
 @RequiredArgsConstructor
 @Slf4j
 @RequestMapping("/api/meeting")
 public class RoomController {
-// TODO: DTO, 리턴타입, URL
 
     private final RoomService roomService;
     private final WebSocketService webSocketService;
 
-    /**
-     * 상담원 - 방 생성
-     * ROLE_TELLER인 경우만 생성 가능
-     */
     @PreAuthorize("hasRole('ROLE_TELLER')")
-    @PostMapping(value = "/{tellerId}")
-    public ResponseEntity<Map<String, String>> createRoom(@PathVariable String tellerId) {
-
+    @PostMapping("/teller/{tellerId}")
+    public ResponseEntity<MeetingResponse> createRoom(@PathVariable String tellerId) {
+        log.info("Creating room for teller: {}", tellerId);
         AccessToken roomToken = roomService.createRoom(tellerId);
-        return ResponseEntity.ok(Map.of("token", roomToken.toJwt()));
+        return ResponseEntity.ok(new MeetingResponse("Room created successfully", roomToken.toJwt()));
     }
 
-    /**
-     * 상담원 - 방 퇴장
-     * 방 퇴장과 동시에 방 삭제
-     */
     @PreAuthorize("hasRole('ROLE_TELLER')")
-    @DeleteMapping(value = "/{tellerId}")
-    public ResponseEntity<?> deleteRoom(@PathVariable String tellerId) {
-
+    @DeleteMapping("/teller/{tellerId}")
+    public ResponseEntity<MeetingResponse> deleteRoom(@PathVariable String tellerId) {
+        log.info("Deleting room for teller: {}", tellerId);
         roomService.deleteRoom(tellerId);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok(new MeetingResponse("Room deleted successfully", null));
     }
 
-    /**
-     * 상담원 - 고객의 상담 요청 승인 및 입장을 위한 방 정보 제공
-     */
     @PreAuthorize("hasRole('ROLE_TELLER')")
-    @PostMapping("/{tellerId}/accept")
-    public ResponseEntity<Map<String, String>> acceptInvitation(@RequestBody RoomEnterRequest enterRequest, @PathVariable String tellerId) {
-        String roomId = enterRequest.getRoomId();
-        String kioskId = enterRequest.getUserId();
-
-        if (roomId == null || kioskId == null || tellerId == null) {
-            log.info("Missing roomId, kioskId, or tellerId");
-            return ResponseEntity.badRequest().body(Collections.singletonMap("error", "Missing required parameters"));
+    @PostMapping("/teller/{tellerId}/accept")
+    public ResponseEntity<MeetingResponse> acceptInvitation(@Validated @RequestBody RoomEnterRequest enterRequest, @PathVariable String tellerId) {
+        log.info("Accepting invitation for room: {}, teller: {}, kiosk: {}", enterRequest.getRoomId(), tellerId, enterRequest.getUserId());
+        if (webSocketService.isTokenIssued(enterRequest.getUserId())) {
+            return ResponseEntity.badRequest().body(new MeetingResponse("Token already issued for this participant", null));
         }
-
-        // 입장 가능 여부 검증
-        if (webSocketService.isTokenIssued(kioskId)) {
-            return ResponseEntity.status(400).body(Map.of("error", "Token already issued for this participant"));
-        }
-        String acceptRoomId = roomService.acceptInvitation(roomId, tellerId, kioskId);
-
-        // roomId 전송
+        String acceptRoomId = roomService.acceptInvitation(enterRequest.getRoomId(), tellerId, enterRequest.getUserId());
         try {
-            webSocketService.sendRoomId(kioskId, acceptRoomId);
-            return ResponseEntity.ok(Map.of("message", "RoomId sent successfully"));
+            webSocketService.sendRoomId(enterRequest.getUserId(), acceptRoomId);
+            return ResponseEntity.ok(new MeetingResponse("RoomId sent successfully", null));
         } catch (RuntimeException e) {
-            return ResponseEntity.status(500).body(Map.of("error", e.getMessage()));
+            log.error("Error sending roomId", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new MeetingResponse("Error sending roomId", null));
         }
     }
 
-    /**
-     * 상담원 - 고객의 상담 요청 거절
-     */
     @PreAuthorize("hasRole('ROLE_KIOSK')")
-    @PostMapping("/reject")
-    public ResponseEntity<String> rejectInvitation(@RequestBody RoomInfo roomInfo) {
-        String roomId = roomInfo.getRoomId();
-        String tellerId = roomInfo.getTellerId();
-
-        if (roomId == null || tellerId == null) {
-            return ResponseEntity.badRequest().body("Missing roomId or tellerId");
-        }
-
-        roomService.rejectInvitation(roomId, tellerId);
-        return ResponseEntity.ok("Invitation rejected for room: " + roomId);
+    @PostMapping("/kiosk/reject")
+    public ResponseEntity<MeetingResponse> rejectInvitation(@Validated @RequestBody RoomInfo roomInfo) {
+        log.info("Rejecting invitation for room: {}, teller: {}", roomInfo.getRoomId(), roomInfo.getTellerId());
+        roomService.rejectInvitation(roomInfo.getRoomId(), roomInfo.getTellerId());
+        return ResponseEntity.ok(new MeetingResponse("Invitation rejected successfully", null));
     }
 
-    /**
-     * 고객 - 상담 요청 전송
-     */
     @PreAuthorize("hasRole('ROLE_KIOSK')")
-    @PostMapping("/enter/{kioskId}")
-    public ResponseEntity<String> messageAllRooms(@PathVariable String kioskId) {
-        if (kioskId == null) {
-            return ResponseEntity.badRequest().body("Message and kioskId are required");
-        }
-
-        // 모든 방에 상담 요청 전송
+    @PostMapping("/kiosk/{kioskId}/request-consultation")
+    public ResponseEntity<MeetingResponse> requestConsultation(@PathVariable String kioskId) {
+        log.info("Requesting consultation for kiosk: {}", kioskId);
         try {
             roomService.messageAllRooms(kioskId);
-            return ResponseEntity.ok("Message sent to all rooms");
+            return ResponseEntity.ok(new MeetingResponse("Consultation request sent to all rooms", null));
         } catch (RuntimeException e) {
-            return ResponseEntity.status(500).body("Failed to send message to all rooms: " + e.getMessage());
+            log.error("Error sending consultation request", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new MeetingResponse("Failed to send consultation request", null));
         }
     }
 
-    /**
-     * 고객 - 입장 요청
-     */
     @PreAuthorize("hasRole('ROLE_KIOSK')")
-    @PostMapping("/enter")
-    public ResponseEntity<?> enterRoom(@RequestBody RoomEnterRequest enterRequest) {
-        String roomId = enterRequest.getRoomId();
-        String kioskId = enterRequest.getUserId();
-
-        if (roomId == null || kioskId == null) {
-            return ResponseEntity.badRequest().body("Missing roomId or kioskId");
-        }
-
-        AccessToken roomToken = roomService.enterRoom(roomId, kioskId);
-        return ResponseEntity.ok(Map.of("token", roomToken.toJwt()));
+    @PostMapping("/kiosk/enter")
+    public ResponseEntity<MeetingResponse> enterRoom(@Validated @RequestBody RoomEnterRequest enterRequest) {
+        log.info("Kiosk entering room: {}, kiosk: {}", enterRequest.getRoomId(), enterRequest.getUserId());
+        AccessToken roomToken = roomService.enterRoom(enterRequest.getRoomId(), enterRequest.getUserId());
+        return ResponseEntity.ok(new MeetingResponse("Entered room successfully", roomToken.toJwt()));
     }
 
-    /**
-     * 고객 - 방 퇴장
-     * Room 객체의 NumberOfCustomers 감소
-     */
     @PreAuthorize("hasRole('ROLE_KIOSK')")
-    @PutMapping(value = "/{roomId}")
-    public ResponseEntity<?> leaveRoom(@PathVariable String roomId) {
-
+    @PostMapping("/kiosk/{roomId}/leave")
+    public ResponseEntity<MeetingResponse> leaveRoom(@PathVariable String roomId) {
+        log.info("Kiosk leaving room: {}", roomId);
         roomService.leaveRoom(roomId);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok(new MeetingResponse("Left room successfully", null));
     }
 
-    /**
-     * WebHook 이벤트 수신
-     */
-    @PostMapping(value = "/livekit/webhook", consumes = "application/webhook+json")
-    public ResponseEntity<String> receiveWebhook(@RequestHeader("Authorization") String authHeader, @RequestBody String body) {
+    @PostMapping("/livekit/webhook")
+    public ResponseEntity<MeetingResponse> receiveWebhook(@RequestHeader("Authorization") String authHeader, @RequestBody String body) {
+        log.info("Received webhook event");
         try {
             roomService.handleWebhook(authHeader, body);
-            return ResponseEntity.ok("Webhook processed successfully");
+            return ResponseEntity.ok(new MeetingResponse("Webhook processed successfully", null));
         } catch (RuntimeException e) {
-            return ResponseEntity.status(500).body("Failed to process webhook: " + e.getMessage());
+            log.error("Error processing webhook", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new MeetingResponse("Failed to process webhook", null));
         }
     }
 }
