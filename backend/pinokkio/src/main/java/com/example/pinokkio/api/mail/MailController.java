@@ -14,10 +14,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.io.UnsupportedEncodingException;
 
@@ -25,6 +22,7 @@ import java.io.UnsupportedEncodingException;
 @RestController
 @RequiredArgsConstructor
 @Tag(name = "Mail Controller", description = "메일 인증 관련 API")
+@RequestMapping("/api/mail")
 public class MailController {
 
     private final MailService mailService;
@@ -35,7 +33,7 @@ public class MailController {
             @ApiResponse(responseCode = "500", description = "메일 전송 실패",
                     content = @Content(schema = @Schema(implementation = String.class)))
     })
-    @PostMapping("/api/mail/send")
+    @PostMapping("/send")
     public ResponseEntity<?> sendMail(@RequestBody MailRequest mailRequest) {
         try {
             String authNum = mailService.sendEmail(mailRequest.getEmail());
@@ -52,10 +50,8 @@ public class MailController {
             @ApiResponse(responseCode = "200", description = "인증 번호 확인 완료",
                     content = @Content(schema = @Schema(implementation = MailAuthResponse.class)))
     })
-    @GetMapping("/api/mail/check-auth")
+    @PostMapping("/check-auth")
     public ResponseEntity<MailAuthResponse> checkAuth(
-            @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "인증 번호 확인 요청", required = true,
-                    content = @Content(schema = @Schema(implementation = MailAuthRequest.class)))
             @RequestBody MailAuthRequest mailAuthRequest) {
         boolean isAuthenticated = mailService.isAuthenticated(mailAuthRequest.getAuthNum());
         return ResponseEntity.ok(new MailAuthResponse(isAuthenticated));

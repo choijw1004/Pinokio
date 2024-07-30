@@ -11,8 +11,8 @@ import org.springframework.context.annotation.Configuration;
 
 @OpenAPIDefinition(
         info = @Info(
-                title = "API Docs",
-                description = "Description",
+                title = "Pinokio API Docs",
+                description = "Pinokio 서비스의 API 명세서",
                 version = "v1"
         )
 )
