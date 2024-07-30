@@ -34,4 +34,8 @@ public class Room extends BaseEntity {
         this.teller = teller;
         this.numberOfCustomers = numberOfCustomers;
     }
+
+    public void updateNumberOfCustomers(Integer numberOfCustomers) {
+        this.numberOfCustomers = numberOfCustomers;
+    }
 }
