@@ -23,7 +23,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/api")
-@Tag(name = "Category Controller", description = "카테고리 CRD API")
+@Tag(name = "Category Controller", description = "카테고리 관련 API")
 public class CategoryController {
 
     private final CategoryService categoryService;
