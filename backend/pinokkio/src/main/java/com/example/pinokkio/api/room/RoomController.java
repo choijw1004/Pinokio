@@ -97,7 +97,7 @@ public class RoomController {
      * 고객 - 상담 요청 전송
      */
     @PreAuthorize("hasRole('ROLE_KIOSK')")
-    @PostMapping("/{kioskId}")
+    @PostMapping("/enter/{kioskId}")
     public ResponseEntity<String> messageAllRooms(@PathVariable String kioskId) {
         if (kioskId == null) {
             return ResponseEntity.badRequest().body("Message and kioskId are required");

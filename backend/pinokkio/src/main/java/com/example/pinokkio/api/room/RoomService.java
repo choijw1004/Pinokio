@@ -21,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Function;
 
@@ -60,18 +61,18 @@ public class RoomService {
         // 상담원 존재 여부 검증
         Teller teller = getEntityById(tellerRepository, tellerId, TellerNotFoundException::new);
 
-        // 방 생성 후 DB 저장
-        Room room = Room.builder().
-                teller(teller).
-                build();
-        roomRepository.save(room);
+        // 기존 방 존재 여부 확인 및 토큰 발급
+        return roomRepository.findByTeller(teller)
+                .map(room -> createToken(room.getRoomId().toString(), tellerId))
+                .orElseGet(() -> {
+                    Room newRoom =  Room.builder()
+                            .teller(teller)
+                            .numberOfCustomers(0)
+                            .build();
+                    roomRepository.save(newRoom);
 
-        // 토큰 발급
-        String roomId = room.getRoomId().toString();
-        AccessToken roomToken = createToken(roomId, tellerId);
-        log.info("[createRoom] roomId: {}, tellerId: {}", roomId, tellerId);
-
-        return roomToken;
+                    return createToken(newRoom.getRoomId().toString(), tellerId);
+                });
     }
 
     /**
