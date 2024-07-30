@@ -1,6 +1,6 @@
 package com.example.pinokkio.config;
 
-import com.example.pinokkio.api.room.RoomController;
+import com.example.pinokkio.api.room.WebSocketService;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
@@ -14,10 +14,10 @@ import org.springframework.web.socket.handler.TextWebSocketHandler;
 @EnableWebSocket
 public class WebSocketConfig implements WebSocketConfigurer {
 
-    private final RoomController roomController;
+    private final WebSocketService webSocketService;
 
-    public WebSocketConfig(RoomController roomController) {
-        this.roomController = roomController;
+    public WebSocketConfig(WebSocketService webSocketService) {
+        this.webSocketService = webSocketService;
     }
 
     @Override
@@ -28,20 +28,19 @@ public class WebSocketConfig implements WebSocketConfigurer {
     private class CustomWebSocketHandler extends TextWebSocketHandler {
         @Override
         public void afterConnectionEstablished(WebSocketSession session) throws Exception {
-            // 연결이 설정되었을 때 수행할 작업
             System.out.println("New WebSocket connection: " + session.getId());
+            webSocketService.addSession(session);
         }
 
         @Override
         protected void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
-            // 텍스트 메시지 처리
-            roomController.handleWebSocketMessage(session, message);
+            webSocketService.handleMessage(session, message);
         }
 
         @Override
         public void afterConnectionClosed(WebSocketSession session, CloseStatus status) throws Exception {
-            // 연결이 종료되었을 때 수행할 작업
             System.out.println("WebSocket connection closed: " + session.getId() + ", status: " + status);
+            webSocketService.removeSession(session);
         }
     }
 }
