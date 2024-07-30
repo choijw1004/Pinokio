@@ -49,29 +49,31 @@ public class SecurityConfig {
 
     private final String[] GET_PERMIT_API_URL = {
             "/",
-            "/refresh",
+            "/api/refresh",
             "/api/mail/check-auth"
     };
 
     private final String[] POST_PERMIT_API_URL = {
-            "/register/pos",
-            "/register/teller",
-            "/login/**",
+            "/api/register/pos",
+            "/api/register/teller",
+            "/api/login/**",
             "/api/mail/send",
-            "/refresh",
-            "/users/auth/token/"
+            "/api/refresh",
+            "/api/users/auth/token/",
     };
 
     private final String[] POS_API_URL = {
-            "/pos/**"
+            "/api/pos/**"
     };
 
     private final String[] TELLER_API_URL = {
-            "/tellers/**"
+            "/api/tellers/**",
+            "/api/meeting/teller"
     };
 
     private final String[] KIOSK_API_URL = {
-            "/kiosk/**"
+            "/api/kiosk/**",
+            "/api/meeting/kiosk"
     };
 
 
