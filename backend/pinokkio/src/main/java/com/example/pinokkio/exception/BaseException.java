@@ -1,8 +1,11 @@
 package com.example.pinokkio.exception;
 
+import lombok.Getter;
+
 import java.util.HashMap;
 import java.util.Map;
 
+@Getter
 public class BaseException extends RuntimeException {
     private final String code;
     private Map<String, String> errors = new HashMap<>();
@@ -18,11 +21,4 @@ public class BaseException extends RuntimeException {
         this.errors = errors;
     }
 
-    public String getCode() {
-        return this.code;
-    }
-
-    public Map<String, String> getErrors() {
-        return this.errors;
-    }
 }

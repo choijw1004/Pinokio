@@ -3,11 +3,11 @@ package com.example.pinokkio.api.category;
 
 import com.example.pinokkio.api.pos.Pos;
 import com.example.pinokkio.api.pos.PosRepository;
-import com.example.pinokkio.exception.notFound.CategoryNotFoundException;
+
 import java.util.List;
 import java.util.UUID;
 
-import com.example.pinokkio.exception.notFound.PosNotFoundException;
+import com.example.pinokkio.exception.domain.pos.PosNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;

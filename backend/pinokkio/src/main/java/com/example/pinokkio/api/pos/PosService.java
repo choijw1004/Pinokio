@@ -1,7 +1,7 @@
 package com.example.pinokkio.api.pos;
 
 import com.example.pinokkio.api.pos.dto.response.PosResponse;
-import com.example.pinokkio.exception.notFound.PosEmailNotFoundException;
+import com.example.pinokkio.exception.domain.pos.PosEmailNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

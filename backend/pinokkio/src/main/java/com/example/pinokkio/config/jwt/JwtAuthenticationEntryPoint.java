@@ -1,6 +1,6 @@
 package com.example.pinokkio.config.jwt;
 
-import com.example.pinokkio.exception.auth.NotAuthenticatedException;
+import com.example.pinokkio.exception.domain.auth.ExpiredTokenException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
@@ -32,7 +32,7 @@ public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             response.setContentType("application/text");
             response.setCharacterEncoding("utf-8");
-            response.getWriter().print(new NotAuthenticatedException().getMessage());
+            response.getWriter().print(new ExpiredTokenException().getMessage());
         } else {
             resolver.resolveException(request, response, null, (Exception) request.getAttribute("exception"));
         }

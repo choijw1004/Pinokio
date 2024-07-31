@@ -3,7 +3,7 @@ package com.example.pinokkio.api.item.image;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.model.ObjectMetadata;
-import com.example.pinokkio.exception.badInput.ImageBadInputException;
+import com.example.pinokkio.exception.domain.image.ImageBadInputException;
 import java.io.IOException;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
