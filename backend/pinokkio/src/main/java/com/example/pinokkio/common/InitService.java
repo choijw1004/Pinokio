@@ -15,6 +15,7 @@ import com.example.pinokkio.api.teller.TellerRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.event.ContextRefreshedEvent;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.Map;
@@ -22,6 +23,8 @@ import java.util.Map;
 @Service
 @RequiredArgsConstructor
 public class InitService implements ApplicationListener<ContextRefreshedEvent> {
+
+    private final PasswordEncoder passwordEncoder;
 
     private static final Map<String, String> POS_NAME_TO_EMAIL_DOMAIN = Map.of(
             "맥도날드", "mcdonalds",
@@ -45,196 +48,196 @@ public class InitService implements ApplicationListener<ContextRefreshedEvent> {
     @Override
     public void onApplicationEvent(ContextRefreshedEvent event) {
         // Code Repository 데이터 추가
-//        Code mcdonaldsCode = codeRepository.save(new Code("맥도날드"));
-//        Code lotteriaCode = codeRepository.save(new Code("롯데리아"));
-//        Code kfcCode = codeRepository.save(new Code("KFC"));
-//        Code momstouchCode = codeRepository.save(new Code("맘스터치"));
-//        Code burgerkingCode = codeRepository.save(new Code("버거킹"));
-//        Code starbucksCode = codeRepository.save(new Code("스타벅스"));
-//        Code ediyaCode = codeRepository.save(new Code("이디야"));
-//        Code parisBaguetteCode = codeRepository.save(new Code("파리바게뜨"));
-//        Code dunkinCode = codeRepository.save(new Code("던킨"));
-//
-//        // Pos Repository 데이터 추가
-//        Pos mcdonalds = posRepository.save(Pos.builder()
-//                .code(mcdonaldsCode)
-//                .email("mcdonalds@example.com")
-//                .password("맥도날드")
-//                .build());
-//
-//        Pos lotteria = posRepository.save(Pos.builder()
-//                .code(lotteriaCode)
-//                .email("lotteria@example.com")
-//                .password("롯데리아")
-//                .build());
-//
-//        Pos kfc = posRepository.save(Pos.builder()
-//                .code(kfcCode)
-//                .email("kfc@example.com")
-//                .password("KFC")
-//                .build());
-//
-//        Pos momstouch = posRepository.save(Pos.builder()
-//                .code(momstouchCode)
-//                .email("momstouch@example.com")
-//                .password("맘스터치")
-//                .build());
-//
-//        Pos burgerking = posRepository.save(Pos.builder()
-//                .code(burgerkingCode)
-//                .email("burgerking@example.com")
-//                .password("버거킹")
-//                .build());
-//
-//        Pos starbucks = posRepository.save(Pos.builder()
-//                .code(starbucksCode)
-//                .email("starbucks@example.com")
-//                .password("스타벅스")
-//                .build());
-//
-//        Pos ediya = posRepository.save(Pos.builder()
-//                .code(ediyaCode)
-//                .email("ediya@example.com")
-//                .password("이디야")
-//                .build());
-//
-//        Pos parisBaguette = posRepository.save(Pos.builder()
-//                .code(parisBaguetteCode)
-//                .email("parisbaguette@example.com")
-//                .password("파리바게뜨")
-//                .build());
-//
-//        Pos dunkin = posRepository.save(Pos.builder()
-//                .code(dunkinCode)
-//                .email("dunkin@example.com")
-//                .password("던킨")
-//                .build());
-//
-//        // Category Repository 데이터 추가
-//        Category drinksMcdonalds = categoryRepository.save(Category.builder()
-//                .pos(mcdonalds)
-//                .name("음료")
-//                .build());
-//
-//        Category snacksMcdonalds = categoryRepository.save(Category.builder()
-//                .pos(mcdonalds)
-//                .name("간식")
-//                .build());
-//
-//        Category burgersMcdonalds = categoryRepository.save(Category.builder()
-//                .pos(mcdonalds)
-//                .name("버거")
-//                .build());
-//
-//        Category dessertsMcdonalds = categoryRepository.save(Category.builder()
-//                .pos(mcdonalds)
-//                .name("디저트")
-//                .build());
-//
-//        Category snacksLotteria = categoryRepository.save(Category.builder()
-//                .pos(lotteria)
-//                .name("간식")
-//                .build());
-//
-//        Category burgersKfc = categoryRepository.save(Category.builder()
-//                .pos(kfc)
-//                .name("버거")
-//                .build());
-//
-//        Category snacksKfc = categoryRepository.save(Category.builder()
-//                .pos(kfc)
-//                .name("간식")
-//                .build());
-//
-//        Category dessertsMomstouch = categoryRepository.save(Category.builder()
-//                .pos(momstouch)
-//                .name("디저트")
-//                .build());
-//
-//        Category burgersBurgerking = categoryRepository.save(Category.builder()
-//                .pos(burgerking)
-//                .name("버거")
-//                .build());
-//
-//        Category coffeeStarbucks = categoryRepository.save(Category.builder()
-//                .pos(starbucks)
-//                .name("커피")
-//                .build());
-//
-//        Category dessertsStarbucks = categoryRepository.save(Category.builder()
-//                .pos(starbucks)
-//                .name("디저트")
-//                .build());
-//
-//        Category coffeeEdiya = categoryRepository.save(Category.builder()
-//                .pos(ediya)
-//                .name("커피")
-//                .build());
-//
-//        Category dessertsEdiya = categoryRepository.save(Category.builder()
-//                .pos(ediya)
-//                .name("디저트")
-//                .build());
-//
-//        Category bakeryParisBaguette = categoryRepository.save(Category.builder()
-//                .pos(parisBaguette)
-//                .name("베이커리")
-//                .build());
-//
-//        Category dessertsParisBaguette = categoryRepository.save(Category.builder()
-//                .pos(parisBaguette)
-//                .name("디저트")
-//                .build());
-//
-//        Category snacksDunkin = categoryRepository.save(Category.builder()
-//                .pos(dunkin)
-//                .name("간식")
-//                .build());
-//
-//        Category coffeeDunkin = categoryRepository.save(Category.builder()
-//                .pos(dunkin)
-//                .name("커피")
-//                .build());
-//
-//        // Kiosk Repository 데이터 추가
-//        addKiosks(mcdonalds);
-//        addKiosks(lotteria);
-//        addKiosks(kfc);
-//        addKiosks(momstouch);
-//        addKiosks(burgerking);
-//        addKiosks(starbucks);
-//        addKiosks(ediya);
-//        addKiosks(parisBaguette);
-//        addKiosks(dunkin);
-//
-//        // Teller Repository 데이터 추가
-//        addTellers(mcdonalds);
-//        addTellers(lotteria);
-//        addTellers(kfc);
-//        addTellers(momstouch);
-//        addTellers(burgerking);
-//        addTellers(starbucks);
-//        addTellers(ediya);
-//        addTellers(parisBaguette);
-//        addTellers(dunkin);
-//
-//        // Item Repository 데이터 추가
-//        addItems(mcdonalds, drinksMcdonalds, snacksMcdonalds, burgersMcdonalds, dessertsMcdonalds);
-//        addItems(lotteria, snacksLotteria);
-//        addItems(kfc, burgersKfc, snacksKfc);
-//        addItems(momstouch, dessertsMomstouch);
-//        addItems(burgerking, burgersBurgerking);
-//        addItems(starbucks, coffeeStarbucks, dessertsStarbucks);
-//        addItems(ediya, coffeeEdiya, dessertsEdiya);
-//        addItems(parisBaguette, bakeryParisBaguette, dessertsParisBaguette);
-//        addItems(dunkin, snacksDunkin, coffeeDunkin);
+        Code mcdonaldsCode = codeRepository.save(new Code("맥도날드"));
+        Code lotteriaCode = codeRepository.save(new Code("롯데리아"));
+        Code kfcCode = codeRepository.save(new Code("KFC"));
+        Code momstouchCode = codeRepository.save(new Code("맘스터치"));
+        Code burgerkingCode = codeRepository.save(new Code("버거킹"));
+        Code starbucksCode = codeRepository.save(new Code("스타벅스"));
+        Code ediyaCode = codeRepository.save(new Code("이디야"));
+        Code parisBaguetteCode = codeRepository.save(new Code("파리바게뜨"));
+        Code dunkinCode = codeRepository.save(new Code("던킨"));
+
+        // Pos Repository 데이터 추가
+        Pos mcdonalds = posRepository.save(Pos.builder()
+                .code(mcdonaldsCode)
+                .email("mcdonalds@example.com")
+                .password(passwordEncoder.encode("맥도날드"))
+                .build());
+
+        Pos lotteria = posRepository.save(Pos.builder()
+                .code(lotteriaCode)
+                .email("lotteria@example.com")
+                .password(passwordEncoder.encode("롯데리아"))
+                .build());
+
+        Pos kfc = posRepository.save(Pos.builder()
+                .code(kfcCode)
+                .email("kfc@example.com")
+                .password(passwordEncoder.encode("KFC"))
+                .build());
+
+        Pos momstouch = posRepository.save(Pos.builder()
+                .code(momstouchCode)
+                .email("momstouch@example.com")
+                .password(passwordEncoder.encode("맘스터치"))
+                .build());
+
+        Pos burgerking = posRepository.save(Pos.builder()
+                .code(burgerkingCode)
+                .email("burgerking@example.com")
+                .password(passwordEncoder.encode("버거킹"))
+                .build());
+
+        Pos starbucks = posRepository.save(Pos.builder()
+                .code(starbucksCode)
+                .email("starbucks@example.com")
+                .password(passwordEncoder.encode("스타벅스"))
+                .build());
+
+        Pos ediya = posRepository.save(Pos.builder()
+                .code(ediyaCode)
+                .email("ediya@example.com")
+                .password(passwordEncoder.encode("이디야"))
+                .build());
+
+        Pos parisBaguette = posRepository.save(Pos.builder()
+                .code(parisBaguetteCode)
+                .email("parisbaguette@example.com")
+                .password(passwordEncoder.encode("파리바게뜨"))
+                .build());
+
+        Pos dunkin = posRepository.save(Pos.builder()
+                .code(dunkinCode)
+                .email("dunkin@example.com")
+                .password(passwordEncoder.encode("던킨"))
+                .build());
+
+        // Category Repository 데이터 추가
+        Category drinksMcdonalds = categoryRepository.save(Category.builder()
+                .pos(mcdonalds)
+                .name("음료")
+                .build());
+
+        Category snacksMcdonalds = categoryRepository.save(Category.builder()
+                .pos(mcdonalds)
+                .name("간식")
+                .build());
+
+        Category burgersMcdonalds = categoryRepository.save(Category.builder()
+                .pos(mcdonalds)
+                .name("버거")
+                .build());
+
+        Category dessertsMcdonalds = categoryRepository.save(Category.builder()
+                .pos(mcdonalds)
+                .name("디저트")
+                .build());
+
+        Category snacksLotteria = categoryRepository.save(Category.builder()
+                .pos(lotteria)
+                .name("간식")
+                .build());
+
+        Category burgersKfc = categoryRepository.save(Category.builder()
+                .pos(kfc)
+                .name("버거")
+                .build());
+
+        Category snacksKfc = categoryRepository.save(Category.builder()
+                .pos(kfc)
+                .name("간식")
+                .build());
+
+        Category dessertsMomstouch = categoryRepository.save(Category.builder()
+                .pos(momstouch)
+                .name("디저트")
+                .build());
+
+        Category burgersBurgerking = categoryRepository.save(Category.builder()
+                .pos(burgerking)
+                .name("버거")
+                .build());
+
+        Category coffeeStarbucks = categoryRepository.save(Category.builder()
+                .pos(starbucks)
+                .name("커피")
+                .build());
+
+        Category dessertsStarbucks = categoryRepository.save(Category.builder()
+                .pos(starbucks)
+                .name("디저트")
+                .build());
+
+        Category coffeeEdiya = categoryRepository.save(Category.builder()
+                .pos(ediya)
+                .name("커피")
+                .build());
+
+        Category dessertsEdiya = categoryRepository.save(Category.builder()
+                .pos(ediya)
+                .name("디저트")
+                .build());
+
+        Category bakeryParisBaguette = categoryRepository.save(Category.builder()
+                .pos(parisBaguette)
+                .name("베이커리")
+                .build());
+
+        Category dessertsParisBaguette = categoryRepository.save(Category.builder()
+                .pos(parisBaguette)
+                .name("디저트")
+                .build());
+
+        Category snacksDunkin = categoryRepository.save(Category.builder()
+                .pos(dunkin)
+                .name("간식")
+                .build());
+
+        Category coffeeDunkin = categoryRepository.save(Category.builder()
+                .pos(dunkin)
+                .name("커피")
+                .build());
+
+        // Kiosk Repository 데이터 추가
+        addKiosks(mcdonalds);
+        addKiosks(lotteria);
+        addKiosks(kfc);
+        addKiosks(momstouch);
+        addKiosks(burgerking);
+        addKiosks(starbucks);
+        addKiosks(ediya);
+        addKiosks(parisBaguette);
+        addKiosks(dunkin);
+
+        // Teller Repository 데이터 추가
+        addTellers(mcdonalds);
+        addTellers(lotteria);
+        addTellers(kfc);
+        addTellers(momstouch);
+        addTellers(burgerking);
+        addTellers(starbucks);
+        addTellers(ediya);
+        addTellers(parisBaguette);
+        addTellers(dunkin);
+
+        // Item Repository 데이터 추가
+        addItems(mcdonalds, drinksMcdonalds, snacksMcdonalds, burgersMcdonalds, dessertsMcdonalds);
+        addItems(lotteria, snacksLotteria);
+        addItems(kfc, burgersKfc, snacksKfc);
+        addItems(momstouch, dessertsMomstouch);
+        addItems(burgerking, burgersBurgerking);
+        addItems(starbucks, coffeeStarbucks, dessertsStarbucks);
+        addItems(ediya, coffeeEdiya, dessertsEdiya);
+        addItems(parisBaguette, bakeryParisBaguette, dessertsParisBaguette);
+        addItems(dunkin, snacksDunkin, coffeeDunkin);
     }
 
     private void addKiosks(Pos pos) {
         String domain = POS_NAME_TO_EMAIL_DOMAIN.get(pos.getCode().getName());
         for (int i = 1; i <= 3; i++) {
             String email = "kiosk" + i + "@" + domain + ".com";
-            kioskRepository.save(new Kiosk(pos, email, pos.getPassword()));
+            kioskRepository.save(new Kiosk(pos, email, passwordEncoder.encode(pos.getCode().getName())));
         }
     }
 
@@ -242,7 +245,7 @@ public class InitService implements ApplicationListener<ContextRefreshedEvent> {
         String domain = POS_NAME_TO_EMAIL_DOMAIN.get(pos.getCode().getName());
         for (int i = 1; i <= 4; i++) {
             String email = "teller" + i + "@" + domain + ".com";
-            tellerRepository.save(new Teller(pos.getCode(), email, pos.getPassword(), 10000));
+            tellerRepository.save(new Teller(pos.getCode(), email, passwordEncoder.encode(pos.getCode().getName()), 10000));
         }
     }
 

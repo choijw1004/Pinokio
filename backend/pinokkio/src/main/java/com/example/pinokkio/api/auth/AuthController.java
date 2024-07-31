@@ -52,7 +52,7 @@ public class AuthController {
         return new ResponseEntity<>(HttpStatus.CREATED);
     }
 
-    @Operation(summary = "키오스크 등록", description = "POS 사용자가 키오스크를 등록")
+    @Operation(summary = "키오스크 등록", description = "POS 사용자가 키오스크를 등록,  ROLE_POS인 사용자가 Header에 Access Token을 가진 경우만 접근가능")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "키오스크 등록 성공"),
             @ApiResponse(responseCode = "400", description = "잘못된 요청"),
@@ -65,7 +65,7 @@ public class AuthController {
         return new ResponseEntity<>(HttpStatus.CREATED);
     }
 
-    @Operation(summary = "POS 로그인", description = "POS 사용자 로그인을 처리, ROLE_POS인 사용자가 Header에 Access Token을 가진 경우만 접근가능")
+    @Operation(summary = "POS 로그인", description = "POS 사용자 로그인을 처리")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "OK",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = AuthToken.class))
