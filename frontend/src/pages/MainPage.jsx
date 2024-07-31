@@ -4,7 +4,7 @@ import styled from 'styled-components';
 import KioskMain from '../assets/images/main/kioskmain.png';
 import KioskSenior from '../assets/images/main/kiosksenior.png';
 import PosMain from '../assets/images/main/posmain.png';
-import Logo from '../components/common/Logo';
+import LOGO from '../components/common/LOGO';
 
 const MainContainer = styled.div`
   width: 100%;
@@ -192,7 +192,7 @@ function MainPage() {
   return (
     <MainContainer>
       <LinksContainer>
-        <Logo />
+        <LOGO />
         <Links>
           <Link onClick={goPosLogin}>포스로그인</Link>
           <Link onClick={goKioskLogin}>키오스크로그인</Link>

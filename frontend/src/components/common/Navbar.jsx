@@ -2,7 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import MenuButton from '../../assets/images/MenuButton.png'; // 메뉴 버튼 이미지 경로
 import CloseButton from '../../assets/images/CloseButton.png'; // 닫기 버튼 이미지 경로
-import KioskNavbar from './Logo';
+import LOGO from './LOGO';
 import styled from 'styled-components';
 
 const NavbarContainer = styled.nav`
@@ -78,7 +78,7 @@ function Navbar({ items, isOpen, toggleNavbar }) {
         ))}
       </NavbarMenu>
       <LogoLocation>
-        <KioskNavbar />
+        <LOGO />
       </LogoLocation>
     </NavbarContainer>
   );

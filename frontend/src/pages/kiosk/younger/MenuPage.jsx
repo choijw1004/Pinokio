@@ -9,6 +9,7 @@ const KioskHeader = styled.div`
   border-bottom: 1px #d9d9d9 solid;
   background-color: white;
   width: 100%;
+  height: 5rem;
 `;
 
 const Logo = styled.div`

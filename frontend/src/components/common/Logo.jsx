@@ -1,7 +1,7 @@
 import React from 'react';
 import styled from 'styled-components';
 
-const Logo = styled.div`
+const LogoStyle = styled.div`
   font-size: 40px;
   color: #7392ff;
   font-family: 'Alfa Slab One', serif;
@@ -10,7 +10,7 @@ const Logo = styled.div`
 `;
 
 function LOGO({ onClick }) {
-  return <Logo onClick={onClick}>Pinokio</Logo>;
+  return <LogoStyle onClick={onClick}>Pinokio</LogoStyle>;
 }
 
 export default LOGO;
