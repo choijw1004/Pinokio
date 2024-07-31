@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { Routes, Route, BrowserRouter as Router, Navigate, Outlet } from 'react-router-dom';
 
+import MainPage from '../pages/MainPage';
+
 import Login from '../pages/loginsignup/Login';
 import SignUp from '../pages/loginsignup/SignUp';
 import FindPassword1 from '../pages/loginsignup/FindPassword1';
@@ -30,10 +32,11 @@ function App() {
   });
 
   return (
-    <div className="App">
+    <>
       <Router>
         <Routes>
-          <Route path="/" element={<Login />} />
+          <Route path="/" element={<MainPage />} />
+          <Route path="login" element={<Login />} />
           <Route path="signup" element={<SignUp />} />
           <Route path="findpassword1" element={<FindPassword1 />} />
           <Route path="findpassword2" element={<FindPassword2 />} />
@@ -48,7 +51,7 @@ function App() {
           </Route>
         </Routes>
       </Router>
-    </div>
+    </>
   );
 }
 

@@ -5,11 +5,40 @@ import MenuMain from '../../../components/kiosk/MenuMain';
 import Cart from '../../../components/kiosk/Cart';
 import MenuModal from '../../../components/kiosk/MenuModal';
 
+const KioskHeader = styled.div`
+  border-bottom: 1px #d9d9d9 solid;
+  background-color: white;
+  width: 100%;
+`;
+
+const Logo = styled.div`
+  font-size: 3vh;
+  color: #7392ff;
+  font-family: 'Alfa Slab One', serif;
+  font-weight: 400;
+  font-style: normal;
+  padding-left: 1vw;
+  padding-top: 1vh;
+`;
+
 const MenuPageStyle = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
+  background-color: #efefef;
   /* align-items: center; */
+`;
+
+const KioskBody = styled.div`
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  overflow: scroll;
+  height: 30rem;
+  &::-webkit-scrollbar {
+    display: none;
+  }
 `;
 
 function MenuPage() {
@@ -47,16 +76,21 @@ function MenuPage() {
 
   return (
     <MenuPageStyle>
-      <MenuCategory
-        categories={categories}
-        selectedCategory={selectedCategory}
-        setSelectedCategory={setSelectedCategory}
-      />
-      <MenuMain
-        selectedCategory={selectedCategory}
-        setSelectedMenu={setSelectedMenu}
-        setModal={setModal}
-      />
+      <KioskHeader>
+        <Logo>Pinokio</Logo>
+        <MenuCategory
+          categories={categories}
+          selectedCategory={selectedCategory}
+          setSelectedCategory={setSelectedCategory}
+        />
+      </KioskHeader>
+      <KioskBody>
+        <MenuMain
+          selectedCategory={selectedCategory}
+          setSelectedMenu={setSelectedMenu}
+          setModal={setModal}
+        />
+      </KioskBody>
       <Cart cartItems={cartItems} setCartItems={setCartItems} />
 
       {modal && (

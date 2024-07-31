@@ -6,8 +6,8 @@ const MMC = styled.div`
   display: flex;
   flex-direction: column;
   background: white;
-  border-radius: 5px;
-  border: 1px solid;
+  border: 1px solid #c7c7c7;
+  margin: 0.5vh 0.2vw;
   /* font-family: 'PeoplefirstNeatLoudTTF';
   margin: 10px;
   @font-face {
@@ -21,20 +21,22 @@ const MMC = styled.div`
 
 const Image = styled.img`
   width: 100%;
+  height: 100%;
+  object-fit: cover;
 `;
 
 const MenuContents = styled.div`
-  padding-left: 20px;
+  padding-left: 1vw;
+  font-family: var(--font-CafeOhsquareAir);
 `;
 const MenuName = styled.div`
-  font-size: 20px;
+  font-size: 0.7rem;
 `;
 const MenuNameEng = styled.div`
-  font-size: 10px;
+  font-size: 0.3rem;
 `;
 const MenuPrice = styled.div`
-  font-size: 15px;
-  font-weight: Bold;
+  font-size: 1rem;
 `;
 
 function MenuMainCard({ menu, setSelectedMenu, setModal }) {

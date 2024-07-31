@@ -1,5 +1,5 @@
 import React from 'react';
-import { Router, Route, Routes, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import Button from '../../../components/common/Button';
 
 function PaymentPage() {

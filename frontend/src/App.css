@@ -9,3 +9,12 @@
   font-style: normal;
   font-weight: 400;
 }
+
+@font-face {
+  font-family: 'CafeOhsquareAir';
+  src: url('./assets/fonts/Cafe24OhsquareAir-v2.0.woff') format('woff');
+}
+
+:root {
+  --font-CafeOhsquareAir: 'CafeOhsquareAir';
+}

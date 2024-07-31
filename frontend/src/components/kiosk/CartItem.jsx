@@ -5,22 +5,46 @@ const CI = styled.div`
   display: flex;
   flex-direction: row;
   justify-content: space-between;
+  align-items: center;
   background: white;
-  height: 30px;
-  margin: 5px;
-  font-size: 30px;
+  height: 2rem;
+  font-size: 0.7rem;
+
+  border-bottom: 1px #d9d9d9 solid;
+`;
+
+const CartItemName = styled.div`
+  margin: 0 1rem;
 `;
 
 const CartItemRight = styled.div`
   display: flex;
   flex-direction: row;
+  justify-content: space-between;
+  width: 40%;
+  /* background-color: yellow; */
 `;
 
-const CountButtonsContainer = styled.div``;
+const CountButtonsContainer = styled.div`
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
 
-const CountUpButton = styled.div``;
+  width: 20%;
+  margin-left: 0.5rem;
+`;
+
+const CountUpButton = styled.div`
+  width: 0.5rem;
+`;
 
 const CountDownButton = styled.div``;
+
+const DeleteButton = styled.div`
+  color: #ec7348;
+  margin-right: 0.5rem;
+  line-height: 1rem;
+`;
 
 function CartItem({ item, cartItems, setCartItems }) {
   const changeCount = (count) => {
@@ -37,17 +61,21 @@ function CartItem({ item, cartItems, setCartItems }) {
     }
   };
 
+  const changePriceForm = (price) => {
+    return '₩' + price.toLocaleString();
+  };
+
   return (
     <CI>
-      <text>{item.itemName}</text>
+      <CartItemName>{item.itemName}</CartItemName>
       <CartItemRight>
         <CountButtonsContainer>
           <CountUpButton onClick={() => changeCount(+1)}>+</CountUpButton>
           <text>{item.itemCount}</text>
           <CountDownButton onClick={() => changeCount(-1)}>-</CountDownButton>
         </CountButtonsContainer>
-        <button onClick={() => changeCount(-1 * item.itemCount)}>del</button>
-        <text>{item.itemPrice}</text>
+        <text>{changePriceForm(item.itemPrice)}</text>
+        <DeleteButton onClick={() => changeCount(-1 * item.itemCount)}>x</DeleteButton>
       </CartItemRight>
     </CI>
   );

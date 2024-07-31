@@ -1,18 +1,16 @@
 import React, { useEffect, useState } from 'react';
 import MenuMainCard from './MenuMainCard';
 import styled from 'styled-components';
-import ja from 'date-fns/esm/locale/ja/index.js';
 
 const MM = styled.div`
   display: flex;
   flex-direction: column;
   width: 80%;
+  padding-top: 2vh;
 `;
 
 function MenuMain({ selectedCategory, setSelectedMenu, setModal }) {
-  // 현재 보고 있는 페이지를 관리하는 변수
-  const [nowPage, setNowPage] = useState(0);
-  // showSize * showSize 배열로 보여줌
+  // 한 줄에 showSize 개만큼 보여줌
   const [showSize, setShowSize] = useState(3);
   // 메뉴들을 페이지에 맞게 담고 있는 배열
   const [pages, setPages] = useState([]);
@@ -20,7 +18,6 @@ function MenuMain({ selectedCategory, setSelectedMenu, setModal }) {
   useEffect(() => {
     /* 처움 렌더링할 때랑 카테고리 선택할 때마다 getMenu 실행 */
     getMenu();
-    console.log('change menus');
   }, [selectedCategory]);
 
   const makeList = () => {};
@@ -34,27 +31,24 @@ function MenuMain({ selectedCategory, setSelectedMenu, setModal }) {
       list.push(selectedCategory + (i + 1));
     }
 
-    const pagesLength = list.length / (showSize * showSize);
+    const pagesLength = list.length / showSize;
     let pages_temp = [];
     for (let p = 0; p < pagesLength; p++) {
       pages_temp.push([]);
       for (let i = 0; i < showSize; i++) {
-        pages_temp[p].push([]);
-        for (let j = 0; j < showSize; j++) {
-          pages_temp[p][i].push(list[p * pagesLength * showSize * showSize + i * showSize + j]);
-        }
+        pages_temp[p].push(list[p * pagesLength * showSize + i]);
       }
     }
-    console.log(pages_temp);
+    // console.log(pages_temp);
 
     setPages(pages_temp);
-    console.log(pages);
+    // console.log(pages);
   };
 
   return (
     <MM>
-      {pages[nowPage] &&
-        pages[nowPage].map((row, rowIndex) => (
+      {pages &&
+        pages.map((row, rowIndex) => (
           <div key={rowIndex} style={{ display: 'flex', flexDirection: 'row' }}>
             {row.map((menu, colIndex) => (
               <MenuMainCard

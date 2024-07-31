@@ -10,7 +10,6 @@ import styled from 'styled-components';
 import '../../styles/pos/pos.css';
 
 const Content = styled.div`
-  margin-left: ${(props) => (props.isNavbarOpen ? '250px' : '0')};
   transition: margin-left 0.3s ease-in-out;
 `;
 

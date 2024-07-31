@@ -9,12 +9,8 @@ const Logo = styled.div`
   font-style: normal;
 `;
 
-function Navbar({ onClick }) {
-  return (
-    <div>
-      <Logo onClick={onClick}>Pinokio</Logo>
-    </div>
-  );
+function LOGO({ onClick }) {
+  return <Logo onClick={onClick}>Pinokio</Logo>;
 }
 
-export default Navbar;
+export default LOGO;

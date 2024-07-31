@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import styled from 'styled-components';
 
-import Logo from '../../components/common/Logo';
+import Logo from '../../components/common/LOGO';
 import { useDispatch, useSelector } from 'react-redux';
 import { setUser } from '../../features/user/userSlice';
 

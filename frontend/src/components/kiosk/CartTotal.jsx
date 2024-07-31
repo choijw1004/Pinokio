@@ -5,14 +5,24 @@ import Button from '../common/Button';
 
 const CT = styled.div`
   display: flex;
-  flex-direction: row;
-  justify-content: space-between;
-  background: #eeeeee;
-  height: 70px;
-  margin: 5px;
+  flex-direction: column;
+  width: 30%;
 `;
-
-const StyledButton = styled.div``;
+const CTtop = styled.div`
+  display: flex;
+  flex-direction: column;
+  height: 9rem;
+  padding-left: 1rem;
+  padding-top: 1rem;
+`;
+const GoPaymentButton = styled.div`
+  background-color: #7392ff;
+  color: white;
+  height: 3rem;
+  text-align: center;
+  line-height: 3rem;
+  font-size: 1.3rem;
+`;
 
 function CartTotal({ cartItems }) {
   const navigate = useNavigate();
@@ -30,15 +40,21 @@ function CartTotal({ cartItems }) {
     setTotalPrice(ttl);
   };
 
+  const changePriceForm = (price) => {
+    return '₩' + price.toLocaleString();
+  };
+
   const goPayment = () => {
     // 결제 버튼을 누르면 다음 페이지로 이동
     navigate('/kiosk/payment');
   };
   return (
     <CT>
-      <h3>결제 금액</h3>
-      <h4>{totalPrice}</h4>
-      <Button onClick={goPayment} text="결제" />
+      <CTtop>
+        <text>결제 금액</text>
+        <text>{changePriceForm(totalPrice)}</text>
+      </CTtop>
+      <GoPaymentButton onClick={goPayment}>결제하기</GoPaymentButton>
     </CT>
   );
 }

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
-import Logo from '../../components/common/Logo';
+import Logo from '../../components/common/LOGO';
 import { Navigate, useNavigate } from 'react-router-dom';
 
 const LoginWrapper = styled.div`

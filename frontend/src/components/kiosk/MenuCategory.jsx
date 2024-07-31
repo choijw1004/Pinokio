@@ -1,17 +1,20 @@
 import React, { useEffect, useRef, useState } from 'react';
 import MenuCategoryCard from './MenuCategoryCard';
 import styled from 'styled-components';
-import rightArrow from '../../assets/images/icons8-원-셰브론-오른쪽-80.png';
-import leftArrow from '../../assets/images/icons8-원-셰브론-왼쪽-80.png';
 
 const MC = styled.div`
   display: flex;
   flex-direction: row;
+  justify-content: space-between;
   width: 100%;
-  background-color: yellow;
+  background-color: white;
+  padding: 1rem 0;
 `;
 
-const Arrow = styled.img`
+const Arrow = styled.div`
+  text-align: center;
+  font-size: 2vh;
+  color: #cfcfcf;
   width: 10%;
 `;
 const MenuCategoryCards = styled.div`
@@ -27,9 +30,23 @@ function MenuCategory({ categories, selectedCategory, setSelectedCategory }) {
   useEffect(() => {
     leftArrow.current.opacity = '0.5';
   });
+
+  const decreaseNowFirst = () => {
+    if (nowFirst > 0) {
+      setNowFirst(nowFirst - 1);
+    }
+  };
+  const increaseNowFirst = () => {
+    if (nowFirst < categories.length - 1) {
+      setNowFirst(nowFirst + 1);
+    }
+  };
+
   return (
     <MC>
-      <Arrow ref={leftArrow} src={leftArrow} onClick={() => setNowFirst(nowFirst - 1)} />
+      <Arrow ref={leftArrow} onClick={decreaseNowFirst}>
+        {'<'}
+      </Arrow>
       <MenuCategoryCards>
         {categories.slice(nowFirst, nowFirst + showSize).map((cat, index) => (
           <MenuCategoryCard
@@ -42,7 +59,7 @@ function MenuCategory({ categories, selectedCategory, setSelectedCategory }) {
         ))}
       </MenuCategoryCards>
 
-      <Arrow src={rightArrow} onClick={() => setNowFirst(nowFirst + 1)} />
+      <Arrow onClick={increaseNowFirst}>{'>'}</Arrow>
     </MC>
   );
 }

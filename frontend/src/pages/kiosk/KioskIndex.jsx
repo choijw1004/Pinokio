@@ -31,8 +31,10 @@ const KioskOutline = styled.div`
 
 const KioskInline = styled.div`
   background-color: white;
-  height: 95vh;
-  width: 30vw;
+  /* height: 95vh; */
+  height: 35rem;
+  /* width: 30vw; */
+  width: 27rem;
   display: flex;
   flex-direction: column;
   align-items: center;

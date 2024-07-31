@@ -11,11 +11,11 @@ const NavbarContainer = styled.nav`
   left: 0;
   width: 100%;
   background-color: white;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
   z-index: 1000;
   display: flex;
   align-items: center;
   padding: 1rem;
+  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
 `;
 
 const NavbarToggle = styled.img`
@@ -34,7 +34,7 @@ const NavbarMenu = styled.ul`
   width: 250px;
   height: 100%;
   background-color: white;
-  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+  box-shadow: 2px 0 0 rgba(0, 0, 0, 0.1);
   display: flex;
   flex-direction: column;
   transition: left 0.3s ease-in-out;
@@ -56,6 +56,13 @@ const LogoLocation = styled.div`
 `;
 
 function Navbar({ items, isOpen, toggleNavbar }) {
+  // 메뉴 아이템 클릭 시 NavbarMenu를 닫기 위한 핸들러
+  const handleItemClick = () => {
+    if (isOpen) {
+      toggleNavbar();
+    }
+  };
+
   return (
     <NavbarContainer>
       <NavbarToggle
@@ -65,7 +72,7 @@ function Navbar({ items, isOpen, toggleNavbar }) {
       />
       <NavbarMenu isOpen={isOpen}>
         {items.map((item, index) => (
-          <NavbarItem key={index}>
+          <NavbarItem key={index} onClick={handleItemClick}>
             <NavbarLink to={item.path}>{item.text}</NavbarLink>
           </NavbarItem>
         ))}

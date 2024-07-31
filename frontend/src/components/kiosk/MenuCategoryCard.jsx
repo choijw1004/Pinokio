@@ -2,12 +2,13 @@ import React, { useEffect, useRef, useState } from 'react';
 import styled from 'styled-components';
 
 const MCC = styled.div`
-  background-color: ${(props) => (props.cat === props.selectedcat ? 'blue' : null)};
+  background-color: ${(props) => (props.cat === props.selectedcat ? '#7392ff' : null)};
   color: ${(props) => (props.cat === props.selectedcat ? 'white' : null)};
   width: ${(props) => `${100 / props.showSize}%`};
   border-radius: ${(props) => props.borderRadius};
 
-  font-size: 15px;
+  font-size: ${(props) => (props.cat.length >= 7 ? '0.7rem' : '1rem')};
+  font-family: var(--font-CafeOhsquareAir);
   display: flex;
   text-align: center;
   align-items: center;
