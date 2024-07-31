@@ -4,10 +4,10 @@ import com.example.pinokkio.api.kiosk.Kiosk;
 import com.example.pinokkio.api.kiosk.KioskRepository;
 import com.example.pinokkio.api.teller.Teller;
 import com.example.pinokkio.api.teller.TellerRepository;
-import com.example.pinokkio.exception.RoomNotAvailableException;
-import com.example.pinokkio.exception.notFound.KioskNotFoundException;
-import com.example.pinokkio.exception.notFound.RoomNotFoundException;
-import com.example.pinokkio.exception.notFound.TellerNotFoundException;
+import com.example.pinokkio.exception.domain.room.RoomNotAvailableException;
+import com.example.pinokkio.exception.domain.kiosk.KioskNotFoundException;
+import com.example.pinokkio.exception.domain.room.RoomNotFoundException;
+import com.example.pinokkio.exception.domain.teller.TellerNotFoundException;
 import io.livekit.server.*;
 import jakarta.annotation.PostConstruct;
 import livekit.LivekitModels;
@@ -21,7 +21,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Function;
 
@@ -131,7 +130,7 @@ public class RoomService {
         // 방 유효성 검증
         Room room = getEntityById(roomRepository, roomId, RoomNotFoundException::new);
         int currentCustomerCount = room.getNumberOfCustomers();
-        if (currentCustomerCount >= MAX_CAPACITY) {
+        if (room.getNumberOfCustomers() >= MAX_CAPACITY) {
             throw new RoomNotAvailableException(UUID.fromString(roomId));
         }
         room.updateNumberOfCustomers(currentCustomerCount+1);

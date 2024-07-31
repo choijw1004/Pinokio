@@ -1,7 +1,7 @@
 package com.example.pinokkio.config.jwt;
 
-import com.example.pinokkio.exception.auth.ExpiredTokenException;
-import com.example.pinokkio.exception.auth.TokenNotValidException;
+import com.example.pinokkio.exception.domain.auth.ExpiredTokenException;
+import com.example.pinokkio.exception.domain.auth.TokenNotValidException;
 import io.jsonwebtoken.*;
 import jakarta.annotation.PostConstruct;
 import jakarta.servlet.http.HttpServletRequest;

@@ -4,6 +4,7 @@ import com.example.pinokkio.api.auth.dto.request.LoginRequest;
 import com.example.pinokkio.api.auth.dto.request.SignUpKioskRequest;
 import com.example.pinokkio.api.auth.dto.request.SignUpPosRequest;
 import com.example.pinokkio.api.auth.dto.request.SignUpTellerRequest;
+import com.example.pinokkio.exception.ErrorResponse;
 import com.example.pinokkio.exception.base.AuthenticationException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -66,10 +67,11 @@ public class AuthController {
 
     @Operation(summary = "POS 로그인", description = "POS 사용자 로그인을 처리")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "로그인 성공. 응답 헤더의 Authorization에 Bearer 토큰 포함",
-                    content = @Content(schema = @Schema(implementation = AuthToken.class))
+            @ApiResponse(responseCode = "200", description = "OK",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = AuthToken.class))
             ),
-            @ApiResponse(responseCode = "401", description = "인증 실패")
+            @ApiResponse(responseCode = "401", description = "UNAUTHORIZED",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
     })
     @PostMapping("/login/pos")
     public ResponseEntity<?> loginPos(@Validated @RequestBody LoginRequest loginRequest) {
@@ -81,10 +83,11 @@ public class AuthController {
 
     @Operation(summary = "상담원 로그인", description = "상담원 로그인을 처리")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "로그인 성공. 응답 헤더의 Authorization에 Bearer 토큰 포함",
-                    content = @Content(schema = @Schema(implementation = AuthToken.class))
+            @ApiResponse(responseCode = "200", description = "OK",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = AuthToken.class))
             ),
-            @ApiResponse(responseCode = "401", description = "인증 실패")
+            @ApiResponse(responseCode = "401", description = "UNAUTHORIZED",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
     })
     @PostMapping("/login/teller")
     public ResponseEntity<?> loginTeller(@Validated @RequestBody LoginRequest loginRequest) {
@@ -96,10 +99,11 @@ public class AuthController {
 
     @Operation(summary = "키오스크 로그인", description = "키오스크 로그인을 처리")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "로그인 성공. 응답 헤더의 Authorization에 Bearer 토큰 포함",
-                    content = @Content(schema = @Schema(implementation = AuthToken.class))
+            @ApiResponse(responseCode = "200", description = "OK",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = AuthToken.class))
             ),
-            @ApiResponse(responseCode = "401", description = "인증 실패")
+            @ApiResponse(responseCode = "401", description = "UNAUTHORIZED",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
     })
     @PostMapping("/login/kiosk")
     public ResponseEntity<?> loginKiosk(@Validated @RequestBody LoginRequest loginRequest) {
@@ -109,11 +113,11 @@ public class AuthController {
         return new ResponseEntity<>(authToken, httpHeaders, HttpStatus.OK);
     }
 
-    @Operation(summary = "인증 예외 처리", description = "인증 과정에서 발생한 예외를 처리")
-    @ApiResponse(responseCode = "401", description = "인증 실패")
-    @ExceptionHandler(AuthenticationException.class)
-    public ResponseEntity<?> handleAuthenticationException(AuthenticationException e) {
-        log.error("인증 중 오류 발생: ", e);
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(e.getMessage());
-    }
+//    @Operation(summary = "인증 예외 처리", description = "인증 과정에서 발생한 예외를 처리")
+//    @ApiResponse(responseCode = "401", description = "인증 실패")
+//    @ExceptionHandler(AuthenticationException.class)
+//    public ResponseEntity<?> handleAuthenticationException(AuthenticationException e) {
+//        log.error("인증 중 오류 발생: ", e);
+//        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(e.getMessage());
+//    }
 }
