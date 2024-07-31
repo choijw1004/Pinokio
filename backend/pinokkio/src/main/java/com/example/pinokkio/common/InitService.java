@@ -15,6 +15,7 @@ import com.example.pinokkio.api.teller.TellerRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.event.ContextRefreshedEvent;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.Map;
@@ -22,6 +23,8 @@ import java.util.Map;
 @Service
 @RequiredArgsConstructor
 public class InitService implements ApplicationListener<ContextRefreshedEvent> {
+
+    private final PasswordEncoder passwordEncoder;
 
     private static final Map<String, String> POS_NAME_TO_EMAIL_DOMAIN = Map.of(
             "맥도날드", "mcdonalds",
@@ -59,55 +62,55 @@ public class InitService implements ApplicationListener<ContextRefreshedEvent> {
         Pos mcdonalds = posRepository.save(Pos.builder()
                 .code(mcdonaldsCode)
                 .email("mcdonalds@example.com")
-                .password("맥도날드")
+                .password(passwordEncoder.encode("맥도날드"))
                 .build());
 
         Pos lotteria = posRepository.save(Pos.builder()
                 .code(lotteriaCode)
                 .email("lotteria@example.com")
-                .password("롯데리아")
+                .password(passwordEncoder.encode("롯데리아"))
                 .build());
 
         Pos kfc = posRepository.save(Pos.builder()
                 .code(kfcCode)
                 .email("kfc@example.com")
-                .password("KFC")
+                .password(passwordEncoder.encode("KFC"))
                 .build());
 
         Pos momstouch = posRepository.save(Pos.builder()
                 .code(momstouchCode)
                 .email("momstouch@example.com")
-                .password("맘스터치")
+                .password(passwordEncoder.encode("맘스터치"))
                 .build());
 
         Pos burgerking = posRepository.save(Pos.builder()
                 .code(burgerkingCode)
                 .email("burgerking@example.com")
-                .password("버거킹")
+                .password(passwordEncoder.encode("버거킹"))
                 .build());
 
         Pos starbucks = posRepository.save(Pos.builder()
                 .code(starbucksCode)
                 .email("starbucks@example.com")
-                .password("스타벅스")
+                .password(passwordEncoder.encode("스타벅스"))
                 .build());
 
         Pos ediya = posRepository.save(Pos.builder()
                 .code(ediyaCode)
                 .email("ediya@example.com")
-                .password("이디야")
+                .password(passwordEncoder.encode("이디야"))
                 .build());
 
         Pos parisBaguette = posRepository.save(Pos.builder()
                 .code(parisBaguetteCode)
                 .email("parisbaguette@example.com")
-                .password("파리바게뜨")
+                .password(passwordEncoder.encode("파리바게뜨"))
                 .build());
 
         Pos dunkin = posRepository.save(Pos.builder()
                 .code(dunkinCode)
                 .email("dunkin@example.com")
-                .password("던킨")
+                .password(passwordEncoder.encode("던킨"))
                 .build());
 
         // Category Repository 데이터 추가
@@ -234,7 +237,7 @@ public class InitService implements ApplicationListener<ContextRefreshedEvent> {
         String domain = POS_NAME_TO_EMAIL_DOMAIN.get(pos.getCode().getName());
         for (int i = 1; i <= 3; i++) {
             String email = "kiosk" + i + "@" + domain + ".com";
-            kioskRepository.save(new Kiosk(pos, email, pos.getPassword()));
+            kioskRepository.save(new Kiosk(pos, email, passwordEncoder.encode(pos.getCode().getName())));
         }
     }
 
@@ -242,7 +245,7 @@ public class InitService implements ApplicationListener<ContextRefreshedEvent> {
         String domain = POS_NAME_TO_EMAIL_DOMAIN.get(pos.getCode().getName());
         for (int i = 1; i <= 4; i++) {
             String email = "teller" + i + "@" + domain + ".com";
-            tellerRepository.save(new Teller(pos.getCode(), email, pos.getPassword(), 10000));
+            tellerRepository.save(new Teller(pos.getCode(), email, passwordEncoder.encode(pos.getCode().getName()), 10000));
         }
     }
 
