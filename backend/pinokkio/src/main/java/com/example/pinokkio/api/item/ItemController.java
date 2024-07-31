@@ -16,10 +16,12 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.UUID;
@@ -96,7 +98,7 @@ public class ItemController {
                     content = @Content(schema = @Schema(implementation = String.class)))
     })
     @PreAuthorize("hasRole('ROLE_POS')")
-    @GetMapping("/pos/{posId}/items/{categoryId}")
+    @GetMapping("/pos/{posId}/items/categories/{categoryId}")
     public ResponseEntity<GroupItemResponse> getItemsByCategory(
             @Parameter(description = "카테고리 ID", example = "123e4567-e89b-12d3-a456-426614174000")
             @PathVariable String categoryId,
@@ -118,7 +120,7 @@ public class ItemController {
     public ResponseEntity<GroupItemResponse> getItemsByKeyword(
             @Parameter(description = "포스 ID", example = "123e4567-e89b-12d3-a456-426614174000")
             @PathVariable String posId,
-            @RequestBody SearchItemRequest searchItemRequest) {
+            @ModelAttribute SearchItemRequest searchItemRequest) {
         List<Item> items = itemService.getGroupItemsByKeyword(searchItemRequest.getKeyWord(), toUUID(posId));
         return ResponseEntity.ok(new GroupItemResponse(items));
     }
@@ -132,23 +134,23 @@ public class ItemController {
                     content = @Content(schema = @Schema(implementation = String.class)))
     })
     @PreAuthorize("hasRole('ROLE_POS')")
-    @PutMapping("/pos/{posId}/items/{itemId}")
-    public ResponseEntity<Void> updateItem(
+    @PutMapping(value = "/pos/{posId}/items/{itemId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<?> updateItem(
             @Parameter(description = "아이템 ID", example = "123e4567-e89b-12d3-a456-426614174000")
             @PathVariable String itemId,
             @Parameter(description = "포스 ID", example = "123e4567-e89b-12d3-a456-426614174000")
             @PathVariable String posId,
-            @Validated @ModelAttribute UpdateItemRequest updateItemRequest) {
-        Item findItem = itemService.getItem(toUUID(itemId), toUUID(posId));
-        if (findItem.getItemImage() != null) {
-            imageService.deleteImage(findItem.getItemImage());
-        }
-        if (updateItemRequest.getFile() != null) {
-            imageService.uploadImage(updateItemRequest.getFile());
-        }
-        itemService.updateItem(toUUID(itemId), toUUID(posId), updateItemRequest);
+            @RequestPart(value = "file", required = false) MultipartFile file,  // MultipartFile을 따로 받음
+            @RequestPart("updateItemRequest") @Validated UpdateItemRequest updateItemRequest) {  // DTO를 받음
+
+        log.info("price={}", updateItemRequest.getPrice());
+        log.info("amount={}", updateItemRequest.getAmount());
+        log.info("file={}", file);
+
+        itemService.updateItem(toUUID(itemId), toUUID(posId), updateItemRequest, file);
         return ResponseEntity.noContent().build();
     }
+
 
     @Operation(summary = "아이템 삭제", description = "특정 아이템을 삭제")
     @ApiResponses(value = {

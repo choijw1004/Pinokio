@@ -4,6 +4,7 @@ import com.example.pinokkio.api.category.Category;
 import com.example.pinokkio.api.category.CategoryRepository;
 import com.example.pinokkio.api.item.dto.request.ItemRequest;
 import com.example.pinokkio.api.item.dto.request.UpdateItemRequest;
+import com.example.pinokkio.api.item.image.ImageService;
 import com.example.pinokkio.api.pos.Pos;
 import com.example.pinokkio.api.pos.PosRepository;
 import com.example.pinokkio.exception.domain.category.CategoryNotFoundException;
@@ -14,6 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
@@ -28,6 +30,7 @@ public class ItemService {
     private final ItemRepository itemRepository;
     private final PosRepository posRepository;
     private final CategoryRepository categoryRepository;
+    private final ImageService imageService;
 
     /**
      * 특정 포스의 개별 아이템 조회
@@ -86,11 +89,25 @@ public class ItemService {
      * 특정 포스의 아이템 수정
      */
     @Transactional
-    public void updateItem(UUID itemId, UUID posId, UpdateItemRequest updateItemRequest) {
+    public void updateItem(UUID itemId, UUID posId, UpdateItemRequest updateItemRequest, MultipartFile file) {
         Item item = itemRepository
                 .findById(itemId)
                 .orElseThrow(() -> new ItemNotFoundException(itemId));
         validateItem(itemId, posId);
+
+        // 기존 이미지 삭제
+        if (item.getItemImage() != null) {
+            imageService.deleteImage(item.getItemImage());
+        }
+
+        // 새 이미지가 있을 경우 업로드
+        String imageUrl = null;
+        if (file != null && !file.isEmpty()) {
+            imageUrl = imageService.uploadImage(file);
+        }
+
+        // 아이템 정보 업데이트
+        item.updateItemImage(imageUrl); // 새 이미지 URL로 업데이트
         item.updateAmount(updateItemRequest.getAmount());
         item.updatePrice(updateItemRequest.getPrice());
         item.updateName(updateItemRequest.getName());

@@ -34,7 +34,7 @@ public class CommonExceptionHandler {
     }
 
     @ExceptionHandler(AuthorizationException.class)
-    public ResponseEntity<ErrorResponse> badInputExceptionHandler(AuthorizationException e) {
+    public ResponseEntity<ErrorResponse> authorizationExceptionHandler(AuthorizationException e) {
         ErrorResponse errorResponse = ErrorResponse.builder()
                 .code(e.getCode())
                 .message(e.getMessage())
@@ -45,7 +45,7 @@ public class CommonExceptionHandler {
     }
 
     @ExceptionHandler(ConflictException.class)
-    public ResponseEntity<ErrorResponse> badInputExceptionHandler(ConflictException e) {
+    public ResponseEntity<ErrorResponse> conflictExceptionHandler(ConflictException e) {
         ErrorResponse errorResponse = ErrorResponse.builder()
                 .code(e.getCode())
                 .message(e.getMessage())
