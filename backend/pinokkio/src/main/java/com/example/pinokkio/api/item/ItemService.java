@@ -126,6 +126,22 @@ public class ItemService {
         itemRepository.deleteByItemIdAndPosId(itemId, posId);
     }
 
+    @Transactional
+    public void toggleScreenStatus(UUID itemId, UUID posId) {
+        Item item = itemRepository
+                .findById(itemId)
+                .orElseThrow(() -> new ItemNotFoundException(itemId));
+        item.toggleIsScreen();
+    }
+
+    @Transactional
+    public void toggleSoldOutStatus(UUID itemId, UUID posId) {
+        Item item = itemRepository
+                .findById(itemId)
+                .orElseThrow(() -> new ItemNotFoundException(itemId));
+        item.toggleIsSoldOut();
+    }
+
 
     /**
      * 해당 아이템이 입력받은 포스의 아이템인지 검증한다.

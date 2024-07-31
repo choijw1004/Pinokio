@@ -160,12 +160,42 @@ public class ItemController {
     })
     @PreAuthorize("hasRole('ROLE_POS')")
     @DeleteMapping("/pos/{posId}/items/{itemId}")
-    public ResponseEntity<Void> deleteItem(
+    public ResponseEntity<?> deleteItem(
             @Parameter(description = "아이템 ID", example = "123e4567-e89b-12d3-a456-426614174000")
             @PathVariable String itemId,
             @Parameter(description = "포스 ID", example = "123e4567-e89b-12d3-a456-426614174000")
             @PathVariable String posId) {
         itemService.deleteItem(toUUID(itemId), toUUID(posId));
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    }
+
+    /**
+     * isScreen 상태 변경
+     */
+    @Operation(summary = "특정 아이템의 키오스크 표출 여부 TOGGLE", description = "키오스크 표출 여부 TOGGLE")
+    @PreAuthorize("hasRole('ROLE_POS')")
+    @PutMapping("/pos/{posId}/items/{itemId}/toggle/screen")
+    public ResponseEntity<?> toggleScreen(
+            @Parameter(description = "아이템 ID", example = "123e4567-e89b-12d3-a456-426614174000")
+            @PathVariable String itemId,
+            @Parameter(description = "포스 ID", example = "123e4567-e89b-12d3-a456-426614174000")
+            @PathVariable String posId) {
+        itemService.toggleScreenStatus(toUUID(itemId), toUUID(posId));
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    }
+
+    /**
+     * isSoldOut 상태 변경
+     */
+    @Operation(summary = "특정 아이템의 키오스크 품절 여부 TOGGLE", description = "키오스크 품절 여부 TOGGLE")
+    @PreAuthorize("hasRole('ROLE_POS')")
+    @PutMapping("/pos/{posId}/items/{itemId}/toggle/sold-out")
+    public ResponseEntity<?> toggleSoldOut(
+            @Parameter(description = "아이템 ID", example = "123e4567-e89b-12d3-a456-426614174000")
+            @PathVariable String itemId,
+            @Parameter(description = "포스 ID", example = "123e4567-e89b-12d3-a456-426614174000")
+            @PathVariable String posId) {
+        itemService.toggleSoldOutStatus(toUUID(itemId), toUUID(posId));
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
