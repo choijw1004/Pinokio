@@ -4,13 +4,14 @@ import styled from 'styled-components';
 const ToggleButton = styled.div`
   width: 100px;
   height: 50px;
-  background-color: #ccc;
+  background-color: ${({ $toggled }) => ($toggled ? '#4caf50' : '#ccc')}; /* 배경색 변경 */
   border-radius: 30px;
   display: flex;
   align-items: center;
   cursor: pointer;
   padding: 5px;
   box-sizing: border-box;
+  transition: background-color 0.3s;
 `;
 
 const ToggleCircle = styled.div`
@@ -30,7 +31,7 @@ function ToggleSwitch() {
   };
 
   return (
-    <ToggleButton onClick={handleToggle}>
+    <ToggleButton $toggled={toggled} onClick={handleToggle}>
       <ToggleCircle $toggled={toggled} />
     </ToggleButton>
   );

@@ -49,7 +49,7 @@ function Video() {
     setRoom(room);
 
     // Specify the actions when events take place in the room
-    // On every new Track received...
+    // On every new Track received... 아마 새로운 방 열 때 인듯?
     room.on(RoomEvent.TrackSubscribed, (_track, publication, participant) => {
       setRemoteTracks((prev) => [
         ...prev,

@@ -5,6 +5,7 @@ import { Bar } from 'react-chartjs-2';
 import { Chart, registerables } from 'chart.js';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
+import { ko } from 'date-fns/locale';
 
 Chart.register(...registerables);
 
@@ -40,15 +41,74 @@ const Charts = styled.div`
 `;
 
 const DateDisplay = styled.div`
-  padding: 10px;
-  background-color: #f0f0f0;
-  border-radius: 5px;
+  border: 1px solid;
   cursor: pointer;
-  margin: 10px 0;
-  font-weight: bold;
+  width: 475px;
+  padding: 10px;
+  margin-bottom: 5px;
   text-align: center;
-  &:hover {
-    background-color: #e0e0e0;
+  user-select: none;
+  border-radius: 15px;
+`;
+
+const DatePickerWrapper = styled.div`
+  display: flex;
+  gap: 10px;
+
+  /* 전체 레이아웃. 그림자 효과같은 것을 주면 좋다 */
+  .react-datepicker {
+    box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.25);
+  }
+
+  .react-datepicker__month-container {
+  }
+
+  .react-datepicker__header {
+    background-color: white;
+  }
+
+  /* 최상단에 뜨는 연도와 월 */
+  .react-datepicker__current-month {
+  }
+
+  /* 요일들 */
+  .react-datepicker__day-name {
+  }
+
+  /* 날짜들을 담는 레이아웃 */
+  .react-datepicker__month {
+  }
+
+  /* day: 주말 날짜 */
+  .react-datepicker__day:nth-child(1) {
+    color: red; /* 일요일 날짜*/
+  }
+  .react-datepicker__day:nth-child(7) {
+    color: #8685ff; /* 토요일 날짜 */
+  }
+
+  /* day-name: 요일 */
+  .react-datepicker__day-name:nth-child(1) {
+    color: #ff5555; /* 일요일 */
+  }
+  .react-datepicker__day-name:nth-child(7) {
+    color: #8685ff; /* 토요일 */
+  }
+
+  /* 일반 날짜 */
+  .react-datepicker__day {
+  }
+
+  /* 선택된 날짜 */
+  .react-datepicker__day--selected {
+  }
+
+  /* highlighted된 날짜 */
+  .react-datepicker__day--highlighted {
+  }
+
+  /* 날짜에 마우스를 올릴 때 */
+  .react-datepicker__day:hover {
   }
 `;
 
@@ -96,6 +156,7 @@ function SalesReportPage() {
   const formatDate = (date) => {
     return date instanceof Date && !isNaN(date.getTime()) ? date.toLocaleDateString() : '';
   };
+
   const data = {
     labels: ['1월', '2월', '3월', '4월', '5월', '6월', '7월'],
     datasets: [
@@ -136,7 +197,7 @@ function SalesReportPage() {
               {formatDate(startDate)} ~ {formatDate(endDate)}
             </DateDisplay>
             {isDatePickerOpen && (
-              <div style={{ display: 'flex', gap: '10px' }}>
+              <DatePickerWrapper>
                 <DatePicker
                   selected={startDate}
                   onChange={(date) => setStartDate(date)}
@@ -144,6 +205,7 @@ function SalesReportPage() {
                   startDate={startDate}
                   endDate={endDate}
                   inline
+                  locale={ko}
                 />
                 <DatePicker
                   selected={endDate}
@@ -152,8 +214,9 @@ function SalesReportPage() {
                   startDate={startDate}
                   endDate={endDate}
                   inline
+                  locale={ko}
                 />
-              </div>
+              </DatePickerWrapper>
             )}
           </div>
         </MainHeader>

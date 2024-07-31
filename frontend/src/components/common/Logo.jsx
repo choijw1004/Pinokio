@@ -1,10 +1,9 @@
 import React from 'react';
 import styled from 'styled-components';
-import './KioskNavbar.css';
 
 const Logo = styled.div`
   font-size: 40px;
-  color: rgb(102, 102, 255);
+  color: #7392ff;
   font-family: 'Alfa Slab One', serif;
   font-weight: 400;
   font-style: normal;

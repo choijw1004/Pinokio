@@ -7,10 +7,12 @@ const CT = styled.div`
   display: flex;
   flex-direction: row;
   justify-content: space-between;
-  background: #6cff6c;
+  background: #eeeeee;
   height: 70px;
   margin: 5px;
 `;
+
+const StyledButton = styled.div``;
 
 function CartTotal({ cartItems }) {
   const navigate = useNavigate();

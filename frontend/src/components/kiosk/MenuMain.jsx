@@ -5,8 +5,8 @@ import ja from 'date-fns/esm/locale/ja/index.js';
 
 const MM = styled.div`
   display: flex;
-  flex-direction: row;
-  flex-wrap: wrap;
+  flex-direction: column;
+  width: 80%;
 `;
 
 function MenuMain({ selectedCategory, setSelectedMenu, setModal }) {
@@ -55,7 +55,7 @@ function MenuMain({ selectedCategory, setSelectedMenu, setModal }) {
     <MM>
       {pages[nowPage] &&
         pages[nowPage].map((row, rowIndex) => (
-          <div key={rowIndex} style={{ display: 'flex', flexDirection: 'column' }}>
+          <div key={rowIndex} style={{ display: 'flex', flexDirection: 'row' }}>
             {row.map((menu, colIndex) => (
               <MenuMainCard
                 key={colIndex}

@@ -1,7 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import OrderHistory from '../../components/pos/OrderHistory';
 import OrderHistoryDetail from '../../components/pos/OrderHistoryDetail';
+import styled from 'styled-components';
 
+const ComponentRow = styled.div`
+  display: flex;
+`;
 function OrderListPage() {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [orders, setOrders] = useState([]);
@@ -69,7 +73,7 @@ function OrderListPage() {
   };
 
   return (
-    <div className="OrderListPage">
+    <ComponentRow>
       <OrderHistory
         date={selectedDate}
         onDateChange={handleDateChange}
@@ -83,7 +87,7 @@ function OrderListPage() {
           onClose={() => setSelectedOrder(null)}
         />
       )}
-    </div>
+    </ComponentRow>
   );
 }
 

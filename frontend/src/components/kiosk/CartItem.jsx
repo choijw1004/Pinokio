@@ -6,14 +6,21 @@ const CI = styled.div`
   flex-direction: row;
   justify-content: space-between;
   background: white;
-  height: 70px;
+  height: 30px;
   margin: 5px;
+  font-size: 30px;
 `;
 
 const CartItemRight = styled.div`
   display: flex;
   flex-direction: row;
 `;
+
+const CountButtonsContainer = styled.div``;
+
+const CountUpButton = styled.div``;
+
+const CountDownButton = styled.div``;
 
 function CartItem({ item, cartItems, setCartItems }) {
   const changeCount = (count) => {
@@ -32,13 +39,15 @@ function CartItem({ item, cartItems, setCartItems }) {
 
   return (
     <CI>
-      <h3>{item.itemName}</h3>
+      <text>{item.itemName}</text>
       <CartItemRight>
-        <button onClick={() => changeCount(+1)}>+</button>
-        <h5>{item.itemCount}</h5>
-        <button onClick={() => changeCount(-1)}>-</button>
+        <CountButtonsContainer>
+          <CountUpButton onClick={() => changeCount(+1)}>+</CountUpButton>
+          <text>{item.itemCount}</text>
+          <CountDownButton onClick={() => changeCount(-1)}>-</CountDownButton>
+        </CountButtonsContainer>
         <button onClick={() => changeCount(-1 * item.itemCount)}>del</button>
-        <h5>{item.itemPrice}</h5>
+        <text>{item.itemPrice}</text>
       </CartItemRight>
     </CI>
   );
