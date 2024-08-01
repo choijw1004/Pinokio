@@ -7,42 +7,56 @@ import PosMain from '../assets/images/main/posmain.png';
 import LOGO from '../components/common/Logo';
 
 const MainContainer = styled.div`
-  width: 100%;
-  background-color: #071739;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
 `;
 
 const LinksContainer = styled.div`
-  width: 100%;
   display: flex;
-  padding: 10px;
   gap: 10px;
-  justify-content: space-between;
+  justify-content: space-around;
   background-color: white;
+  width: 100%;
 `;
+
+const LogoContainer = styled.div`
+  margin-top: 15px;
+  margin-right: 450px;
+`;
+
 const Links = styled.div`
-  margin-top: 13px;
-  margin-right: 20px;
+  display: flex;
+  margin-top: 23px;
+  gap: 30px;
 `;
+
 const Link = styled.a`
-  font-size: 16px; /* 텍스트 크기 */
-  text-decoration: none; /* 밑줄 제거 */
-  cursor: pointer; /* 커서 포인터로 변경 */
-  transition: color 0.3s ease; /* 애니메이션 효과 */
-  margin-left: 30px;
+  font-size: 16px;
+  text-decoration: none;
+  cursor: pointer;
+  transition: color 0.3s ease;
 
   &:hover {
-    color: #0056b3; /* 호버 시 텍스트 색상 변경 */
+    color: #0056b3;
   }
 `;
 
 const Carousel = styled.div`
   position: relative;
   overflow: hidden;
-  margin-top: 30px;
-  height: 800px;
+  margin-top: 20px;
+  width: 100%;
+  max-width: 1200px;
+  height: 600px;
+  background-color: #ffffff;
+  border-radius: 10px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
 `;
 
 const CarouselTrack = styled.div`
+  display: flex;
   transition: transform 0.5s ease-in-out;
 `;
 
@@ -55,55 +69,44 @@ const CarouselItem = styled.div`
   min-width: 100%;
   box-sizing: border-box;
   position: relative;
+  padding: 20px;
 
-  .kioskmain {
-    position: absolute;
-    right: 300px;
-    top: 30px;
-    width: 300px;
-    height: 500px;
-  }
-
-  .kiosksenior {
-    position: absolute;
-    right: 300px;
-    top: 30px;
-    width: 300px;
-    height: 500px;
-  }
-
+  .kioskmain,
+  .kiosksenior,
   .posmain {
     position: absolute;
-    right: 300px;
-    top: 30px;
-    width: 500px;
-    height: 300px;
+    right: 50px;
+    top: 50px;
+    max-width: 300px;
+    max-height: 500px;
+    width: auto;
+    height: auto;
   }
 
   h2 {
-    color: white;
-    margin-left: 200px;
+    color: #333;
+    margin-left: 20px;
   }
 
   p {
-    color: white;
-    margin-left: 200px;
+    color: #555;
+    margin-left: 20px;
   }
 `;
 
 const CarouselButton = styled.button`
   position: absolute;
-  top: 30%;
+  top: 50%;
   transform: translateY(-50%);
-  background-color: rgba(255, 255, 255, 0.7);
+  background-color: transparent;
   border: none;
   padding: 10px;
   cursor: pointer;
   font-size: 24px;
 
   &.prev {
-    z-index: 1;
     left: 10px;
+    z-index: 1;
   }
 
   &.next {
@@ -111,20 +114,38 @@ const CarouselButton = styled.button`
   }
 `;
 
+const IndicatorContainer = styled.div`
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 10px;
+`;
+
+const Indicator = styled.div`
+  width: 10px;
+  height: 10px;
+  background-color: ${({ isActive }) => (isActive ? '#0056b3' : '#ccc')};
+  border-radius: 50%;
+  cursor: pointer;
+`;
+
 const DiscriptionBox = styled.div`
-  background-color: #4b6382;
+  background-color: #ffc1cc;
   height: 200px;
-  width: 100%;
   padding: 10px;
+  margin-top: 80px;
+  border-radius: 10px;
 
   h3 {
-    margin-top: 50px;
-    margin-left: 190px;
+    margin-top: 20px;
+    margin-left: 20px;
   }
 
-  h4 {
-    margin-top: 50px;
-    margin-left: 190px;
+  h5 {
+    margin-top: 10px;
+    margin-left: 20px;
   }
 `;
 
@@ -145,9 +166,13 @@ function MainPage() {
     <CarouselItem key="1">
       <h2>AI 얼굴 인식</h2>
       <p>고객님의 얼굴을 인식해 나이, 성별을 인식해요.</p>
+      <p>고객님의 얼굴을 인식해 나이, 성별을 인식해요.</p>
+      <p>고객님의 얼굴을 인식해 나이, 성별을 인식해요.</p>
       <DiscriptionBox>
         <h3>어쩌구 저쩌구 엄청난 설명 !</h3>
-        <h4>해당 서비스에 대한 설명입니다.</h4>
+        <h5>해당 서비스에 대한 설명입니다.</h5>
+        <h5>해당 서비스에 대한 설명입니다.</h5>
+        <h5>해당 서비스에 대한 설명입니다.</h5>
       </DiscriptionBox>
       <img className="kioskmain" src={KioskMain} alt="키오스크 메인" />
     </CarouselItem>,
@@ -156,7 +181,9 @@ function MainPage() {
       <p>두 번째 아이템 설명</p>
       <DiscriptionBox>
         <h3>어쩌구 저쩌구 엄청난 설명 !</h3>
-        <h4>해당 서비스에 대한 설명입니다.</h4>
+        <h5>해당 서비스에 대한 설명입니다.</h5>
+        <h5>해당 서비스에 대한 설명입니다.</h5>
+        <h5>해당 서비스에 대한 설명입니다.</h5>
       </DiscriptionBox>
       <img className="kiosksenior" src={KioskSenior} alt="키오스크 노인" />
     </CarouselItem>,
@@ -165,7 +192,9 @@ function MainPage() {
       <p>세 번째 아이템 설명</p>
       <DiscriptionBox>
         <h3>어쩌구 저쩌구 엄청난 설명 !</h3>
-        <h4>해당 서비스에 대한 설명입니다.</h4>
+        <h5>해당 서비스에 대한 설명입니다.</h5>
+        <h5>해당 서비스에 대한 설명입니다.</h5>
+        <h5>해당 서비스에 대한 설명입니다.</h5>
       </DiscriptionBox>
       <img className="posmain" src={PosMain} alt="포스 메인" />
     </CarouselItem>,
@@ -174,29 +203,23 @@ function MainPage() {
   const [currentIndex, setCurrentIndex] = useState(0);
 
   const goToNext = () => {
-    if (currentIndex === items.length - 1) {
-      setCurrentIndex(0);
-    } else {
-      setCurrentIndex((prevIndex) => prevIndex + 1);
-    }
+    setCurrentIndex((prevIndex) => (prevIndex === items.length - 1 ? 0 : prevIndex + 1));
   };
 
   const goToPrev = () => {
-    if (currentIndex === 0) {
-      setCurrentIndex(items.length - 1);
-    } else {
-      setCurrentIndex((prevIndex) => prevIndex - 1);
-    }
+    setCurrentIndex((prevIndex) => (prevIndex === 0 ? items.length - 1 : prevIndex - 1));
   };
 
   return (
     <MainContainer>
       <LinksContainer>
-        <LOGO />
+        <LogoContainer>
+          <LOGO />
+        </LogoContainer>
         <Links>
-          <Link onClick={goPosLogin}>포스로그인</Link>
-          <Link onClick={goKioskLogin}>키오스크로그인</Link>
-          <Link onClick={goAdvisorLogin}>상담사로그인</Link>
+          <Link onClick={goPosLogin}>PosLogin</Link>
+          <Link onClick={goKioskLogin}>KioskLogin</Link>
+          <Link onClick={goAdvisorLogin}>AdvisorLogin</Link>
         </Links>
       </LinksContainer>
       <Carousel>
@@ -209,6 +232,15 @@ function MainPage() {
         <CarouselButton className="next" onClick={goToNext}>
           &gt;
         </CarouselButton>
+        <IndicatorContainer>
+          {items.map((_, index) => (
+            <Indicator
+              key={index}
+              isActive={index === currentIndex}
+              onClick={() => setCurrentIndex(index)}
+            />
+          ))}
+        </IndicatorContainer>
       </Carousel>
     </MainContainer>
   );
