@@ -47,4 +47,8 @@ public class Teller extends BaseEntity {
         this.amount = amount;
     }
 
+    public void updatePassword(String password) {
+        this.password = password;
+    }
+
 }

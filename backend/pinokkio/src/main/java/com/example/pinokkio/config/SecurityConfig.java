@@ -57,7 +57,7 @@ public class SecurityConfig {
             "/api/register/pos",
             "/api/register/teller",
             "/api/login/**",
-            "/api/mail/send",
+            "/api/mail/send/**",
             "/api/refresh",
             "/api/users/auth/token/",
     };

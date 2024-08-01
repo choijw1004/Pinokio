@@ -113,11 +113,6 @@ public class AuthController {
         return new ResponseEntity<>(authToken, httpHeaders, HttpStatus.OK);
     }
 
-//    @Operation(summary = "인증 예외 처리", description = "인증 과정에서 발생한 예외를 처리")
-//    @ApiResponse(responseCode = "401", description = "인증 실패")
-//    @ExceptionHandler(AuthenticationException.class)
-//    public ResponseEntity<?> handleAuthenticationException(AuthenticationException e) {
-//        log.error("인증 중 오류 발생: ", e);
-//        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(e.getMessage());
-//    }
+
+
 }
