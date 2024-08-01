@@ -4,7 +4,7 @@ import styled from 'styled-components';
 import KioskMain from '../assets/images/main/kioskmain.png';
 import KioskSenior from '../assets/images/main/kiosksenior.png';
 import PosMain from '../assets/images/main/posmain.png';
-import LOGO from '../components/common/LOGO';
+import LOGO from '../components/common/Logo';
 
 const MainContainer = styled.div`
   width: 100%;
