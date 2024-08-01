@@ -31,45 +31,35 @@ public class RoomController {
 
     @Operation(summary = "상담 생성", description = "Teller의 경우 상담방 생성 가능")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "화상 상담 생성 성공",
-                    content = @Content(schema = @Schema(implementation = RoomResponse.class))),
-            @ApiResponse(responseCode = "500", description = "화상 상담 생성 실패",
-                    content = @Content(schema = @Schema(implementation = String.class)))
+            @ApiResponse(responseCode = "200", description = "OK",
+                    content = @Content(schema = @Schema(implementation = RoomResponse.class)))
+
     })
     @PreAuthorize("hasRole('ROLE_TELLER')")
     @PostMapping("/teller/{tellerId}")
-    public ResponseEntity<RoomResponse> createRoom(
+    public ResponseEntity<?> createRoom(
             @Parameter(description = "Teller ID", example = "123e4567-e89b-12d3-a456-426614174000")
             @PathVariable String tellerId) {
-        log.info("Creating room for teller: {}", tellerId);
         AccessToken roomToken = roomService.createRoom(tellerId);
-        return ResponseEntity.ok(new RoomResponse("Room created successfully", roomToken.toJwt()));
+        return ResponseEntity.ok(new RoomResponse(roomToken.toJwt()));
     }
 
     @Operation(summary = "상담 삭제", description = "Teller의 경우 상담방 삭제 가능")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "화상 상담 삭제 성공",
-                    content = @Content(schema = @Schema(implementation = RoomResponse.class))),
-            @ApiResponse(responseCode = "500", description = "화상 상담 삭제 실패",
-                    content = @Content(schema = @Schema(implementation = String.class)))
+            @ApiResponse(responseCode = "204", description = "NO CONTENT")
     })
     @PreAuthorize("hasRole('ROLE_TELLER')")
     @DeleteMapping("/teller/{tellerId}")
-    public ResponseEntity<RoomResponse> deleteRoom(
+    public ResponseEntity<?> deleteRoom(
             @Parameter(description = "Teller ID", example = "123e4567-e89b-12d3-a456-426614174000")
             @PathVariable String tellerId) {
-        log.info("Deleting room for teller: {}", tellerId);
         roomService.deleteRoom(tellerId);
-        return ResponseEntity.ok(new RoomResponse("Room deleted successfully", null));
+        return ResponseEntity.noContent().build();
     }
 
     @Operation(summary = "상담 요청 수락", description = "Teller가 상담 요청을 수락하는 경우 Room ID를 전송")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "상담 요청 수락 성공",
-                    content = @Content(schema = @Schema(implementation = RoomResponse.class))),
-            @ApiResponse(responseCode = "400", description = "이미 토큰이 발급된 참가자",
-                    content = @Content(schema = @Schema(implementation = RoomResponse.class))),
-            @ApiResponse(responseCode = "500", description = "Room ID 전송 실패",
+            @ApiResponse(responseCode = "204", description = "NO CONTENT",
                     content = @Content(schema = @Schema(implementation = RoomResponse.class)))
     })
     @PreAuthorize("hasRole('ROLE_TELLER')")
@@ -78,39 +68,30 @@ public class RoomController {
             @Validated @RequestBody RoomEnterRequest enterRequest,
             @Parameter(description = "Teller ID", example = "123e4567-e89b-12d3-a456-426614174000")
             @PathVariable String tellerId) {
-        log.info("Accepting invitation for room: {}, teller: {}, kiosk: {}", enterRequest.getRoomId(), tellerId, enterRequest.getUserId());
         if (webSocketService.isTokenIssued(enterRequest.getUserId())) {
-            return ResponseEntity.badRequest().body(new RoomResponse("Token already issued for this participant", null));
+            //TODO conflict 예외처리 하기
         }
         String acceptRoomId = roomService.acceptInvitation(enterRequest.getRoomId(), tellerId, enterRequest.getUserId());
-        try {
-            webSocketService.sendRoomId(enterRequest.getUserId(), acceptRoomId);
-            return ResponseEntity.ok(new RoomResponse("RoomId sent successfully", null));
-        } catch (RuntimeException e) {
-            log.error("Error sending roomId", e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new RoomResponse("Error sending roomId", null));
-        }
+        webSocketService.sendRoomId(enterRequest.getUserId(), acceptRoomId);
+        //TODO bad input 예외처리 하기
+        return ResponseEntity.noContent().build();
     }
 
     @Operation(summary = "상담 요청 거부", description = "Teller가 상담 요청을 거부하는 경우")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "상담 요청 거부 성공",
-                    content = @Content(schema = @Schema(implementation = RoomResponse.class)))
+            @ApiResponse(responseCode = "204", description = "NO CONTENT")
     })
     @PreAuthorize("hasRole('ROLE_KIOSK')")
     @PostMapping("/kiosk/reject")
     public ResponseEntity<RoomResponse> rejectInvitation(
             @Validated @RequestBody RoomEnterRequest roomEnterRequest) {
-        log.info("Rejecting invitation for room: {}, teller: {}", roomEnterRequest.getRoomId(), roomEnterRequest.getUserId());
         roomService.rejectInvitation(roomEnterRequest.getRoomId(), roomEnterRequest.getUserId());
-        return ResponseEntity.ok(new RoomResponse("Invitation rejected successfully", null));
+        return ResponseEntity.noContent().build();
     }
 
     @Operation(summary = "상담 요청", description = "Kiosk의 경우 생성된 모든 상담방에 상담 요청 전송 가능")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "상담 요청 전송 성공",
-                    content = @Content(schema = @Schema(implementation = RoomResponse.class))),
-            @ApiResponse(responseCode = "500", description = "상담 요청 전송 실패",
+            @ApiResponse(responseCode = "204", description = "NO CONTENT",
                     content = @Content(schema = @Schema(implementation = RoomResponse.class)))
     })
     @PreAuthorize("hasRole('ROLE_KIOSK')")
@@ -118,65 +99,45 @@ public class RoomController {
     public ResponseEntity<RoomResponse> requestEnterRoom(
             @Parameter(description = "Kiosk ID", example = "123e4567-e89b-12d3-a456-426614174000")
             @PathVariable String kioskId) {
-        log.info("Requesting consultation for kiosk: {}", kioskId);
-        try {
-            roomService.messageAllRooms(kioskId);
-            return ResponseEntity.ok(new RoomResponse("Consultation request sent to all rooms", null));
-        } catch (RuntimeException e) {
-            log.error("Error sending consultation request", e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new RoomResponse("Failed to send consultation request", null));
-        }
+        roomService.messageAllRooms(kioskId);
+        return ResponseEntity.noContent().build();
     }
 
     @Operation(summary = "상담 입장", description = "Kiosk가 화상 상담에 입장")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "상담 입장 성공",
-                    content = @Content(schema = @Schema(implementation = RoomResponse.class))),
-            @ApiResponse(responseCode = "500", description = "상담 입장 실패",
+            @ApiResponse(responseCode = "200", description = "OK",
                     content = @Content(schema = @Schema(implementation = RoomResponse.class)))
     })
     @PreAuthorize("hasRole('ROLE_KIOSK')")
-    @PostMapping("/kiosk/enter")
+    @PutMapping("/kiosk/enter")
     public ResponseEntity<RoomResponse> enterRoom(
             @Validated @RequestBody RoomEnterRequest enterRequest) {
-        log.info("Kiosk entering room: {}, kiosk: {}", enterRequest.getRoomId(), enterRequest.getUserId());
         AccessToken roomToken = roomService.enterRoom(enterRequest.getRoomId(), enterRequest.getUserId());
-        return ResponseEntity.ok(new RoomResponse("Entered room successfully", roomToken.toJwt()));
+        return ResponseEntity.ok(new RoomResponse(roomToken.toJwt()));
     }
 
     @Operation(summary = "상담 퇴장", description = "Kiosk가 화상 상담에서 퇴장")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "상담 퇴장 성공",
-                    content = @Content(schema = @Schema(implementation = RoomResponse.class)))
+            @ApiResponse(responseCode = "204", description = "NO CONTENT")
     })
     @PreAuthorize("hasRole('ROLE_KIOSK')")
-    @PostMapping("/kiosk/{roomId}/leave")
+    @PutMapping("/kiosk/{roomId}/leave")
     public ResponseEntity<RoomResponse> leaveRoom(
             @Parameter(description = "Room ID", example = "123e4567-e89b-12d3-a456-426614174000")
             @PathVariable String roomId) {
-        log.info("Kiosk leaving room: {}", roomId);
         roomService.leaveRoom(roomId);
-        return ResponseEntity.ok(new RoomResponse("Left room successfully", null));
+        return ResponseEntity.noContent().build();
     }
 
     @Operation(summary = "Webhook 수신", description = "LiveKit에서 전송된 Webhook 이벤트를 처리")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Webhook 처리 성공",
-                    content = @Content(schema = @Schema(implementation = RoomResponse.class))),
-            @ApiResponse(responseCode = "500", description = "Webhook 처리 실패",
-                    content = @Content(schema = @Schema(implementation = RoomResponse.class)))
+            @ApiResponse(responseCode = "204", description = "NO CONTENT")
     })
     @PostMapping("/livekit/webhook")
     public ResponseEntity<RoomResponse> receiveWebhook(
             @RequestHeader("Authorization") String authHeader,
             @RequestBody String body) {
-        log.info("Received webhook event");
-        try {
-            roomService.handleWebhook(authHeader, body);
-            return ResponseEntity.ok(new RoomResponse("Webhook processed successfully", null));
-        } catch (RuntimeException e) {
-            log.error("Error processing webhook", e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new RoomResponse("Failed to process webhook", null));
-        }
+        roomService.handleWebhook(authHeader, body);
+        return ResponseEntity.noContent().build();
     }
 }

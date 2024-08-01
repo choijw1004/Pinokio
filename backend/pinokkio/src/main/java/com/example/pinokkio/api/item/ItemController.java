@@ -20,6 +20,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
+import org.springframework.web.ErrorResponse;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -40,12 +41,12 @@ public class ItemController {
 
     @Operation(summary = "아이템 등록", description = "새로운 아이템을 등록")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "201", description = "아이템 등록 성공",
+            @ApiResponse(responseCode = "201", description = "CREATED",
                     content = @Content(schema = @Schema(implementation = ItemResponse.class))),
-            @ApiResponse(responseCode = "400", description = "잘못된 요청 데이터",
-                    content = @Content(schema = @Schema(implementation = String.class))),
-            @ApiResponse(responseCode = "500", description = "서버 오류",
-                    content = @Content(schema = @Schema(implementation = String.class)))
+            @ApiResponse(responseCode = "400", description = "NOT FOUND",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "401", description = "UNAUTHORIZED",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     @PreAuthorize("hasRole('ROLE_POS')")
     @PostMapping("/pos/items")
@@ -58,10 +59,12 @@ public class ItemController {
 
     @Operation(summary = "아이템 목록 조회", description = "특정 포스의 모든 아이템을 조회")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "아이템 목록 조회 성공",
+            @ApiResponse(responseCode = "200", description = "OK",
                     content = @Content(schema = @Schema(implementation = GroupItemResponse.class))),
-            @ApiResponse(responseCode = "404", description = "리소스를 찾을 수 없음",
-                    content = @Content(schema = @Schema(implementation = String.class)))
+            @ApiResponse(responseCode = "401", description = "UNAUTHORIZED",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "404", description = "NOT FOUND",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     @PreAuthorize("hasRole('ROLE_POS')")
     @GetMapping("/pos/{posId}/items")
@@ -74,10 +77,12 @@ public class ItemController {
 
     @Operation(summary = "아이템 조회", description = "특정 아이템을 조회")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "아이템 조회 성공",
+            @ApiResponse(responseCode = "200", description = "OK",
                     content = @Content(schema = @Schema(implementation = ItemResponse.class))),
-            @ApiResponse(responseCode = "404", description = "아이템을 찾을 수 없음",
-                    content = @Content(schema = @Schema(implementation = String.class)))
+            @ApiResponse(responseCode = "401", description = "UNAUTHORIZED",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "404", description = "NOT FOUND",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     @PreAuthorize("hasRole('ROLE_POS')")
     @GetMapping("/pos/{posId}/items/{itemId}")
@@ -92,10 +97,12 @@ public class ItemController {
 
     @Operation(summary = "카테고리별 아이템 목록 조회", description = "특정 카테고리의 아이템 목록을 조회")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "카테고리별 아이템 목록 조회 성공",
+            @ApiResponse(responseCode = "200", description = "OK",
                     content = @Content(schema = @Schema(implementation = GroupItemResponse.class))),
-            @ApiResponse(responseCode = "404", description = "리소스를 찾을 수 없음",
-                    content = @Content(schema = @Schema(implementation = String.class)))
+            @ApiResponse(responseCode = "401", description = "UNAUTHORIZED",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "404", description = "NOT FOUND",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     @PreAuthorize("hasRole('ROLE_POS')")
     @GetMapping("/pos/{posId}/items/categories/{categoryId}")
@@ -110,10 +117,14 @@ public class ItemController {
 
     @Operation(summary = "키워드로 아이템 검색", description = "특정 포스의 키워드 접두사 기반 아이템 검색")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "키워드 검색 성공",
+            @ApiResponse(responseCode = "200", description = "OK",
                     content = @Content(schema = @Schema(implementation = GroupItemResponse.class))),
-            @ApiResponse(responseCode = "400", description = "잘못된 요청 데이터",
-                    content = @Content(schema = @Schema(implementation = String.class)))
+            @ApiResponse(responseCode = "400", description = "BAD REQUEST",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "401", description = "UNAUTHORIZED",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "404", description = "NOT FOUND",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     @PreAuthorize("hasRole('ROLE_POS')")
     @GetMapping("/pos/{posId}/items/search")
@@ -127,11 +138,13 @@ public class ItemController {
 
     @Operation(summary = "아이템 수정", description = "아이템 정보를 수정")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "204", description = "아이템 수정 성공"),
-            @ApiResponse(responseCode = "404", description = "아이템을 찾을 수 없음",
-                    content = @Content(schema = @Schema(implementation = String.class))),
-            @ApiResponse(responseCode = "400", description = "잘못된 요청 데이터",
-                    content = @Content(schema = @Schema(implementation = String.class)))
+            @ApiResponse(responseCode = "204", description = "NO CONTENT"),
+            @ApiResponse(responseCode = "400", description = "BAD REQUEST",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "401", description = "UNAUTHORIZED",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "404", description = "NOT FOUND",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
     })
     @PreAuthorize("hasRole('ROLE_POS')")
     @PutMapping(value = "/pos/{posId}/items/{itemId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -154,9 +167,11 @@ public class ItemController {
 
     @Operation(summary = "아이템 삭제", description = "특정 아이템을 삭제")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "204", description = "아이템 삭제 성공"),
-            @ApiResponse(responseCode = "404", description = "아이템을 찾을 수 없음",
-                    content = @Content(schema = @Schema(implementation = String.class)))
+            @ApiResponse(responseCode = "204", description = "NO CONTENT"),
+            @ApiResponse(responseCode = "401", description = "UNAUTHORIZED",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "404", description = "NOT FOUND",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     @PreAuthorize("hasRole('ROLE_POS')")
     @DeleteMapping("/pos/{posId}/items/{itemId}")
@@ -169,9 +184,6 @@ public class ItemController {
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
-    /**
-     * isScreen 상태 변경
-     */
     @Operation(summary = "특정 아이템의 키오스크 표출 여부 TOGGLE", description = "키오스크 표출 여부 TOGGLE")
     @PreAuthorize("hasRole('ROLE_POS')")
     @PutMapping("/pos/{posId}/items/{itemId}/toggle/screen")
@@ -184,9 +196,6 @@ public class ItemController {
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
-    /**
-     * isSoldOut 상태 변경
-     */
     @Operation(summary = "특정 아이템의 키오스크 품절 여부 TOGGLE", description = "키오스크 품절 여부 TOGGLE")
     @PreAuthorize("hasRole('ROLE_POS')")
     @PutMapping("/pos/{posId}/items/{itemId}/toggle/sold-out")

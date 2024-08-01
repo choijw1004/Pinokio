@@ -7,6 +7,7 @@ import com.example.pinokkio.api.item.dto.request.UpdateItemRequest;
 import com.example.pinokkio.api.item.image.ImageService;
 import com.example.pinokkio.api.pos.Pos;
 import com.example.pinokkio.api.pos.PosRepository;
+import com.example.pinokkio.common.utils.EntityUtils;
 import com.example.pinokkio.exception.domain.category.CategoryNotFoundException;
 import com.example.pinokkio.exception.domain.item.ItemNotFoundException;
 import com.example.pinokkio.exception.domain.pos.PosNotFoundException;
@@ -90,9 +91,8 @@ public class ItemService {
      */
     @Transactional
     public void updateItem(UUID itemId, UUID posId, UpdateItemRequest updateItemRequest, MultipartFile file) {
-        Item item = itemRepository
-                .findById(itemId)
-                .orElseThrow(() -> new ItemNotFoundException(itemId));
+        Pos pos = EntityUtils.getEntityById(posRepository, posId.toString(), PosNotFoundException::new);
+        Item item = EntityUtils.getEntityById(itemRepository, itemId.toString(), ItemNotFoundException::new);
         validateItem(itemId, posId);
 
         // 기존 이미지 삭제
@@ -119,26 +119,22 @@ public class ItemService {
      */
     @Transactional
     public void deleteItem(UUID itemId, UUID posId) {
-        Item item = itemRepository
-                .findById(itemId)
-                .orElseThrow(() -> new ItemNotFoundException(itemId));
+        EntityUtils.getEntityById(itemRepository, itemId.toString(), ItemNotFoundException::new);
         validateItem(itemId, posId);
         itemRepository.deleteByItemIdAndPosId(itemId, posId);
     }
 
     @Transactional
     public void toggleScreenStatus(UUID itemId, UUID posId) {
-        Item item = itemRepository
-                .findById(itemId)
-                .orElseThrow(() -> new ItemNotFoundException(itemId));
+        Item item = EntityUtils.getEntityById(itemRepository, itemId.toString(), ItemNotFoundException::new);
+        validateItem(itemId, posId);
         item.toggleIsScreen();
     }
 
     @Transactional
     public void toggleSoldOutStatus(UUID itemId, UUID posId) {
-        Item item = itemRepository
-                .findById(itemId)
-                .orElseThrow(() -> new ItemNotFoundException(itemId));
+        Item item = EntityUtils.getEntityById(itemRepository, itemId.toString(), ItemNotFoundException::new);
+        validateItem(itemId, posId);
         item.toggleIsSoldOut();
     }
 
@@ -149,6 +145,7 @@ public class ItemService {
      * @param posId 포스 식별자
      */
     public void validateItem(UUID itemId, UUID posId) {
+        EntityUtils.getEntityById(posRepository, posId.toString(), PosNotFoundException::new);
         if (!itemRepository.existsByItemIdAndPosId(itemId, posId)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "아이템이 해당 포스에 존재하지 않습니다.");
         }
