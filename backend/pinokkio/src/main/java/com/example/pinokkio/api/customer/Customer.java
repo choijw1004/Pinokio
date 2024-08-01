@@ -23,7 +23,6 @@ import java.util.UUID;
 @Entity
 @Table(name = "customer")
 @Getter
-@Setter(AccessLevel.PROTECTED)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 public class Customer extends BaseEntity {
@@ -55,6 +54,10 @@ public class Customer extends BaseEntity {
         this.gender = gender;
         this.phoneNumber = phoneNumber;
         this.age = age;
+        this.faceEmbedding = faceEmbedding;
+    }
+
+    public void updateFaceEmbedding(byte[] faceEmbedding) {
         this.faceEmbedding = faceEmbedding;
     }
 

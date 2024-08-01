@@ -20,6 +20,7 @@ spring:
   redis:
     host: localhost
     port: 6379
+
   mail:
     host: smtp.naver.com
     port: 465
@@ -55,6 +56,23 @@ livekit:
   api:
     key: ${LIVEKIT_API_KEY}
     secret: ${LIVEKIT_API_SECRET}
+
+encryption:
+  key:
+    ${ENCRYPTION_KEY}
+
+
+fastapi:
+  url: https://your-fastapi-server-url
+  timeout: 10000
+
+grpc:
+  server:
+    port: 50051
+
+redis:
+  cache:
+    ttl: 3600
 
 springdoc:
   swagger-ui:
