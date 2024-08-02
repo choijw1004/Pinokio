@@ -13,7 +13,6 @@ import lombok.*;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.UUID;
 
 @Entity
@@ -39,4 +38,23 @@ public class Order extends BaseEntity {
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OrderItem> items = new ArrayList<>();
 
+    /**
+     * 고객 주문
+     */
+    @Builder
+    public Order(Pos pos, Customer customer, List<OrderItem> items) {
+        this.pos = pos;
+        this.customer = customer;
+        this.items = items;
+    }
+
+    /**
+     * 비고객 주문
+     */
+    @Builder
+    public Order(Pos pos, List<OrderItem> items) {
+        this.pos = pos;
+        this.customer = null;
+        this.items = items;
+    }
 }

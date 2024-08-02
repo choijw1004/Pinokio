@@ -4,6 +4,8 @@ import com.example.pinokkio.api.auth.dto.request.LoginRequest;
 import com.example.pinokkio.api.auth.dto.request.SignUpKioskRequest;
 import com.example.pinokkio.api.auth.dto.request.SignUpPosRequest;
 import com.example.pinokkio.api.auth.dto.request.SignUpTellerRequest;
+import com.example.pinokkio.api.customer.Customer;
+import com.example.pinokkio.api.customer.CustomerRepository;
 import com.example.pinokkio.api.kiosk.Kiosk;
 import com.example.pinokkio.api.kiosk.KioskRepository;
 import com.example.pinokkio.api.pos.Pos;
@@ -12,6 +14,7 @@ import com.example.pinokkio.api.pos.code.Code;
 import com.example.pinokkio.api.pos.code.CodeRepository;
 import com.example.pinokkio.api.teller.Teller;
 import com.example.pinokkio.api.teller.TellerRepository;
+import com.example.pinokkio.common.type.Gender;
 import com.example.pinokkio.config.RedisUtil;
 import com.example.pinokkio.config.jwt.JwtProvider;
 import com.example.pinokkio.config.jwt.Role;
@@ -58,6 +61,7 @@ public class AuthService {
     private final PosRepository posRepository;
     private final KioskRepository kioskRepository;
     private final TellerRepository tellerRepository;
+    private final CustomerRepository customerRepository;
 
     //랜덤 ID 생성기
     private static final String DIGITS = "0123456789";
@@ -79,7 +83,17 @@ public class AuthService {
                 .password(passwordEncode(signUpPosRequest.getPassword()))
                 .code(requestCode)
                 .build();
-        posRepository.save(pos);
+        Pos savedPos = posRepository.save(pos);
+
+        Customer customer = Customer
+                .builder()
+                .pos(pos)
+                .age(99)
+                .phoneNumber("00000000")
+                .gender(Gender.MALE)
+                .build();
+        Customer savedCustomer = customerRepository.save(customer);
+        savedPos.updateDummyCustomerUUID(savedCustomer.getId().toString());
     }
 
     /**
