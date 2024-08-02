@@ -1,4 +1,4 @@
-package com.example.pinokkio.api.order;
+package com.example.pinokkio.api.order.orderitem;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 

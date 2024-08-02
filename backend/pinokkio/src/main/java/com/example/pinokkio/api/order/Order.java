@@ -6,6 +6,7 @@
 package com.example.pinokkio.api.order;
 
 import com.example.pinokkio.api.customer.Customer;
+import com.example.pinokkio.api.order.orderitem.OrderItem;
 import com.example.pinokkio.api.pos.Pos;
 import com.example.pinokkio.common.BaseEntity;
 import jakarta.persistence.*;
@@ -38,9 +39,6 @@ public class Order extends BaseEntity {
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OrderItem> items = new ArrayList<>();
 
-    /**
-     * 고객 주문
-     */
     @Builder
     public Order(Pos pos, Customer customer, List<OrderItem> items) {
         this.pos = pos;
@@ -48,13 +46,4 @@ public class Order extends BaseEntity {
         this.items = items;
     }
 
-    /**
-     * 비고객 주문
-     */
-    @Builder
-    public Order(Pos pos, List<OrderItem> items) {
-        this.pos = pos;
-        this.customer = null;
-        this.items = items;
-    }
 }
