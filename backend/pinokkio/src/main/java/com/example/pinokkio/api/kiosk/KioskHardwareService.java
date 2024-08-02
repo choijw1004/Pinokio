@@ -2,9 +2,9 @@ package com.example.pinokkio.api.kiosk;
 
 import com.example.pinokkio.api.customer.FaceAnalysisService;
 import com.example.pinokkio.api.customer.sse.SSEService;
+import com.example.pinokkio.api.kiosk.grpc.*;
 import com.google.protobuf.ByteString;
 import io.grpc.*;
-import pinokkio.api.kiosk.grpc.*;
 import io.grpc.stub.StreamObserver;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
