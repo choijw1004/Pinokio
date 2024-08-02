@@ -5,13 +5,13 @@ import com.example.pinokkio.api.auth.dto.request.SignUpKioskRequest;
 import com.example.pinokkio.api.auth.dto.request.SignUpPosRequest;
 import com.example.pinokkio.api.auth.dto.request.SignUpTellerRequest;
 import com.example.pinokkio.exception.ErrorResponse;
-import com.example.pinokkio.exception.base.AuthenticationException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
@@ -113,6 +113,20 @@ public class AuthController {
         return new ResponseEntity<>(authToken, httpHeaders, HttpStatus.OK);
     }
 
-
-
+    @Operation(summary = "토큰 재발급", description = "refresh 토큰을 이용한 토큰 재발급")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "OK",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = AuthToken.class))
+            ),
+            @ApiResponse(responseCode = "401", description = "UNAUTHORIZED",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    @GetMapping("/refresh")
+    public ResponseEntity<?> tokenReissue(HttpServletRequest request) {
+        String refresh = request.getHeader("refresh");
+        AuthToken authToken = authService.reissue(refresh);
+        HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.add(HttpHeaders.AUTHORIZATION, "Bearer " + authToken.getAccessToken());
+        return new ResponseEntity<>(authToken, httpHeaders, HttpStatus.OK);
+    }
 }

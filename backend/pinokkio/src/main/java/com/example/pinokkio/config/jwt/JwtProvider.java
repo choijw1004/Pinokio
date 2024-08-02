@@ -41,42 +41,32 @@ public class JwtProvider {
     }
 
     /**
-     * AccessToken 생성
-     * role 포함
+     * 토큰 생성 메서드
+     *
+     * @param category  access/refresh 토큰 구분
+     * @param email     사용자 이메일
+     * @param role      역할
+     * @param expiredMs 토큰 유효시간
+     * @return access/refresh 토큰
      */
-    public String createAccessToken(String email, String role, Date now) {
-        log.info("[createAccessToken] 액세스 토큰 생성 시작");
+    public String createJwt(String category, String email, String role, Long expiredMs) {
+        log.info("[createToken] 토큰 생성 시작... 카테고리: " + category);
+
         Claims claims = Jwts.claims().setSubject(email);
         claims.put("role", role);
+        claims.put("category", category);
 
-        log.info("Access Token에서 claims 생성 claims : {}", claims);
-        String accessToken = Jwts.builder()
+        return Jwts.builder()
                 .setClaims(claims)
                 .setIssuer("pinokkio")
-                .setIssuedAt(now)
-                .setExpiration(new Date(now.getTime() + accessValidTime))
+                .setIssuedAt(new Date(System.currentTimeMillis()))
+                .setExpiration(new Date(System.currentTimeMillis() + expiredMs))
                 .signWith(SignatureAlgorithm.HS256, secretKey)
                 .compact();
-
-        log.info("[createToken] 액세스 토큰 생성 완료: {}", accessToken);
-        return accessToken;
     }
 
-    /**
-     * RefreshToken 생성
-     * role 포함하지 않고 최소한의 정보만 가진다
-     */
-    public String createRefreshToken(Date now) {
-        log.info("[createRefreshToken] 리프레쉬 토큰 생성 시작");
-        String refreshToken = Jwts.builder()
-                .setHeaderParam(Header.TYPE, Header.JWT_TYPE)
-                .setIssuer("pinokkio")
-                .setExpiration(new Date(now.getTime() + refreshValidTime))
-                .signWith(SignatureAlgorithm.HS256, secretKey)
-                .compact();
-
-        log.info("[createRefreshToken] 리프레쉬 토큰 생성 완료: {}", refreshToken);
-        return refreshToken;
+    public String getCategory(String token) {
+        return Jwts.parser().setSigningKey(secretKey).parseClaimsJws(token).getBody().get("category", String.class);
     }
 
     /**
@@ -124,14 +114,45 @@ public class JwtProvider {
     /**
      * AccessToken의 유효성 + 만료여부 체크
      */
-    public boolean validateToken(String token) {
-        log.info("[validateToken] 토큰 유효 체크 시작");
+    public boolean validateToken(String token, String tokenType) {
+
+        log.info("[validateToken] {} 토큰 유효 체크 시작", tokenType);
+        boolean isRefreshToken = tokenType.equals("refresh");
+
+        if (token == null) {
+            log.info("[validateToken] {} 토큰 없음", tokenType);
+            if (isRefreshToken) {
+                throw new TokenNotValidException(true);
+            }
+            throw new TokenNotValidException();
+        }
+
         try {
             Jwts.parser().setSigningKey(secretKey).parseClaimsJws(token);
+
+            // 토큰 종류 검증
+            String category = getCategory(token);
+            if (isRefreshToken && !category.equals("refresh")) {
+                log.info("[validateToken] {} 토큰 타입 불일치 ", tokenType);
+                throw new TokenNotValidException(true);
+            } else if (!isRefreshToken && !category.equals("access")) {
+                log.info("[validateToken] {} 토큰 타입 불일치 ", tokenType);
+                throw new TokenNotValidException();
+            }
         } catch (ExpiredJwtException e) {
-            throw new ExpiredTokenException();
-        } catch (MalformedJwtException e) {
-            throw new TokenNotValidException();
+            log.info("[validateToken] {} 토큰 만료 ", tokenType);
+            if (isRefreshToken) {
+                throw new ExpiredTokenException(true);
+            } else {
+                throw new ExpiredTokenException();
+            }
+        } catch (MalformedJwtException | SignatureException e) {
+            log.info("[validateToken] {} 토큰 유효하지 않음 ", tokenType);
+            if (isRefreshToken) {
+                throw new TokenNotValidException(true);
+            } else {
+                throw new TokenNotValidException();
+            }
         }
         return true;
     }
@@ -152,7 +173,7 @@ public class JwtProvider {
 
     /**
      * 토큰으로부터 이메일(아이디)값과 role 값을 파싱해 "R + 이메일" 형태로 제공
-     * R 
+     * R
      * - "P" : ROLE_POS
      * - "K" : ROLE_KIOSK
      * - "T" : ROLE_TELLER
