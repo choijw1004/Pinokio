@@ -127,7 +127,6 @@ public class AuthController {
         AuthToken authToken = authService.reissue(refresh);
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.add(HttpHeaders.AUTHORIZATION, "Bearer " + authToken.getAccessToken());
-        httpHeaders.add(HttpHeaders.AUTHORIZATION, authToken.getRefreshToken());
         return new ResponseEntity<>(authToken, httpHeaders, HttpStatus.OK);
     }
 }
