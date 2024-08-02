@@ -1,13 +1,12 @@
 package com.example.pinokkio.api.kiosk;
 
+import com.example.pinokkio.api.kiosk.grpc.LoginResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import pinokkio.api.kiosk.grpc.LoginResponse;
 
 import java.util.UUID;
-import java.util.logging.Logger;
 
 @Service
 @RequiredArgsConstructor
