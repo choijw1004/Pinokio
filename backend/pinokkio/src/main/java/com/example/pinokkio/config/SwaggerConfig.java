@@ -23,18 +23,26 @@ public class SwaggerConfig {
 
     @Bean
     public OpenAPI openAPI() {
-        String securityJwtName = "JWT";
-        SecurityRequirement securityRequirement = new SecurityRequirement().addList(securityJwtName);
+        String jwtSchemeName = "JWT";
+        String refreshTokenSchemeName = "refresh";
+
+        SecurityRequirement securityRequirement = new SecurityRequirement()
+                .addList(jwtSchemeName)
+                .addList(refreshTokenSchemeName);
+
         Components components = new Components()
-                .addSecuritySchemes(securityJwtName, new SecurityScheme()
-                        .name(securityJwtName)
+                .addSecuritySchemes(jwtSchemeName, new SecurityScheme()
+                        .name(jwtSchemeName)
                         .type(SecurityScheme.Type.HTTP)
                         .scheme(BEARER_TOKEN_PREFIX)
-                        .bearerFormat(securityJwtName));
+                        .bearerFormat(jwtSchemeName))
+                .addSecuritySchemes(refreshTokenSchemeName, new SecurityScheme()
+                        .name(refreshTokenSchemeName)
+                        .type(SecurityScheme.Type.APIKEY)
+                        .in(SecurityScheme.In.HEADER));
 
         return new OpenAPI()
                 .addSecurityItem(securityRequirement)
                 .components(components);
     }
-
 }
