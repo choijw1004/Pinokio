@@ -22,7 +22,7 @@ public class Code {
     @Column(columnDefinition = "BINARY(16)", name = "code_id")
     private UUID id;
 
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false)
     private String name;
 
     public Code(String name) {

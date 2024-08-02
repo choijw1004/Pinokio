@@ -7,14 +7,7 @@ package com.example.pinokkio.api.teller;
 
 import com.example.pinokkio.api.pos.code.Code;
 import com.example.pinokkio.common.BaseEntity;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.OneToOne;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.*;
 
 import java.util.UUID;
@@ -32,7 +25,8 @@ public class Teller extends BaseEntity {
     @Column(columnDefinition = "BINARY(16)", name = "teller_id")
     private UUID id;
 
-    @OneToOne(fetch = FetchType.LAZY)
+    //TODO: 이 부분 논의. 기존은 OneToOne 이었음
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "code_id")
     private Code code;
 
@@ -51,6 +45,10 @@ public class Teller extends BaseEntity {
         this.email = email;
         this.password = password;
         this.amount = amount;
+    }
+
+    public void updatePassword(String password) {
+        this.password = password;
     }
 
 }

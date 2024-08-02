@@ -7,14 +7,7 @@ package com.example.pinokkio.api.pos;
 
 import com.example.pinokkio.api.pos.code.Code;
 import com.example.pinokkio.common.BaseEntity;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.OneToOne;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.*;
 
 import java.util.UUID;
@@ -32,7 +25,7 @@ public class Pos extends BaseEntity {
     @Column(columnDefinition = "BINARY(16)", name = "pos_id")
     private UUID id;
 
-    @OneToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "code_id")
     private Code code;
 
