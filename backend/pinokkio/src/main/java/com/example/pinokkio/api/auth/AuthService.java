@@ -44,8 +44,7 @@ import java.util.function.Predicate;
 @Transactional(readOnly = true)
 public class AuthService {
 
-    //    private final long accessValidTime = 1000L * 60 * 60;    // 액세스 토큰 유효 시간 60분
-    private final long accessValidTime = 1000L * 60;
+    private final long accessValidTime = 1000L * 60 * 60;    // 액세스 토큰 유효 시간 60분
     private final long refreshValidTime = 1000L * 60 * 60 * 24 * 14;    // 리프레쉬 토큰 유효 시간 2주
 
     private final PasswordEncoder passwordEncoder;

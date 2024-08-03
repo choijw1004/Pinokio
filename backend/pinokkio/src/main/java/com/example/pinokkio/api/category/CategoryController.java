@@ -39,7 +39,7 @@ public class CategoryController {
             @ApiResponse(responseCode = "404", description = "리소스를 찾을 수 없음",
                     content = @Content(schema = @Schema(implementation = String.class)))
     })
-    @PreAuthorize("hasRole('ROLE_POS')")
+    @PreAuthorize("hasAnyRole('ROLE_POS', 'ROLE_KIOSK')")
     @GetMapping({"/pos/{posId}/categories"})
     public ResponseEntity<?> getAllCategories(
             @PathVariable String posId) {
