@@ -32,7 +32,10 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
     ports:
-      - "3000:3000"
+            - "80:80"
+            - "443:443"
+    volumes:
+            - /etc/letsencrypt:/etc/letsencrypt:ro
 
   mysql:
     image: mysql:8.0
@@ -51,3 +54,4 @@ services:
 
 volumes:
   mysql-data:
+
