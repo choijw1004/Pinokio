@@ -2,9 +2,11 @@ package com.example.pinokkio.api.room;
 
 import com.example.pinokkio.api.kiosk.Kiosk;
 import com.example.pinokkio.api.kiosk.KioskRepository;
+import com.example.pinokkio.api.room.dto.response.RoomResponse;
 import com.example.pinokkio.api.teller.Teller;
 import com.example.pinokkio.api.teller.TellerRepository;
 import com.example.pinokkio.common.utils.EntityUtils;
+import com.example.pinokkio.config.jwt.JwtProvider;
 import com.example.pinokkio.exception.domain.room.RoomAccessRestrictedException;
 import com.example.pinokkio.exception.domain.room.RoomNotAvailableException;
 import com.example.pinokkio.exception.domain.kiosk.KioskNotFoundException;
@@ -17,14 +19,12 @@ import livekit.LivekitWebhook;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
 import java.util.List;
 import java.util.UUID;
-import java.util.function.Function;
 
 @Service
 @RequiredArgsConstructor
@@ -39,6 +39,7 @@ public class RoomService {
     private final RoomRepository roomRepository;
     private final TellerRepository tellerRepository;
     private final KioskRepository kioskRepository;
+    private final JwtProvider jwtProvider;
 
     private RoomServiceClient roomServiceClient;
 
@@ -57,21 +58,22 @@ public class RoomService {
      * 상담원 - 방 생성 후 입장을 위한 토큰 발급
      */
     @Transactional
-    public AccessToken createRoom(String tellerId) {
-        // 상담원 존재 여부 검증
-        Teller teller = EntityUtils.getEntityById(tellerRepository, tellerId, TellerNotFoundException::new);
+    public RoomResponse createRoom() {
+        Teller teller = getCurrentTeller();
 
         // 기존 방 존재 여부 확인 및 토큰 발급
         return roomRepository.findByTeller(teller)
-                .map(room -> createToken(room.getRoomId().toString(), tellerId))
+                .map(room -> new RoomResponse(room.getRoomId().toString(),
+                        createToken(room.getRoomId().toString(), teller.getId().toString()).toJwt()))
                 .orElseGet(() -> {
-                    Room newRoom =  Room.builder()
+                    Room newRoom = Room.builder()
                             .teller(teller)
                             .numberOfCustomers(0)
                             .build();
                     roomRepository.save(newRoom);
 
-                    return createToken(newRoom.getRoomId().toString(), tellerId);
+                    return new RoomResponse(newRoom.getRoomId().toString(),
+                            createToken(newRoom.getRoomId().toString(), teller.getId().toString()).toJwt());
                 });
     }
 
@@ -79,21 +81,33 @@ public class RoomService {
      * 상담원 - 상담원 퇴장 시 방 삭제
      */
     @Transactional
-    public void deleteRoom(String tellerId) {
-        Teller teller = EntityUtils.getEntityById(tellerRepository, tellerId, TellerNotFoundException::new);
+    public void deleteRoom() {
+        Teller teller = getCurrentTeller();
+
         roomRepository.deleteByTeller(teller);
-        log.info("[deleteRoom] complete for tellerId: {}", tellerId);
+        log.info("[deleteRoom] complete for tellerId: {}",teller.getId());
     }
 
     /**
      * 상담원 - 상담 요청 수락시 고객의 방 접근을 위한 roomId 정보 제공
      */
-    public String acceptInvitation(String roomId, String tellerId, String kioskId) {
-        EntityUtils.getEntityById(roomRepository, roomId, RoomNotFoundException::new);
-        EntityUtils.getEntityById(tellerRepository, tellerId, TellerNotFoundException::new);
-        EntityUtils.getEntityById(kioskRepository, kioskId, KioskNotFoundException::new);
-        log.info("[acceptInvitation] roomId: {}, participantName: {}", roomId, tellerId);
+    public String acceptInvitation(String roomId, String kioskId) {
+        Teller teller = getCurrentTeller();
+
+        try {
+            EntityUtils.getEntityById(roomRepository, roomId, RoomNotFoundException::new);
+            EntityUtils.getEntityById(kioskRepository, kioskId, KioskNotFoundException::new);
+        } catch (Exception e) {
+            log.info("[acceptInvitation] failed to find : {}",e.getMessage());
+        }
+        log.info("[acceptInvitation] roomId: {}, participantName: {}", roomId, teller.getId());
         return roomId;
+    }
+
+    private Teller getCurrentTeller() {
+        String tellerEmail = jwtProvider.getCurrentUserEmail();
+        return tellerRepository.findByEmail(tellerEmail)
+                .orElseThrow(() -> new TellerNotFoundException(tellerEmail));
     }
 
     /**
@@ -106,13 +120,17 @@ public class RoomService {
     /**
      * 고객 -모든 방에 상담 요청 전송
      */
-    public void messageAllRooms(String kioskId) {
+    public void messageAllRooms() {
         try {
+            String kioskEmail = jwtProvider.getCurrentUserEmail();
+            Kiosk kiosk = kioskRepository.findByEmail(kioskEmail)
+                    .orElseThrow(() -> new KioskNotFoundException(kioskEmail));
+
             List<LivekitModels.Room> rooms = roomServiceClient.listRooms().execute().body();
             if (rooms == null || rooms.isEmpty()) throw new RoomAccessRestrictedException();
             rooms.forEach(room -> {
                 try {
-                    sendMessageToRoom(room, kioskId);
+                    sendMessageToRoom(room, kiosk.getId().toString());
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
