@@ -49,7 +49,9 @@ public class SecurityConfig {
 
     private final String[] GET_PERMIT_API_URL = {
             "/",
-            "/api/refresh"
+            "/api/refresh",
+            "/api/customer", // 추후 수정
+            "/api/face-recognition-events"
     };
 
     private final String[] POST_PERMIT_API_URL = {
@@ -60,6 +62,7 @@ public class SecurityConfig {
             "/api/mail/check-auth",
             "/api/refresh",
             "/api/users/auth/token/",
+            "/api/customer" // 추후 수정
     };
 
     private final String[] POS_API_URL = {
