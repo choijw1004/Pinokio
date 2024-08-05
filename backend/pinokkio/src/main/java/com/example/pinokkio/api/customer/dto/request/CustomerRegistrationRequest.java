@@ -16,7 +16,6 @@ public class CustomerRegistrationRequest {
     private Customer customer;
 
     // 얼굴 임베딩 데이터를 바이트 배열로 저장합니다.
-    private byte[] faceEmbeddingData;
-
+    private String faceEmbeddingData;
 
 }
