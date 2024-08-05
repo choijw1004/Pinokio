@@ -18,6 +18,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.*;
 
+import java.util.Arrays;
 import java.util.UUID;
 
 @Entity
@@ -70,4 +71,11 @@ public class Customer extends BaseEntity {
         this.faceEmbedding = faceEmbedding;
     }
 
+    public void setGender(String genderString) {
+        this.gender = Gender.fromString(genderString);
+    }
+
+    public void updatePos(Pos pos) {
+        this.pos = pos;
+    }
 }
