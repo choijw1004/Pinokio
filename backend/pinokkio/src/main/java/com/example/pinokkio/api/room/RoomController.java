@@ -12,7 +12,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
@@ -61,11 +60,11 @@ public class RoomController {
     @PostMapping("/teller/accept")
     public ResponseEntity<RoomResponse> acceptInvitation(
             @Validated @RequestBody RoomEnterRequest enterRequest) {
-        if (webSocketService.isTokenIssued(enterRequest.getUserId())) {
+        if (webSocketService.isTokenIssued(enterRequest.getKioskId())) {
             //TODO conflict 예외처리 하기
         }
-        String acceptRoomId = roomService.acceptInvitation(enterRequest.getRoomId(), enterRequest.getUserId());
-        webSocketService.sendRoomId(enterRequest.getUserId(), acceptRoomId);
+        String acceptRoomId = roomService.acceptInvitation(enterRequest.getRoomId(), enterRequest.getKioskId());
+        webSocketService.sendRoomId(enterRequest.getKioskId(), acceptRoomId);
         //TODO bad input 예외처리 하기
         return ResponseEntity.noContent().build();
     }
@@ -78,7 +77,7 @@ public class RoomController {
     @PostMapping("/kiosk/reject")
     public ResponseEntity<RoomResponse> rejectInvitation(
             @Validated @RequestBody RoomEnterRequest roomEnterRequest) {
-        roomService.rejectInvitation(roomEnterRequest.getRoomId(), roomEnterRequest.getUserId());
+        roomService.rejectInvitation(roomEnterRequest.getRoomId(), roomEnterRequest.getKioskId());
         return ResponseEntity.noContent().build();
     }
 
@@ -103,7 +102,7 @@ public class RoomController {
     @PutMapping("/kiosk/enter")
     public ResponseEntity<RoomResponse> enterRoom(
             @Validated @RequestBody RoomEnterRequest enterRequest) {
-        AccessToken roomToken = roomService.enterRoom(enterRequest.getRoomId(), enterRequest.getUserId());
+        AccessToken roomToken = roomService.enterRoom(enterRequest.getRoomId(), enterRequest.getKioskId());
         return ResponseEntity.ok(new RoomResponse(roomToken.toJwt(), enterRequest.getRoomId()));
     }
 
