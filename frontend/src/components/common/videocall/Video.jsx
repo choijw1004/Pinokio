@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from "react";
-import "./Video.css";
-import VideoComponent from "./components/VideoComponent";
-import AudioComponent from "./components/AudioComponent";
+import React, { useState, useEffect } from 'react';
+import './Video.css';
+import VideoComponent from './VideoComponent';
+import AudioComponent from './AudioComponent';
 import {
   LocalVideoTrack,
   RemoteParticipant,
@@ -9,24 +9,24 @@ import {
   RemoteTrackPublication,
   Room,
   RoomEvent,
-} from "livekit-client";
+} from 'livekit-client';
 
-let APPLICATION_SERVER_URL = "";
-let LIVEKIT_URL = "";
+let APPLICATION_SERVER_URL = '';
+let LIVEKIT_URL = '';
 configureUrls();
 
 function configureUrls() {
   if (!APPLICATION_SERVER_URL) {
-    if (window.location.hostname === "localhost") {
-      APPLICATION_SERVER_URL = "http://localhost:6080/";
+    if (window.location.hostname === 'localhost') {
+      APPLICATION_SERVER_URL = 'http://localhost:6080/';
     } else {
       APPLICATION_SERVER_URL = `https://${window.location.hostname}:6443/`;
     }
   }
 
   if (!LIVEKIT_URL) {
-    if (window.location.hostname === "localhost") {
-      LIVEKIT_URL = "ws://localhost:7880/";
+    if (window.location.hostname === 'localhost') {
+      LIVEKIT_URL = 'ws://localhost:7880/';
     } else {
       LIVEKIT_URL = `wss://${window.location.hostname}:7443/`;
     }
@@ -41,7 +41,7 @@ function Video() {
   const [participantName, setParticipantName] = useState(
     `Participant${Math.floor(Math.random() * 100)}`
   );
-  const [roomName, setRoomName] = useState("Test Room");
+  const [roomName, setRoomName] = useState('Test Room');
 
   async function joinRoom() {
     // Initialize a new Room object
@@ -49,7 +49,7 @@ function Video() {
     setRoom(room);
 
     // Specify the actions when events take place in the room
-    // On every new Track received...
+    // On every new Track received... 아마 새로운 방 열 때 인듯?
     room.on(RoomEvent.TrackSubscribed, (_track, publication, participant) => {
       setRemoteTracks((prev) => [
         ...prev,
@@ -63,9 +63,7 @@ function Video() {
     // On every Track destroyed...
     room.on(RoomEvent.TrackUnsubscribed, (_track, publication) => {
       setRemoteTracks((prev) =>
-        prev.filter(
-          (track) => track.trackPublication.trackSid !== publication.trackSid
-        )
+        prev.filter((track) => track.trackPublication.trackSid !== publication.trackSid)
       );
     });
 
@@ -78,12 +76,9 @@ function Video() {
 
       // Publish your camera and microphone
       await room.localParticipant.enableCameraAndMicrophone();
-      setLocalTrack(
-        room.localParticipant.videoTrackPublications.values().next().value
-          .videoTrack
-      );
+      setLocalTrack(room.localParticipant.videoTrackPublications.values().next().value.videoTrack);
     } catch (error) {
-      console.log("There was an error connecting to the room:", error.message);
+      console.log('There was an error connecting to the room:', error.message);
       await leaveRoom();
     }
   }
@@ -112,10 +107,10 @@ function Video() {
    * access to the endpoints.
    */
   async function getToken(roomName, participantName) {
-    const response = await fetch(APPLICATION_SERVER_URL + "token", {
-      method: "POST",
+    const response = await fetch(APPLICATION_SERVER_URL + 'token', {
+      method: 'POST',
       headers: {
-        "Content-Type": "application/json",
+        'Content-Type': 'application/json',
       },
       body: JSON.stringify({
         roomName: roomName,
@@ -180,11 +175,7 @@ function Video() {
         <div id="room">
           <div id="room-header">
             <h2 id="room-title">{roomName}</h2>
-            <button
-              className="btn btn-danger"
-              id="leave-room-button"
-              onClick={leaveRoom}
-            >
+            <button className="btn btn-danger" id="leave-room-button" onClick={leaveRoom}>
               Leave Room
             </button>
           </div>
@@ -197,7 +188,7 @@ function Video() {
               />
             )}
             {remoteTracks.map((remoteTrack) =>
-              remoteTrack.trackPublication.kind === "video" ? (
+              remoteTrack.trackPublication.kind === 'video' ? (
                 <VideoComponent
                   key={remoteTrack.trackPublication.trackSid}
                   track={remoteTrack.trackPublication.videoTrack}

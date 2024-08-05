@@ -1,12 +1,12 @@
-import React from "react";
-import { Router, Route, Routes, useNavigate } from "react-router-dom";
-import Button from "../../../components/common/Button";
+import React from 'react';
+import { useNavigate } from 'react-router-dom';
+import Button from '../../../components/common/Button';
 
 function PaymentPage() {
   const navigate = useNavigate();
 
   const goReceipt = () => {
-    navigate("/kiosk/receipt");
+    navigate('/kiosk/receipt');
   };
 
   return (

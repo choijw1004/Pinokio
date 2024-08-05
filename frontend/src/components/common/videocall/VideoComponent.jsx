@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef } from 'react';
 
 // interface VideoComponentProps {
 //   track: LocalVideoTrack | RemoteVideoTrack;
@@ -23,7 +23,7 @@ const VideoComponent = ({ track, participantIdentity, local = false }) => {
       <div className="participant-data">
         <p>
           {participantIdentity}
-          {local ? " (You)" : ""}
+          {local ? ' (You)' : ''}
         </p>
       </div>
       <video ref={videoElement} id={track.sid}></video>
