@@ -4,6 +4,7 @@ import com.example.pinokkio.api.auth.dto.request.LoginRequest;
 import com.example.pinokkio.api.auth.dto.request.SignUpKioskRequest;
 import com.example.pinokkio.api.auth.dto.request.SignUpPosRequest;
 import com.example.pinokkio.api.auth.dto.request.SignUpTellerRequest;
+import com.example.pinokkio.api.auth.dto.response.KioskLoginResponse;
 import com.example.pinokkio.api.kiosk.Kiosk;
 import com.example.pinokkio.api.kiosk.KioskRepository;
 import com.example.pinokkio.api.pos.Pos;
@@ -19,6 +20,7 @@ import com.example.pinokkio.exception.base.AuthenticationException;
 import com.example.pinokkio.exception.domain.auth.EmailConflictException;
 import com.example.pinokkio.exception.domain.auth.PasswordBadInputException;
 import com.example.pinokkio.exception.domain.code.CodeNotFoundException;
+import com.example.pinokkio.exception.domain.kiosk.KioskNotFoundException;
 import com.example.pinokkio.exception.domain.pos.PosNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -159,7 +161,7 @@ public class AuthService {
 
 
     @Transactional
-    public AuthToken loginKiosk(LoginRequest loginRequest) {
+    public KioskLoginResponse loginKiosk(LoginRequest loginRequest) {
         try {
             Role role = Role.K;
             String kioskEmail = role + loginRequest.getUsername();
@@ -178,9 +180,16 @@ public class AuthService {
             SecurityContextHolder.getContext().setAuthentication(authentication);
 
             AuthToken authToken = createTokens(authentication.getName(), role.getValue());
-//            // 리프레시 토큰을 Redis에 저장
+            // 리프레시 토큰을 Redis에 저장
             saveRefreshTokenToRedis(authentication.getName(), role.getValue(), authToken.getAccessToken(), authToken.getRefreshToken());
-            return authToken;
+
+            // 키오스크 ID
+            String userEmail = authentication.getName();
+            UUID kioskId = kioskRepository.findByEmail(userEmail)
+                    .map(Kiosk::getId)
+                    .orElseThrow(() -> new KioskNotFoundException(userEmail));
+
+            return new KioskLoginResponse(authToken, kioskId);
         } catch (AuthenticationException e) {
             throw new AuthenticationException("KIOSK 인증 실패", e.getMessage());
         }
