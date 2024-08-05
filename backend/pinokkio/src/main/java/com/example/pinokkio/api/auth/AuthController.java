@@ -4,6 +4,7 @@ import com.example.pinokkio.api.auth.dto.request.LoginRequest;
 import com.example.pinokkio.api.auth.dto.request.SignUpKioskRequest;
 import com.example.pinokkio.api.auth.dto.request.SignUpPosRequest;
 import com.example.pinokkio.api.auth.dto.request.SignUpTellerRequest;
+import com.example.pinokkio.api.auth.dto.response.KioskLoginResponse;
 import com.example.pinokkio.exception.ErrorResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -107,10 +108,10 @@ public class AuthController {
     })
     @PostMapping("/login/kiosk")
     public ResponseEntity<?> loginKiosk(@Validated @RequestBody LoginRequest loginRequest) {
-        AuthToken authToken = authService.loginKiosk(loginRequest);
+        KioskLoginResponse loginResponse = authService.loginKiosk(loginRequest);
         HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.add(HttpHeaders.AUTHORIZATION, "Bearer " + authToken.getAccessToken());
-        return new ResponseEntity<>(authToken, httpHeaders, HttpStatus.OK);
+        httpHeaders.add(HttpHeaders.AUTHORIZATION, "Bearer " + loginResponse.getAuthToken().getAccessToken());
+        return new ResponseEntity<>(loginResponse, httpHeaders, HttpStatus.OK);
     }
 
     @Operation(summary = "토큰 재발급", description = "refresh 토큰을 이용한 토큰 재발급")

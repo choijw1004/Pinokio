@@ -22,5 +22,7 @@ public class PosService {
     }
 
 
-
+    public boolean isEmailDuplicated(String email) {
+        return posRepository.existsByEmail(email);
+    }
 }

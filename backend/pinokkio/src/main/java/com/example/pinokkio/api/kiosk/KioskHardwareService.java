@@ -2,7 +2,7 @@ package com.example.pinokkio.api.kiosk;
 
 import com.example.pinokkio.api.customer.FaceAnalysisService;
 import com.example.pinokkio.api.customer.sse.SSEService;
-import com.example.pinokkio.api.kiosk.grpc.*;
+import com.example.pinokkio.grpc.*;
 import com.google.protobuf.ByteString;
 import io.grpc.*;
 import io.grpc.stub.StreamObserver;
@@ -10,13 +10,11 @@ import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
 import java.time.Instant;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -58,17 +56,9 @@ public class KioskHardwareService extends KioskServiceGrpc.KioskServiceImplBase 
     // gRPC 서버 객체입니다.
     private Server grpcServer;
 
-    // SSEService를 주입받습니다. Server-Sent Events를 통한 실시간 통신을 위해 사용됩니다.
-    @Autowired
-    private SSEService sseService;
-
-    // FaceAnalysisService를 주입받습니다. 얼굴 분석을 위해 사용됩니다.
-    @Autowired
-    private FaceAnalysisService faceAnalysisService;
-
-    // KioskService를 주입받습니다. gRPC 로그인 처리를 위해 사용됩니다.
-    @Autowired
-    private KioskService kioskService;
+    private final SSEService sseService;
+    private final FaceAnalysisService faceAnalysisService;
+    private final KioskService kioskService;
 
     // gRPC 서버를 시작하는 메서드입니다. 애플리케이션 시작 시 자동으로 실행됩니다.
     @PostConstruct
@@ -89,6 +79,13 @@ public class KioskHardwareService extends KioskServiceGrpc.KioskServiceImplBase 
     public void stopGrpcServer() {
         if (grpcServer != null) {
             grpcServer.shutdown();
+            try {
+                if (!grpcServer.awaitTermination(5, TimeUnit.SECONDS)) {
+                    grpcServer.shutdownNow();
+                }
+            } catch (InterruptedException e) {
+                grpcServer.shutdownNow();
+            }
         }
     }
 
@@ -98,7 +95,6 @@ public class KioskHardwareService extends KioskServiceGrpc.KioskServiceImplBase 
         String kioskId = request.getKioskId();
         double distance = request.getDistance();
         log.info("Received distance data from kiosk {}: {} cm", kioskId, distance);
-
         boolean shouldProcessFurther = processDistanceData(kioskId, distance);
         if (shouldProcessFurther) {
             handleUserDetected(kioskId);
@@ -111,13 +107,36 @@ public class KioskHardwareService extends KioskServiceGrpc.KioskServiceImplBase 
     private void handleUserDetected(String kioskId) {
         log.info("User detected at kiosk {}. Initiating brightness adjustment and image capture.", kioskId);
 
-        adjustBrightness(kioskId, MAX_BRIGHTNESS)
-                .thenRun(() -> captureAndAnalyzeImages(kioskId, 2))
+        stopDistanceMeasurement(kioskId)
+                .thenCompose(v -> adjustBrightness(kioskId, MAX_BRIGHTNESS))
+                .thenCompose(v -> captureAndAnalyzeImages(kioskId, 2))
                 .exceptionally(e -> {
                     log.error("Error in user detection process for kiosk {}", kioskId, e);
-                    resetKiosk(kioskId);
                     return null;
                 });
+    }
+
+    public CompletableFuture<Void> stopDistanceMeasurement(String kioskId) {
+        return CompletableFuture.runAsync(() -> {
+            ManagedChannel channel = ManagedChannelBuilder.forAddress(KIOSK_CONTROLLER_ADDRESS, KIOSK_CONTROLLER_PORT)
+                    .usePlaintext()
+                    .build();
+            KioskServiceGrpc.KioskServiceBlockingStub stub = KioskServiceGrpc.newBlockingStub(channel);
+
+            StopDistanceMeasurementRequest request = StopDistanceMeasurementRequest.newBuilder()
+                    .setKioskId(kioskId)
+                    .build();
+
+            try {
+                stub.stopDistanceMeasurement(request);
+                log.info("Stopped distance measurement for kiosk: {}", kioskId);
+            } catch (StatusRuntimeException e) {
+                log.error("Error stopping distance measurement for kiosk: {}", kioskId, e);
+            } finally {
+                log.info("Shutdown!");
+                channel.shutdown();
+            }
+        });
     }
 
     // 키오스크의 밝기를 조절하는 메서드입니다.
@@ -143,42 +162,41 @@ public class KioskHardwareService extends KioskServiceGrpc.KioskServiceImplBase 
     }
 
     // 이미지를 캡처하고 분석하는 메서드입니다.
-    public void captureAndAnalyzeImages(String kioskId, int count) {
-        List<String> capturedImages = captureMultipleImages(kioskId, count);
+    public CompletableFuture<Object> captureAndAnalyzeImages(String kioskId, int count) {
+        return CompletableFuture.supplyAsync(() -> {
+            ManagedChannel channel = ManagedChannelBuilder.forAddress(KIOSK_CONTROLLER_ADDRESS, KIOSK_CONTROLLER_PORT)
+                    .usePlaintext()
+                    .build();
+            KioskServiceGrpc.KioskServiceBlockingStub stub = KioskServiceGrpc.newBlockingStub(channel);
 
-        if (!capturedImages.isEmpty()) {
-            sseService.sendWaitingEvent(true);
-            faceAnalysisService.analyzeImages(capturedImages);
-        } else {
-            log.error("Failed to capture images from kiosk: {}", kioskId);
-            sseService.sendWaitingEvent(false);
-            resetKiosk(kioskId);
-        }
-    }
+            CaptureImagesRequest request = CaptureImagesRequest.newBuilder()
+                    .setCount(count)
+                    .build();
 
-    // 여러 장의 이미지를 캡처하는 메서드입니다.
-    private List<String> captureMultipleImages(String kioskId, int count) {
-        ManagedChannel channel = ManagedChannelBuilder.forAddress(KIOSK_CONTROLLER_ADDRESS, KIOSK_CONTROLLER_PORT)
-                .usePlaintext()
-                .build();
-        KioskServiceGrpc.KioskServiceBlockingStub stub = KioskServiceGrpc.newBlockingStub(channel)
-                .withDeadlineAfter(5, TimeUnit.SECONDS);
-
-        CaptureImagesRequest request = CaptureImagesRequest.newBuilder()
-                .setCount(count)
-                .build();
-
-        try {
-            CaptureImagesResponse response = stub.captureImages(request);
-            return response.getImagesList().stream()
-                    .map(ByteString::toStringUtf8)
-                    .collect(Collectors.toList());
-        } catch (StatusRuntimeException e) {
-            log.error("Error capturing images", e);
-            return Collections.emptyList();
-        } finally {
-            channel.shutdown();
-        }
+            try {
+                CaptureImagesResponse response = stub.captureImages(request);
+                List<ByteString> capturedImages = response.getImagesList();
+                if (!capturedImages.isEmpty()) {
+                    sseService.sendWaitingEvent(true);
+                    List<String> base64Images = capturedImages.stream()
+                            .map(ByteString::toStringUtf8)
+                            .collect(Collectors.toList());
+                    faceAnalysisService.analyzeImages(base64Images);
+                    return null;
+                } else {
+                    log.error("Failed to capture images from kiosk: {}", kioskId);
+                    sseService.sendWaitingEvent(false);
+                    throw new RuntimeException("Failed to capture images");
+                }
+            } catch (Exception e) {
+                log.error("Error during image capture or analysis for kiosk: {}", kioskId, e);
+                sseService.sendWaitingEvent(false);
+                resetKiosk(kioskId).join(); // kioskReset 호출
+                return null;
+            } finally {
+                channel.shutdown();
+            }
+        });
     }
 
     // 거리 데이터를 처리하는 메서드입니다.
@@ -232,23 +250,25 @@ public class KioskHardwareService extends KioskServiceGrpc.KioskServiceImplBase 
     }
 
     // 키오스크를 리셋하는 메서드입니다.
-    public void resetKiosk(String kioskId) {
-        ManagedChannel channel = ManagedChannelBuilder.forAddress(KIOSK_CONTROLLER_ADDRESS, KIOSK_CONTROLLER_PORT)
-                .usePlaintext()
-                .build();
-        KioskServiceGrpc.KioskServiceBlockingStub stub = KioskServiceGrpc.newBlockingStub(channel);
+    public CompletableFuture<Void> resetKiosk(String kioskId) {
+        return CompletableFuture.runAsync(() -> {
+            ManagedChannel channel = ManagedChannelBuilder.forAddress(KIOSK_CONTROLLER_ADDRESS, KIOSK_CONTROLLER_PORT)
+                    .usePlaintext()
+                    .build();
+            KioskServiceGrpc.KioskServiceBlockingStub stub = KioskServiceGrpc.newBlockingStub(channel);
 
-        ResetRequest request = ResetRequest.newBuilder().build();
+            ResetRequest request = ResetRequest.newBuilder().build();
 
-        try {
-            stub.resetKiosk(request);
-            log.info("Kiosk reset successful: {}", kioskId);
-            sseService.sendWaitingEvent(false);
-        } catch (StatusRuntimeException e) {
-            log.error("Error resetting kiosk: {}", kioskId, e);
-        } finally {
-            channel.shutdown();
-        }
+            try {
+                stub.resetKiosk(request);
+                log.info("Kiosk reset successful: {}", kioskId);
+                sseService.sendWaitingEvent(false);
+            } catch (StatusRuntimeException e) {
+                log.error("Error resetting kiosk: {}", kioskId, e);
+            } finally {
+                channel.shutdown();
+            }
+        });
     }
 
     // 키오스크에 제어 신호를 보내는 메서드입니다.

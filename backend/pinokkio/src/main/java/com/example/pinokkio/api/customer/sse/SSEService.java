@@ -2,6 +2,7 @@ package com.example.pinokkio.api.customer.sse;
 
 import com.example.pinokkio.api.customer.Customer;
 import com.example.pinokkio.api.customer.dto.response.AnalysisResult;
+import jakarta.annotation.PreDestroy;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
@@ -11,23 +12,47 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 @Service
 public class SSEService {
 
+    private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
     // 여러 클라이언트의 SseEmitter를 관리하기 위한 스레드 안전한 리스트입니다.
     private final List<SseEmitter> emitters = new CopyOnWriteArrayList<>();
 
+    public SSEService() {
+        scheduler.scheduleAtFixedRate(this::sendKeepAlive, 0, 15, TimeUnit.SECONDS);
+    }
+
+    private void sendKeepAlive() {
+        Map<String, Object> keepAliveData = new HashMap<>();
+        keepAliveData.put("status", "keep-alive");
+        sendEventToAll("keepAlive", keepAliveData);
+    }
+
+    @PreDestroy
+    public void destroy() {
+        scheduler.shutdown();
+        emitters.forEach(SseEmitter::complete);
+    }
+
     // 새로운 SSE 연결을 생성하는 메서드입니다.
     public SseEmitter createEmitter() {
-        // 무한 타임아웃으로 SseEmitter를 생성합니다.
         SseEmitter emitter = new SseEmitter(Long.MAX_VALUE);
-        // 생성된 emitter를 리스트에 추가합니다.
         this.emitters.add(emitter);
-        // 연결이 완료되면 리스트에서 emitter를 제거하는 콜백을 설정합니다.
         emitter.onCompletion(() -> this.emitters.remove(emitter));
-        // 연결이 타임아웃되면 리스트에서 emitter를 제거하는 콜백을 설정합니다.
         emitter.onTimeout(() -> this.emitters.remove(emitter));
+
+        try {
+            emitter.send(SseEmitter.event()
+                    .name("connect")
+                    .data("Connected successfully"));
+        } catch (IOException e) {
+            emitter.completeWithError(e);
+        }
         return emitter;
     }
 
@@ -52,6 +77,7 @@ public class SSEService {
         eventData.put("gender", analysisResult.getGender());
         eventData.put("isFace", analysisResult.isFace());
         eventData.put("isCustomer", customer != null);
+        eventData.put("faceEmbeddingData", analysisResult.getEncryptedEmbedding());
 
         if (customer != null) {
             eventData.put("customerId", customer.getId());
@@ -64,22 +90,20 @@ public class SSEService {
 
     // 모든 연결된 클라이언트에게 이벤트를 전송하는 private 메서드입니다.
     private void sendEventToAll(String eventName, Map<String, Object> eventData) {
-        // 전송에 실패한 emitter를 저장할 리스트입니다.
         List<SseEmitter> deadEmitters = new ArrayList<>();
 
-        // 모든 emitter에 대해 이벤트를 전송합니다.
-        this.emitters.forEach(emitter -> {
+        for (SseEmitter emitter : this.emitters) {
             try {
                 emitter.send(SseEmitter.event()
                         .name(eventName)
                         .data(eventData));
             } catch (IOException e) {
-                // 전송에 실패한 emitter를 deadEmitters 리스트에 추가합니다.
+                deadEmitters.add(emitter);
+            } catch (Exception e) {
                 deadEmitters.add(emitter);
             }
-        });
+        }
 
-        // 전송에 실패한 emitter들을 리스트에서 제거합니다.
         this.emitters.removeAll(deadEmitters);
     }
 

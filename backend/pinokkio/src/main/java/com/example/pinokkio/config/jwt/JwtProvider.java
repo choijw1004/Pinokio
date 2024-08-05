@@ -17,6 +17,7 @@ import org.springframework.stereotype.Component;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.Date;
+import java.util.Optional;
 
 @Component
 @RequiredArgsConstructor
@@ -193,13 +194,11 @@ public class JwtProvider {
      * 현재 인증된 사용자로부터 이메일을 가져오는 메서드
      */
     public String getCurrentUserEmail() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication != null && authentication.isAuthenticated()) {
-            Object principal = authentication.getPrincipal();
-            if (principal instanceof UserDetails) {
-                return ((UserDetails) principal).getUsername();
-            }
-        }
-        return null;
+        return Optional.ofNullable(SecurityContextHolder.getContext().getAuthentication())
+                .filter(Authentication::isAuthenticated)
+                .map(Authentication::getPrincipal)
+                .filter(principal -> principal instanceof UserDetails)
+                .map(principal -> ((UserDetails) principal).getUsername())
+                .orElse(null);
     }
 }

@@ -18,7 +18,6 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-@CrossOrigin(origins = "*") // 추후 수정 예정
 @RestController
 @RequiredArgsConstructor
 @Slf4j
@@ -36,12 +35,10 @@ public class RoomController {
 
     })
     @PreAuthorize("hasRole('ROLE_TELLER')")
-    @PostMapping("/teller/{tellerId}")
-    public ResponseEntity<?> createRoom(
-            @Parameter(description = "Teller ID", example = "123e4567-e89b-12d3-a456-426614174000")
-            @PathVariable String tellerId) {
-        AccessToken roomToken = roomService.createRoom(tellerId);
-        return ResponseEntity.ok(new RoomResponse(roomToken.toJwt()));
+    @GetMapping("/teller/room")
+    public ResponseEntity<?> createRoom() {
+        RoomResponse roomResponse = roomService.createRoom();
+        return ResponseEntity.ok(roomResponse);
     }
 
     @Operation(summary = "상담 삭제", description = "Teller의 경우 상담방 삭제 가능")
@@ -49,11 +46,9 @@ public class RoomController {
             @ApiResponse(responseCode = "204", description = "NO CONTENT")
     })
     @PreAuthorize("hasRole('ROLE_TELLER')")
-    @DeleteMapping("/teller/{tellerId}")
-    public ResponseEntity<?> deleteRoom(
-            @Parameter(description = "Teller ID", example = "123e4567-e89b-12d3-a456-426614174000")
-            @PathVariable String tellerId) {
-        roomService.deleteRoom(tellerId);
+    @DeleteMapping("/teller/room")
+    public ResponseEntity<?> deleteRoom() {
+        roomService.deleteRoom();
         return ResponseEntity.noContent().build();
     }
 
@@ -63,15 +58,13 @@ public class RoomController {
                     content = @Content(schema = @Schema(implementation = RoomResponse.class)))
     })
     @PreAuthorize("hasRole('ROLE_TELLER')")
-    @PostMapping("/teller/{tellerId}/accept")
+    @PostMapping("/teller/accept")
     public ResponseEntity<RoomResponse> acceptInvitation(
-            @Validated @RequestBody RoomEnterRequest enterRequest,
-            @Parameter(description = "Teller ID", example = "123e4567-e89b-12d3-a456-426614174000")
-            @PathVariable String tellerId) {
+            @Validated @RequestBody RoomEnterRequest enterRequest) {
         if (webSocketService.isTokenIssued(enterRequest.getUserId())) {
             //TODO conflict 예외처리 하기
         }
-        String acceptRoomId = roomService.acceptInvitation(enterRequest.getRoomId(), tellerId, enterRequest.getUserId());
+        String acceptRoomId = roomService.acceptInvitation(enterRequest.getRoomId(), enterRequest.getUserId());
         webSocketService.sendRoomId(enterRequest.getUserId(), acceptRoomId);
         //TODO bad input 예외처리 하기
         return ResponseEntity.noContent().build();
@@ -95,11 +88,9 @@ public class RoomController {
                     content = @Content(schema = @Schema(implementation = RoomResponse.class)))
     })
     @PreAuthorize("hasRole('ROLE_KIOSK')")
-    @PostMapping("/kiosk/{kioskId}/request-enter")
-    public ResponseEntity<RoomResponse> requestEnterRoom(
-            @Parameter(description = "Kiosk ID", example = "123e4567-e89b-12d3-a456-426614174000")
-            @PathVariable String kioskId) {
-        roomService.messageAllRooms(kioskId);
+    @PostMapping("/kiosk/request-enter")
+    public ResponseEntity<RoomResponse> requestEnterRoom() {
+        roomService.messageAllRooms();
         return ResponseEntity.noContent().build();
     }
 
@@ -113,7 +104,7 @@ public class RoomController {
     public ResponseEntity<RoomResponse> enterRoom(
             @Validated @RequestBody RoomEnterRequest enterRequest) {
         AccessToken roomToken = roomService.enterRoom(enterRequest.getRoomId(), enterRequest.getUserId());
-        return ResponseEntity.ok(new RoomResponse(roomToken.toJwt()));
+        return ResponseEntity.ok(new RoomResponse(roomToken.toJwt(), enterRequest.getRoomId()));
     }
 
     @Operation(summary = "상담 퇴장", description = "Kiosk가 화상 상담에서 퇴장")

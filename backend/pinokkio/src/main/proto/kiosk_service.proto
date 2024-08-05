@@ -1,7 +1,7 @@
 syntax = "proto3";
 
 option java_multiple_files = true;
-option java_package = "com.example.pinokkio.api.kiosk.grpc";
+option java_package = "com.example.pinokkio.grpc";
 option java_outer_classname = "KioskServiceProto";
 
 package kiosk;
@@ -13,6 +13,7 @@ service KioskService {
   rpc CaptureImages (CaptureImagesRequest) returns (CaptureImagesResponse) {}
   rpc ResetKiosk (ResetRequest) returns (Empty) {}
   rpc SendControlSignal (ControlSignalRequest) returns (Empty) {}
+  rpc StopDistanceMeasurement (StopDistanceMeasurementRequest) returns (Empty) {}
 }
 
 message KioskId {
@@ -46,4 +47,8 @@ message ResetRequest {}
 
 message ControlSignalRequest {
   string signal = 1;
+}
+
+message StopDistanceMeasurementRequest {
+  string kiosk_id = 1;
 }

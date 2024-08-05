@@ -11,8 +11,11 @@ import lombok.Setter;
 @Schema(description = "화상 상담 응답 DTO")
 public class RoomResponse {
 
-    @Schema(description = "응답 데이터(Livekit Access Token)", example = "{\n" +
+    @Schema(description = "Room UUID", example = "123e4567-e89b-12d3-a456-426614174000")
+    private String roomId;
+
+    @Schema(description = "Livekit Access Token", example = "{\n" +
             "    \"token\": \"eyJ0eXAiOiJKV1QiLCJhbG...\"\n" +
             "}")
-    private String data;
+    private String token;
 }

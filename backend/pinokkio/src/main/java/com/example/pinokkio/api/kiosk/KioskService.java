@@ -1,10 +1,8 @@
 package com.example.pinokkio.api.kiosk;
 
 import com.example.pinokkio.api.kiosk.dto.response.KioskResponse;
-import com.example.pinokkio.api.kiosk.grpc.LoginResponse;
-import com.example.pinokkio.api.pos.Pos;
-import com.example.pinokkio.api.pos.dto.response.PosResponse;
 import com.example.pinokkio.exception.domain.pos.PosEmailNotFoundException;
+import com.example.pinokkio.grpc.LoginResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -31,8 +29,8 @@ public class KioskService {
                 .findByEmail(email)
                 .orElseThrow(() -> new PosEmailNotFoundException(email));
         return new KioskResponse(
-                kiosk.getPos().getId().toString(),
                 kiosk.getId().toString(),
+                kiosk.getPos().getId().toString(),
                 kiosk.getEmail()
         );
     }
