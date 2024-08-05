@@ -11,10 +11,12 @@ import com.example.pinokkio.api.order.orderitem.OrderItemRepository;
 import com.example.pinokkio.api.pos.Pos;
 import com.example.pinokkio.api.pos.PosRepository;
 import com.example.pinokkio.exception.domain.customer.CustomerNotFoundException;
+import com.example.pinokkio.exception.domain.item.ItemAmountException;
 import com.example.pinokkio.exception.domain.item.ItemNotFoundException;
 import com.example.pinokkio.exception.domain.pos.PosNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.core.parameters.P;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -35,46 +37,40 @@ public class OrderService {
     private final OrderItemRepository orderItemRepository;
     private final ItemRepository itemRepository;
 
+    public Order createOrder(UUID posId, GroupOrderItemRequest dtoList) {
 
-    /**
-     * 컨트롤러에서 GroupOrderItemRequest 받아오기
-     * -> OrderItem 으로 변형시켜서 저장하기
-     * -> Order 정보 저장하기
-     * 
-     * 도중에 수량 카운트 검증 필요
-     * 
-     */
-    
-    
-    public Order createOrder(UUID posId, UUID customerId, GroupOrderItemRequest dtoList) {
-
-        //Pos 검증
-        Pos pos = posRepository.findById(posId)
+        // Pos 검증
+        Pos pos = posRepository
+                .findById(posId)
                 .orElseThrow(() -> new PosNotFoundException(posId));
 
+        UUID customerId = dtoList.getCustomerId() == null
+                ? toUUID(pos.getDummyCustomerUUID())
+                : toUUID(dtoList.getCustomerId());
+
+
+        Customer customer = customerRepository
+                .findById(customerId)
+                .orElseThrow(() -> new CustomerNotFoundException(customerId));
+
         // OrderItem 리스트 생성
-        List<OrderItem> orderItems = dtoList.getOrderItems().stream()
-                .map(request -> {
-                    Item item = itemRepository
-                            .findById(toUUID(request.getItemId()))
-                            .orElseThrow(() -> new ItemNotFoundException(toUUID(request.getItemId())));
-                    return new OrderItem(null, item, request.getQuantity());
-                })
-                .toList();
+        List<OrderItem> orderItems = new ArrayList<>();
+        for (OrderItemRequest request : dtoList.getOrderItems()) {
+            Item item = itemRepository
+                    .findById(toUUID(request.getItemId()))
+                    .orElseThrow(() -> new ItemNotFoundException(toUUID(request.getItemId())));
 
+            // Item 수량 체크
+            if (item.getAmount() < request.getQuantity()) {
+                throw new ItemAmountException(item.getId());
+            }
 
-        Customer customer = null;
-        //CASE 1:고객
-        if (customerId != null) {
-            customer = customerRepository
-                    .findById(customerId)
-                    .orElseThrow(() -> new CustomerNotFoundException(customerId));
-        }
-        //CASE 2:비고객
-        else {
-            customer = customerRepository
-                    .findById(toUUID(pos.getDummyCustomerUUID()))
-                    .orElseThrow(()-> new CustomerNotFoundException(toUUID(pos.getDummyCustomerUUID())));
+            // Item 수량 차감
+            item.updateAmount(-request.getQuantity());
+
+            // OrderItem 생성
+            OrderItem orderItem = new OrderItem(null, item, request.getQuantity());
+            orderItems.add(orderItem);
         }
 
         // Order 생성
@@ -84,19 +80,17 @@ public class OrderService {
                 .items(orderItems)
                 .build();
 
-        // OrderItem의 Order 설정
+        // OrderItem 의 Order 설정 및 저장
         orderItems.forEach(orderItem -> {
             orderItem.updateOrder(order);
             orderItemRepository.save(orderItem);
-            // 각 OrderItem을 저장
         });
 
+        // Order 저장
         return orderRepository.save(order);
     }
 
-    /**
-     * String to UUID
-     */
+
     public UUID toUUID(String input) {
         return UUID.fromString(input);
     }

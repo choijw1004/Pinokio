@@ -13,5 +13,6 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class GroupOrderItemRequest {
+    private String customerId; //nullable
     private List<OrderItemRequest> orderItems = new ArrayList<>();
 }
