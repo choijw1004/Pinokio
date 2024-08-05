@@ -28,7 +28,7 @@ function MenuCategory({ categories, selectedCategory, setSelectedCategory }) {
   const leftArrow = useRef(null);
   const showSize = 4;
   useEffect(() => {
-    leftArrow.current.opacity = '0.5';
+    // leftArrow.current.opacity = '0.5';
   });
 
   const decreaseNowFirst = () => {
@@ -37,7 +37,7 @@ function MenuCategory({ categories, selectedCategory, setSelectedCategory }) {
     }
   };
   const increaseNowFirst = () => {
-    if (nowFirst < categories.length - 1) {
+    if (nowFirst < categories.length - showSize) {
       setNowFirst(nowFirst + 1);
     }
   };
@@ -48,15 +48,18 @@ function MenuCategory({ categories, selectedCategory, setSelectedCategory }) {
         {'<'}
       </Arrow>
       <MenuCategoryCards>
-        {categories.slice(nowFirst, nowFirst + showSize).map((cat, index) => (
-          <MenuCategoryCard
-            key={index}
-            cat={cat}
-            setselectedcat={setSelectedCategory}
-            selectedcat={selectedCategory}
-            showSize={showSize}
-          />
-        ))}
+        {categories &&
+          categories
+            .slice(nowFirst, nowFirst + showSize)
+            .map((cat, index) => (
+              <MenuCategoryCard
+                key={index}
+                cat={cat}
+                setselectedcat={setSelectedCategory}
+                selectedcat={selectedCategory}
+                showSize={showSize}
+              />
+            ))}
       </MenuCategoryCards>
 
       <Arrow onClick={increaseNowFirst}>{'>'}</Arrow>

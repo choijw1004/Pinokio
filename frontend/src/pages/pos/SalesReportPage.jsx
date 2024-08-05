@@ -11,105 +11,134 @@ Chart.register(...registerables);
 
 const MainOuter = styled.div`
   display: flex;
-  flex-direction: row;
+  justify-content: center;
+  padding: 20px;
+  background-color: #f4f4f9;
+  min-height: 100vh;
 `;
 
 const Main = styled.div`
   display: flex;
   flex-direction: column;
+  width: 100%;
+  max-width: 1200px;
+  background-color: white;
+  border-radius: 15px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  padding: 20px;
 `;
 
-const MainHeader = styled.div`
+const Header = styled.div`
   display: flex;
-  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  font-size: 24px;
+  font-weight: bold;
 `;
 
-const MainBody = styled.div`
+const ButtonGroup = styled.div`
   display: flex;
-  flex-direction: column;
+  gap: 10px;
 `;
 
-const Descriptions = styled.div`
-  display: flex;
-  flex-direction: row;
-  flex-wrap: wrap;
-  border: solid 1px black;
-`;
+const Button = styled.button`
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  padding: 10px 15px;
+  cursor: pointer;
+  font-size: 16px;
 
-const Charts = styled.div`
-  border: 1px;
+  &:hover {
+    background-color: #0056b3;
+  }
+
+  &:focus {
+    outline: none;
+    box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+  }
 `;
 
 const DateDisplay = styled.div`
-  border: 1px solid;
+  border: 1px solid #ddd;
   cursor: pointer;
-  width: 475px;
+  width: 300px;
   padding: 10px;
-  margin-bottom: 5px;
   text-align: center;
   user-select: none;
-  border-radius: 15px;
+  border-radius: 10px;
+  background-color: #fff;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 `;
 
 const DatePickerWrapper = styled.div`
   display: flex;
   gap: 10px;
+  margin-top: 10px;
 
-  /* 전체 레이아웃. 그림자 효과같은 것을 주면 좋다 */
   .react-datepicker {
-    box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.25);
-  }
-
-  .react-datepicker__month-container {
+    box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1);
   }
 
   .react-datepicker__header {
     background-color: white;
+    border-bottom: none;
   }
 
-  /* 최상단에 뜨는 연도와 월 */
-  .react-datepicker__current-month {
-  }
-
-  /* 요일들 */
-  .react-datepicker__day-name {
-  }
-
-  /* 날짜들을 담는 레이아웃 */
-  .react-datepicker__month {
-  }
-
-  /* day: 주말 날짜 */
-  .react-datepicker__day:nth-child(1) {
-    color: red; /* 일요일 날짜*/
-  }
-  .react-datepicker__day:nth-child(7) {
-    color: #8685ff; /* 토요일 날짜 */
-  }
-
-  /* day-name: 요일 */
-  .react-datepicker__day-name:nth-child(1) {
-    color: #ff5555; /* 일요일 */
-  }
-  .react-datepicker__day-name:nth-child(7) {
-    color: #8685ff; /* 토요일 */
-  }
-
-  /* 일반 날짜 */
-  .react-datepicker__day {
-  }
-
-  /* 선택된 날짜 */
   .react-datepicker__day--selected {
+    background-color: #007bff;
+    color: white;
   }
 
-  /* highlighted된 날짜 */
-  .react-datepicker__day--highlighted {
+  .react-datepicker__day--keyboard-selected {
+    background-color: #007bff;
+    color: white;
   }
 
-  /* 날짜에 마우스를 올릴 때 */
+  .react-datepicker__day-name,
+  .react-datepicker__day {
+    color: #333;
+  }
+
+  .react-datepicker__day-name:nth-child(1),
+  .react-datepicker__day:nth-child(1) {
+    color: red;
+  }
+
+  .react-datepicker__day-name:nth-child(7),
+  .react-datepicker__day:nth-child(7) {
+    color: #007bff;
+  }
+
   .react-datepicker__day:hover {
+    background-color: #f0f8ff;
   }
+`;
+
+const MainBody = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+`;
+
+const Descriptions = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  border: solid 1px black;
+  padding: 20px;
+  border-radius: 10px;
+  background-color: #f9f9f9;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+`;
+
+const Charts = styled.div`
+  padding: 20px;
+  background-color: #fff;
+  border-radius: 10px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 `;
 
 function SalesReportPage() {
@@ -161,12 +190,12 @@ function SalesReportPage() {
     labels: ['1월', '2월', '3월', '4월', '5월', '6월', '7월'],
     datasets: [
       {
-        label: 'My First dataset',
-        backgroundColor: 'rgba(255, 99, 132, 0.2)',
-        borderColor: 'rgba(255, 99, 132, 1)',
+        label: '매출',
+        backgroundColor: 'rgba(54, 162, 235, 0.2)',
+        borderColor: 'rgba(54, 162, 235, 1)',
         borderWidth: 1,
-        hoverBackgroundColor: 'rgba(255, 99, 132, 0.4)',
-        hoverBorderColor: 'rgba(255, 99, 132, 1)',
+        hoverBackgroundColor: 'rgba(54, 162, 235, 0.4)',
+        hoverBorderColor: 'rgba(54, 162, 235, 1)',
         data: [65, 59, 80, 81, 56, 55, 40],
       },
     ],
@@ -184,65 +213,59 @@ function SalesReportPage() {
   return (
     <MainOuter>
       <Main>
-        <div>매출 리포트</div>
-        <MainHeader>
-          <div>
-            <button onClick={handleYesterdayClick}>어제</button>
-            <button onClick={handleTodayClick}>오늘</button>
-            <button onClick={handleThisWeekClick}>이번주</button>
-            <button onClick={handleThisMonthClick}>이번달</button>
-          </div>
-          <div>
-            <DateDisplay onClick={() => setIsDatePickerOpen(!isDatePickerOpen)} tabIndex="0">
-              {formatDate(startDate)} ~ {formatDate(endDate)}
-            </DateDisplay>
-            {isDatePickerOpen && (
-              <DatePickerWrapper>
-                <DatePicker
-                  selected={startDate}
-                  onChange={(date) => setStartDate(date)}
-                  selectsStart
-                  startDate={startDate}
-                  endDate={endDate}
-                  inline
-                  locale={ko}
-                />
-                <DatePicker
-                  selected={endDate}
-                  onChange={(date) => setEndDate(date)}
-                  selectsEnd
-                  startDate={startDate}
-                  endDate={endDate}
-                  inline
-                  locale={ko}
-                />
-              </DatePickerWrapper>
-            )}
-          </div>
-        </MainHeader>
+        <Header>
+          매출 리포트
+          <ButtonGroup>
+            <Button onClick={handleYesterdayClick}>어제</Button>
+            <Button onClick={handleTodayClick}>오늘</Button>
+            <Button onClick={handleThisWeekClick}>이번주</Button>
+            <Button onClick={handleThisMonthClick}>이번달</Button>
+          </ButtonGroup>
+        </Header>
         <MainBody>
+          <DateDisplay onClick={() => setIsDatePickerOpen(!isDatePickerOpen)} tabIndex="0">
+            날짜 {formatDate(startDate)} ~ {formatDate(endDate)}
+          </DateDisplay>
+          {isDatePickerOpen && (
+            <DatePickerWrapper>
+              <DatePicker
+                selected={startDate}
+                onChange={(date) => setStartDate(date)}
+                selectsStart
+                startDate={startDate}
+                endDate={endDate}
+                inline
+                locale={ko}
+              />
+              <DatePicker
+                selected={endDate}
+                onChange={(date) => setEndDate(date)}
+                selectsEnd
+                startDate={startDate}
+                endDate={endDate}
+                inline
+                locale={ko}
+              />
+            </DatePickerWrapper>
+          )}
           <Descriptions>
             <DescriptionCard
               title={'실매출'}
-              contents={'135000'}
-              notice={'지난 주 수요일보다 +15,000원  늘었어요.'}
-            ></DescriptionCard>
+              contents={'135,000원'}
+              notice={'지난 주 수요일보다 +15,000원 늘었어요.'}
+            />
             <DescriptionCard
               title={'주문건'}
               contents={'5건'}
               notice={'지난 주 수요일보다 1건 늘었어요.'}
-            ></DescriptionCard>
-            <DescriptionCard title={'할인'} contents={'0원'} notice={''}></DescriptionCard>
+            />
+            <DescriptionCard title={'할인'} contents={'0원'} notice={''} />
           </Descriptions>
           <Charts>
             <Bar data={data} options={options} />
           </Charts>
         </MainBody>
       </Main>
-      <div>
-        <button>^</button>
-        <button>v</button>
-      </div>
     </MainOuter>
   );
 }

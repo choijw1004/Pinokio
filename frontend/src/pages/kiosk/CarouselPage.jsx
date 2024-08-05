@@ -4,6 +4,8 @@ import styled from 'styled-components';
 import carouselimage from '../../assets/images/carouselimage.jpg';
 import carouselimage2 from '../../assets/images/carouselimage2.jpg';
 import carouselimage3 from '../../assets/images/carouselimage3.jpg';
+import menudata from '../../data/MenuData.json';
+import NumberModal from '../../components/kiosk/modal/NumberModal';
 
 const CarouselPageStyle = styled.div`
   display: flex;
@@ -65,11 +67,24 @@ const CarouselMessage = styled.div`
   margin-top: 20vh;
 `;
 
+const ModalButton = styled.button`
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 10px 20px;
+  background-color: #4a90e2;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+`;
+
 function CarouselPage() {
   const navigate = useNavigate();
   const slideRef = useRef(0);
 
-  const [result, setResult] = useState(null);
+  const [result, setResult] = useState(false);
   const [carouselIndex, setCarouselIndex] = useState(0);
 
   const [carouselimages, setCarouselimages] = useState([
@@ -111,7 +126,7 @@ function CarouselPage() {
   };
 
   const takeAway = () => {
-    navigate('/kiosk/menu', { state: { where: 'take away' } });
+    navigate('/kiosk/elder-menu', { state: { where: 'take away' } });
   };
 
   // const slideAutoPlay = () => {
@@ -130,29 +145,42 @@ function CarouselPage() {
   // };
 
   useEffect(() => {
-    moveSlider();
+    const interval = setInterval(() => {
+      moveSlider();
+    }, 2000);
+    /*
+    페이지가 넘어가고 컴포넌트가 없는데 계속 컴포넌트를 찾아서 style을 바꿔주려니깐 에러가 뜬다.
+    때문에 clearInterval을 통해 언마운트되면 지워줘야 한다.
+    */
+    return () => clearInterval(interval);
   }, [carouselIndex]);
 
   const moveSlider = () => {
-    setTimeout(() => {
-      setCarouselIndex(carouselIndex + 1);
-      // console.log('carouselsize : ', carouselimages.length);
-      console.log(slideRef);
+    setCarouselIndex((prevIndex) => prevIndex + 1);
+
+    if (slideRef.current) {
+      // console.log(`Moving slider to index ${carouselIndex}`);
       if (carouselIndex % 2 === 1) {
-        // 홀수일 때 넘기고
         slideRef.current.style.transform = `translateX(-${13.5 * (carouselIndex + 1)}rem)`;
         slideRef.current.style.transition = 'all 0.5s ease-in-out';
-        // console.log(carouselIndex);
       } else if (
-        // 끝에 도달하고, 짝수일 때 style을 바꾼다.
         carouselIndex >= 2 * (carouselimages.length - 1) &&
         carouselIndex % (2 * (carouselimages.length - 1)) === 0
       ) {
         slideRef.current.style.transform = 'none';
-        slideRef.current.style.transition = `none`;
+        slideRef.current.style.transition = 'none';
         setCarouselIndex(1);
       }
-    }, 2000);
+    } else {
+      // console.error('slideRef.current is null');
+    }
+  };
+
+  const [showModal, setShowModal] = useState(false);
+
+  const handleConfirm = (number) => {
+    console.log('입력된 번호:', number);
+    // 여기에 번호 처리 로직을 추가할 수 있습니다.
   };
 
   return (
@@ -191,6 +219,8 @@ function CarouselPage() {
           </CarouselButton>
         </ButtonContainer>
       </CarouselWindow>
+      <ModalButton onClick={() => setShowModal(true)}>번호 입력 모달 열기</ModalButton>
+      {showModal && <NumberModal setModal={setShowModal} onConfirm={handleConfirm} />}
     </CarouselPageStyle>
   );
 }

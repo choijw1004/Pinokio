@@ -6,7 +6,7 @@ const OrderListComponent = styled.div`
 `;
 
 const Header = styled.div`
-  background-color: #4339ff;
+  background-color: #4575f3;
   color: white;
   height: 30px;
   padding: 3px;

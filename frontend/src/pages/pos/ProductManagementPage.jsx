@@ -6,6 +6,8 @@ import CategoryList from '../../components/pos/CategoryList';
 import CategoryModal from '../../components/pos/CategoryModal';
 import Button from '../../components/common/Button';
 import Toast from '../../components/common/Toast';
+import { getItems } from '../../apis/Item'; // Import the API function
+import { useSelector } from 'react-redux'; // Assuming you use Redux to get posId
 
 const TabContainer = styled.div`
   display: flex;
@@ -29,38 +31,22 @@ const ProductManagementPage = () => {
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [toastMessage, setToastMessage] = useState('');
   const [selectedCategoryFilter, setSelectedCategoryFilter] = useState('전체');
+  const posId = 'b48b8afe-0eec-4048-9b47-ebfffb190866';
 
   useEffect(() => {
-    // API를 통해 상품 목록과 카테고리 목록을 가져오는 로직
-    // 임시 데이터
-    setProducts([
-      {
-        id: 1,
-        name: '아메리카노',
-        price: 4000,
-        image: 'url',
-        detail: '기본 커피',
-        isScreen: true,
-        isSoldout: false,
-        category: '커피',
-      },
-      {
-        id: 2,
-        name: '카페라떼',
-        price: 4500,
-        image: 'url',
-        detail: '우유 커피',
-        isScreen: true,
-        isSoldout: false,
-        category: '커피',
-      },
-    ]);
-    setCategories([
-      { id: 1, name: '커피' },
-      { id: 2, name: '논커피' },
-      { id: 3, name: '디저트' },
-    ]);
-  }, []);
+    const fetchItems = async () => {
+      try {
+        const data = await getItems(posId);
+        setProducts(data.products || []); // Adjust based on actual API response
+        setCategories(data.categories || []); // Adjust based on actual API response
+        console.log(data.map((name) => `${name.name}`));
+      } catch (error) {
+        setToastMessage('상품 및 카테고리 데이터를 가져오는 데 실패했습니다.');
+      }
+    };
+
+    fetchItems();
+  }, [posId]);
 
   const handleAddProduct = () => {
     setSelectedProduct(null);

@@ -20,7 +20,7 @@ const TitleItem = styled.div`
   flex: 1;
   text-align: center;
   padding: 10px;
-  background-color: #4339ff;
+  background-color: #4575f3;
   color: white;
   font-size: 18px;
   font-weight: bold;

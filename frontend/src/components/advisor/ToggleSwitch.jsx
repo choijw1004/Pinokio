@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
+import React from 'react';
 import styled from 'styled-components';
 
 const ToggleButton = styled.div`
   width: 100px;
   height: 50px;
-  background-color: ${({ $toggled }) => ($toggled ? '#4caf50' : '#ccc')}; /* 배경색 변경 */
+  background-color: ${({ $toggled }) => ($toggled ? '#4caf50' : '#ccc')};
   border-radius: 30px;
   display: flex;
   align-items: center;
@@ -23,16 +23,14 @@ const ToggleCircle = styled.div`
   transform: ${({ $toggled }) => ($toggled ? 'translateX(50px)' : 'translateX(0)')};
 `;
 
-function ToggleSwitch() {
-  const [toggled, setToggled] = useState(false);
-
+function ToggleSwitch({ isAvailable, setIsAvailable }) {
   const handleToggle = () => {
-    setToggled((prev) => !prev);
+    setIsAvailable(!isAvailable);
   };
 
   return (
-    <ToggleButton $toggled={toggled} onClick={handleToggle}>
-      <ToggleCircle $toggled={toggled} />
+    <ToggleButton $toggled={!isAvailable} onClick={handleToggle}>
+      <ToggleCircle $toggled={!isAvailable} />
     </ToggleButton>
   );
 }

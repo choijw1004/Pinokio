@@ -9,7 +9,7 @@ const ComponentRow = styled.div`
 function OrderListPage() {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [orders, setOrders] = useState([]);
-  const [selectedOrder, setSelectedOrder] = useState(null);
+  const [selectedOrder, setSelectedOrder] = useState(orders[0]);
 
   useEffect(() => {
     // 여기서 선택된 날짜에 따라 주문 내역을 가져오는 API 호출

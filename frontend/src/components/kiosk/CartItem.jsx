@@ -49,10 +49,10 @@ const DeleteButton = styled.div`
 function CartItem({ item, cartItems, setCartItems }) {
   const changeCount = (count) => {
     for (var i = 0; i < cartItems.length; i++) {
-      if (cartItems[i].itemName === item.itemName) {
+      if (cartItems[i].name === item.name) {
         const updatedCartItems = [...cartItems];
-        updatedCartItems[i].itemCount += count;
-        if (updatedCartItems[i].itemCount <= 0) {
+        updatedCartItems[i].count += count;
+        if (updatedCartItems[i].count <= 0) {
           updatedCartItems.splice(i, 1);
         }
         setCartItems(updatedCartItems);
@@ -67,15 +67,15 @@ function CartItem({ item, cartItems, setCartItems }) {
 
   return (
     <CI>
-      <CartItemName>{item.itemName}</CartItemName>
+      <CartItemName>{item.name}</CartItemName>
       <CartItemRight>
         <CountButtonsContainer>
           <CountUpButton onClick={() => changeCount(+1)}>+</CountUpButton>
-          <text>{item.itemCount}</text>
+          <text>{item.count}</text>
           <CountDownButton onClick={() => changeCount(-1)}>-</CountDownButton>
         </CountButtonsContainer>
-        <text>{changePriceForm(item.itemPrice)}</text>
-        <DeleteButton onClick={() => changeCount(-1 * item.itemCount)}>x</DeleteButton>
+        <text>{changePriceForm(item.price)}</text>
+        <DeleteButton onClick={() => changeCount(-1 * item.count)}>x</DeleteButton>
       </CartItemRight>
     </CI>
   );

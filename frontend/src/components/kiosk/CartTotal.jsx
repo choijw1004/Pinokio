@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
-import Button from '../common/Button';
 
 const CT = styled.div`
   display: flex;
@@ -16,15 +15,17 @@ const CTtop = styled.div`
   padding-top: 1rem;
 `;
 const GoPaymentButton = styled.div`
-  background-color: #7392ff;
+  background-color: ${(props) => (props.isElder ? '#EC7348' : '#7392ff')};
   color: white;
   height: 3rem;
   text-align: center;
   line-height: 3rem;
   font-size: 1.3rem;
+  pointer-events: ${(props) => (props.disabled ? 'none' : null)};
+  opacity: ${(props) => (props.disabled ? '0.5' : null)};
 `;
 
-function CartTotal({ cartItems }) {
+function CartTotal({ cartItems, isElder }) {
   const navigate = useNavigate();
   const [totalPrice, setTotalPrice] = useState(0);
   useEffect(() => {
@@ -35,7 +36,7 @@ function CartTotal({ cartItems }) {
     let ttl = 0;
     for (var i = 0; i < cartItems.length; i++) {
       console.log(cartItems);
-      ttl += cartItems[i].itemPrice * cartItems[i].itemCount;
+      ttl += cartItems[i].price * cartItems[i].count;
     }
     setTotalPrice(ttl);
   };
@@ -54,7 +55,9 @@ function CartTotal({ cartItems }) {
         <text>결제 금액</text>
         <text>{changePriceForm(totalPrice)}</text>
       </CTtop>
-      <GoPaymentButton onClick={goPayment}>결제하기</GoPaymentButton>
+      <GoPaymentButton onClick={goPayment} isElder={isElder} disabled={cartItems.length === 0}>
+        결제하기
+      </GoPaymentButton>
     </CT>
   );
 }

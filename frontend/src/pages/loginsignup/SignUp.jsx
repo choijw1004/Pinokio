@@ -57,7 +57,7 @@ const LabelContainer = styled.label`
 `;
 
 const AddedMessage = styled.div`
-  color: ${(props) => (props.isCorrect === true ? 'limegreen' : 'red')};
+  color: ${(props) => (props.isUsableId === true ? 'limegreen' : 'red')};
   font-size: 10px;
   text-align: end;
 `;
@@ -166,9 +166,9 @@ function SignUp() {
             onChange={(e) => checkIdDuplicated(e)}
           />
           {isUsableId ? (
-            <AddedMessage isCorrect={true}>사용할 수 있는 아이디입니다.</AddedMessage>
+            <AddedMessage isUsableId={isUsableId}>사용할 수 있는 아이디입니다.</AddedMessage>
           ) : (
-            <AddedMessage isCorrect={false}>사용할 수 없는 아이디입니다.</AddedMessage>
+            <AddedMessage isUsableId={isUsableId}>사용할 수 없는 아이디입니다.</AddedMessage>
           )}
         </LabelContainer>
 
@@ -228,5 +228,3 @@ function SignUp() {
 }
 
 export default SignUp;
-
-const JobList = ['상담원', '점장'];

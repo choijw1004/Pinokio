@@ -2,12 +2,12 @@ import React, { useEffect, useRef, useState } from 'react';
 import styled from 'styled-components';
 
 const MCC = styled.div`
-  background-color: ${(props) => (props.cat === props.selectedcat ? '#7392ff' : null)};
-  color: ${(props) => (props.cat === props.selectedcat ? 'white' : null)};
+  background-color: ${(props) => (props.cat.id === props.selectedcat.id ? '#7392ff' : null)};
+  color: ${(props) => (props.cat.id === props.selectedcat.id ? 'white' : null)};
   width: ${(props) => `${100 / props.showSize}%`};
   border-radius: ${(props) => props.borderRadius};
 
-  font-size: ${(props) => (props.cat.length >= 7 ? '0.7rem' : '1rem')};
+  font-size: ${(props) => (props.cat.name.length >= 7 ? '0.7rem' : '1rem')};
   font-family: var(--font-CafeOhsquareAir);
   display: flex;
   text-align: center;
@@ -39,7 +39,6 @@ function MenuCategoryCard({ cat, setselectedcat, selectedcat, showSize }) {
     setselectedcat(cat);
   };
 
-  console.log(showSize);
   return (
     <MCC
       ref={mccRef}
@@ -49,7 +48,7 @@ function MenuCategoryCard({ cat, setselectedcat, selectedcat, showSize }) {
       showSize={showSize}
       borderRadius={borderRadius}
     >
-      {cat}
+      {cat.name}
     </MCC>
   );
 }

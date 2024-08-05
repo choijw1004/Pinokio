@@ -14,7 +14,7 @@ function CustomerVideo(props) {
   return (
     <div>
       <VideoSection>
-        <p>유저 webRTC 화면입니다.</p>
+        <p>연결 대기중</p>
         <p>components/advisor/CustomerVideo.jsx</p>
       </VideoSection>
     </div>

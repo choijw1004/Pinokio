@@ -20,7 +20,7 @@ const SelectPayment = styled.div`
 const Header = styled.div`
   height: 30px;
   color: white;
-  background-color: #4339ff;
+  background-color: #4575f3;
   padding: 5px;
   font-weight: bolder;
   font-size: 24px;

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import styled from 'styled-components';
 import coffeeImage from '../../assets/images/coffee_image_rb.png';
 
@@ -8,6 +8,8 @@ const MMC = styled.div`
   background: white;
   border: 1px solid #c7c7c7;
   margin: 0.5vh 0.2vw;
+  width: 6.5rem;
+  /* visibility: ${(props) => (props.menu.id ? 'visible' : 'hidden')}; */
   /* font-family: 'PeoplefirstNeatLoudTTF';
   margin: 10px;
   @font-face {
@@ -40,18 +42,20 @@ const MenuPrice = styled.div`
 `;
 
 function MenuMainCard({ menu, setSelectedMenu, setModal }) {
+  useEffect(() => {}, []);
+
   const handleClick = () => {
     setModal(true);
     setSelectedMenu(menu);
   };
 
   return (
-    <MMC onClick={handleClick}>
+    <MMC onClick={handleClick} menu={menu}>
       <Image src={coffeeImage} />
       <MenuContents>
-        <MenuName>{menu}</MenuName>
-        <MenuNameEng>{'Americano'}</MenuNameEng>
-        <MenuPrice>{'5,000원'}</MenuPrice>
+        <MenuName>{menu.name}</MenuName>
+        <MenuNameEng>{menu.detail}</MenuNameEng>
+        <MenuPrice>{menu.price}</MenuPrice>
       </MenuContents>
     </MMC>
   );

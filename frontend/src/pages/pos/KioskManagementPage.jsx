@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import Modal from 'react-modal';
 import styled from 'styled-components';
+import { postRegisterPos } from '../../apis/Auth'; // API 함수 import
 
 const Container = styled.div`
   text-align: center;
@@ -65,13 +66,13 @@ function KioskManagementPage() {
   const [kiosks, setKiosks] = useState([]);
   const [modalIsOpen, setModalIsOpen] = useState(false);
   const [editingKiosk, setEditingKiosk] = useState(null);
-  const [newKiosk, setNewKiosk] = useState({ id: '', password: '' });
+  const [newKiosk, setNewKiosk] = useState({ id: '', password: '', confirmPassword: '', code: '' });
 
   const openModal = (kiosk = null) => {
     if (kiosk) {
       setEditingKiosk({ ...kiosk }); // Create a new object to avoid direct mutation
     } else {
-      setNewKiosk({ id: '', password: '' });
+      setNewKiosk({ id: '', password: '', confirmPassword: '', code: '' });
     }
     setModalIsOpen(true);
   };
@@ -79,7 +80,7 @@ function KioskManagementPage() {
   const closeModal = () => {
     setModalIsOpen(false);
     setEditingKiosk(null);
-    setNewKiosk({ id: '', password: '' });
+    setNewKiosk({ id: '', password: '', confirmPassword: '', code: '' });
   };
 
   const handleEditSubmit = () => {
@@ -87,13 +88,25 @@ function KioskManagementPage() {
     closeModal();
   };
 
-  const handleAddSubmit = () => {
+  const handleAddSubmit = async () => {
     if (kiosks.some((kiosk) => kiosk.id === newKiosk.id)) {
       alert('이미 존재하는 아이디입니다.');
       return;
     }
-    setKiosks([...kiosks, newKiosk]);
-    closeModal();
+
+    try {
+      const response = await postRegisterPos(
+        newKiosk.code,
+        newKiosk.id,
+        newKiosk.password,
+        newKiosk.confirmPassword
+      );
+      setKiosks([...kiosks, newKiosk]);
+      closeModal();
+    } catch (error) {
+      console.error('키오스크 등록 실패:', error);
+      alert('키오스크 등록에 실패했습니다.');
+    }
   };
 
   const deleteKiosk = (index) => {
@@ -165,6 +178,18 @@ function KioskManagementPage() {
                 placeholder="비밀번호"
                 value={newKiosk.password}
                 onChange={(e) => setNewKiosk({ ...newKiosk, password: e.target.value })}
+              />
+              <input
+                type="password"
+                placeholder="비밀번호 확인"
+                value={newKiosk.confirmPassword}
+                onChange={(e) => setNewKiosk({ ...newKiosk, confirmPassword: e.target.value })}
+              />
+              <input
+                type="text"
+                placeholder="코드"
+                value={newKiosk.code}
+                onChange={(e) => setNewKiosk({ ...newKiosk, code: e.target.value })}
               />
               <ActionButton onClick={handleAddSubmit}>추가</ActionButton>
             </>

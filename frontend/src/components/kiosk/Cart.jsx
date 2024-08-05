@@ -43,7 +43,7 @@ const ItemContainer = styled.div`
   }
 `;
 
-function Cart({ cartItems, setCartItems }) {
+function Cart({ cartItems, setCartItems, isElder }) {
   const deleteAll = () => {
     setCartItems([]);
   };
@@ -57,7 +57,7 @@ function Cart({ cartItems, setCartItems }) {
           ))}
         </ItemContainer>
       </CartLeft>
-      <CartTotal cartItems={cartItems} />
+      <CartTotal cartItems={cartItems} isElder={isElder} />
     </CartContainer>
   );
 }
