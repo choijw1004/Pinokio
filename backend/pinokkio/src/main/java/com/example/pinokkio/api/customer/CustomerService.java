@@ -2,9 +2,14 @@ package com.example.pinokkio.api.customer;
 
 import com.example.pinokkio.api.customer.dto.response.AnalysisResult;
 import com.example.pinokkio.api.customer.sse.SSEService;
+import com.example.pinokkio.api.kiosk.KioskService;
+import com.example.pinokkio.api.kiosk.dto.response.KioskResponse;
+import com.example.pinokkio.api.pos.Pos;
 import com.example.pinokkio.api.pos.PosRepository;
 import com.example.pinokkio.common.type.Gender;
+import com.example.pinokkio.config.jwt.JwtProvider;
 import com.example.pinokkio.exception.domain.customer.CustomerNotFoundException;
+import com.example.pinokkio.exception.domain.pos.PosNotFoundException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -14,7 +19,6 @@ import org.apache.commons.math3.linear.ArrayRealVector;
 import org.apache.commons.math3.linear.RealVector;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.Cacheable;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -32,9 +36,10 @@ public class CustomerService {
     private final CustomerRepository customerRepository;
     private final RedisTemplate<String, String> redisTemplate;
     private final SSEService sseService;
-    private final ApplicationEventPublisher eventPublisher;
     private final PosRepository posRepository;
     private final ObjectMapper objectMapper;
+    private final JwtProvider jwtProvider;
+    private final KioskService kioskService;
 
     @Value("${encryption.key}")
     private String encryptionKey;
@@ -61,9 +66,57 @@ public class CustomerService {
      */
     public Customer saveCustomer(Customer customer, byte[] faceEmbeddingData) {
         customer.updateFaceEmbedding(faceEmbeddingData);
+        customer.updatePos(getCurrenetPos());
+
+        log.info("customer 등록: " + customer);
         Customer savedCustomer = customerRepository.save(customer);
         cacheCustomerEmbedding(savedCustomer.getId(), faceEmbeddingData);
+
         return savedCustomer;
+    }
+
+    // 헤더에 토큰이 있어야 확인 가능
+    private Pos getCurrenetPos() {
+        String kioskEmail = jwtProvider.getCurrentUserEmail();
+        log.info("[getCurrentPos] current Kiosk Email: {}", kioskEmail);
+        KioskResponse kioskInfo = kioskService.getMyKioskInfo(kioskEmail);
+        UUID posId = UUID.fromString(kioskInfo.getPosId());
+
+        return posRepository.findById(posId)
+                .orElseThrow(() -> new PosNotFoundException(posId));
+    }
+
+    // 새로운 고객을 등록하는 메서드
+    // TODO 추후 수정 필
+    private void getFaceEmbedding(AnalysisResult analysisResult) {
+        String cacheKey = "analysis_result:" + analysisResult.getEncryptedEmbedding();
+
+        AnalysisResult cachedResult;
+        String cachedString = redisTemplate.opsForValue().get(cacheKey);
+
+        if (cachedString == null) {
+            cachedResult = analysisResult;
+            try {
+                String jsonString = objectMapper.writeValueAsString(cachedResult);
+                redisTemplate.opsForValue().set(cacheKey, jsonString, 30, TimeUnit.MINUTES);
+            } catch (JsonProcessingException e) {
+                return;
+            }
+        } else {
+            try {
+                cachedResult = objectMapper.readValue(cachedString, AnalysisResult.class);
+            } catch (JsonProcessingException e) {
+                return;
+            }
+        }
+
+//        Customer newCustomer = new Customer(cachedResult.getGender(), cachedResult.getAge());
+        byte[] embeddingData = Base64.getDecoder().decode(cachedResult.getEncryptedEmbedding());
+
+        CompletableFuture.runAsync(() -> {
+//            Customer savedCustomer = saveCustomer(newCustomer, embeddingData);
+//            sseService.sendAnalysisResult(cachedResult, savedCustomer);
+        });
     }
 
     /**
@@ -91,14 +144,14 @@ public class CustomerService {
             redisTemplate.opsForValue().set(cacheKey, encryptedFaceEmbedding, redisCacheTTL, TimeUnit.SECONDS);
 
             RealVector inputVector = parseEmbedding(encryptedFaceEmbedding);
-
+            UUID posId = getCurrenetPos().getId();
             // 성별과 나이 범위 -> 범위 한정 탐색
-            List<Customer> potentialCustomers = customerRepository.findByGenderAndAgeBetween(Gender.valueOf(gender.toUpperCase()), age - 5, age + 5);
+            List<Customer> potentialCustomers = customerRepository.findByPosIdAndGenderAndAgeBetween(posId, Gender.valueOf(gender.toUpperCase()), age - 5, age + 5);
             Customer matchedCustomer = findMatchingCustomer(potentialCustomers, inputVector);
 
             // 매칭되는 고객이 없으면 모든 고객을 대상으로 다시 검색합니다.
             if (matchedCustomer == null) {
-                List<Customer> allCustomers = customerRepository.findAll();
+                List<Customer> allCustomers = customerRepository.findAllByPosId(posId);
                 matchedCustomer = findMatchingCustomer(allCustomers, inputVector);
             }
 
@@ -106,7 +159,6 @@ public class CustomerService {
 //                    new AnalysisResult(age, gender, true, encryptedFaceEmbedding),
 //                    matchedCustomer
 //            );
-
             return matchedCustomer;
 
         } catch (Exception e) {
@@ -250,38 +302,5 @@ public class CustomerService {
 
         // 분석 결과와 매칭된 고객 정보를 SSE를 통해 전송합니다.
         sseService.sendAnalysisResult(analysisResult, matchedCustomer);
-    }
-
-    // 새로운 고객을 등록하는 메서드
-    // TODO 추후 수정
-    private void registerNewCustomer(AnalysisResult analysisResult) {
-        String cacheKey = "analysis_result:" + analysisResult.getEncryptedEmbedding();
-
-        AnalysisResult cachedResult;
-        String cachedString = redisTemplate.opsForValue().get(cacheKey);
-
-        if (cachedString == null) {
-            cachedResult = analysisResult;
-            try {
-                String jsonString = objectMapper.writeValueAsString(cachedResult);
-                redisTemplate.opsForValue().set(cacheKey, jsonString, 30, TimeUnit.MINUTES);
-            } catch (JsonProcessingException e) {
-                return;
-            }
-        } else {
-            try {
-                cachedResult = objectMapper.readValue(cachedString, AnalysisResult.class);
-            } catch (JsonProcessingException e) {
-                return;
-            }
-        }
-
-//        Customer newCustomer = new Customer(cachedResult.getGender(), cachedResult.getAge());
-        byte[] embeddingData = Base64.getDecoder().decode(cachedResult.getEncryptedEmbedding());
-
-        CompletableFuture.runAsync(() -> {
-//            Customer savedCustomer = saveCustomer(newCustomer, embeddingData);
-//            sseService.sendAnalysisResult(cachedResult, savedCustomer);
-        });
     }
 }
