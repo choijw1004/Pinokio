@@ -4,6 +4,7 @@ import com.example.pinokkio.api.auth.dto.request.LoginRequest;
 import com.example.pinokkio.api.auth.dto.request.SignUpKioskRequest;
 import com.example.pinokkio.api.auth.dto.request.SignUpPosRequest;
 import com.example.pinokkio.api.auth.dto.request.SignUpTellerRequest;
+import com.example.pinokkio.api.auth.dto.response.KioskLoginResponse;
 import com.example.pinokkio.api.kiosk.Kiosk;
 import com.example.pinokkio.api.kiosk.KioskRepository;
 import com.example.pinokkio.api.pos.Pos;
@@ -15,10 +16,11 @@ import com.example.pinokkio.api.teller.TellerRepository;
 import com.example.pinokkio.config.RedisUtil;
 import com.example.pinokkio.config.jwt.JwtProvider;
 import com.example.pinokkio.config.jwt.Role;
-import com.example.pinokkio.exception.domain.auth.PasswordBadInputException;
 import com.example.pinokkio.exception.base.AuthenticationException;
 import com.example.pinokkio.exception.domain.auth.EmailConflictException;
+import com.example.pinokkio.exception.domain.auth.PasswordBadInputException;
 import com.example.pinokkio.exception.domain.code.CodeNotFoundException;
+import com.example.pinokkio.exception.domain.kiosk.KioskNotFoundException;
 import com.example.pinokkio.exception.domain.pos.PosNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -32,7 +34,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.security.SecureRandom;
-import java.util.Date;
 import java.util.Map;
 import java.util.Random;
 import java.util.UUID;
@@ -44,6 +45,9 @@ import java.util.function.Predicate;
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class AuthService {
+
+    private final long accessValidTime = 1000L * 60 * 60;    // 액세스 토큰 유효 시간 60분
+    private final long refreshValidTime = 1000L * 60 * 60 * 24 * 14;    // 리프레쉬 토큰 유효 시간 2주
 
     private final PasswordEncoder passwordEncoder;
 
@@ -141,12 +145,11 @@ public class AuthService {
 
             SecurityContextHolder.getContext().setAuthentication(authentication);
 
-            String accessToken = jwtProvider.createAccessToken(authentication.getName(), role.getValue(), new Date());
-            String refreshToken = jwtProvider.createRefreshToken(new Date());
+            AuthToken authToken = createTokens(authentication.getName(), role.getValue());
             // 리프레시 토큰을 Redis에 저장
-            saveRefreshTokenToRedis(authentication.getName(), role.getValue(), accessToken, refreshToken);
+            saveRefreshTokenToRedis(authentication.getName(), role.getValue(), authToken.getAccessToken(), authToken.getRefreshToken());
 
-            return new AuthToken(accessToken, refreshToken);
+            return authToken;
         } catch (AuthenticationException e) {
             log.error("POS 인증 실패", e);
             throw new AuthenticationException("POS 인증 실패", e.getMessage());
@@ -158,7 +161,7 @@ public class AuthService {
 
 
     @Transactional
-    public AuthToken loginKiosk(LoginRequest loginRequest) {
+    public KioskLoginResponse loginKiosk(LoginRequest loginRequest) {
         try {
             Role role = Role.K;
             String kioskEmail = role + loginRequest.getUsername();
@@ -176,11 +179,17 @@ public class AuthService {
 
             SecurityContextHolder.getContext().setAuthentication(authentication);
 
-            String accessToken = jwtProvider.createAccessToken(authentication.getName(), role.getValue(), new Date());
-            String refreshToken = jwtProvider.createRefreshToken(new Date());
+            AuthToken authToken = createTokens(authentication.getName(), role.getValue());
             // 리프레시 토큰을 Redis에 저장
-            saveRefreshTokenToRedis(authentication.getName(), role.getValue(), accessToken, refreshToken);
-            return new AuthToken(accessToken, refreshToken);
+            saveRefreshTokenToRedis(authentication.getName(), role.getValue(), authToken.getAccessToken(), authToken.getRefreshToken());
+
+            // 키오스크 ID
+            String userEmail = authentication.getName();
+            UUID kioskId = kioskRepository.findByEmail(userEmail)
+                    .map(Kiosk::getId)
+                    .orElseThrow(() -> new KioskNotFoundException(userEmail));
+
+            return new KioskLoginResponse(authToken, kioskId);
         } catch (AuthenticationException e) {
             throw new AuthenticationException("KIOSK 인증 실패", e.getMessage());
         }
@@ -205,11 +214,10 @@ public class AuthService {
 
             SecurityContextHolder.getContext().setAuthentication(authentication);
 
-            String accessToken = jwtProvider.createAccessToken(authentication.getName(), role.getValue(), new Date());
-            String refreshToken = jwtProvider.createRefreshToken(new Date());
+            AuthToken authToken = createTokens(authentication.getName(), role.getValue());
             // 리프레시 토큰을 Redis에 저장
-            saveRefreshTokenToRedis(authentication.getName(), role.getValue(), accessToken, refreshToken);
-            return new AuthToken(accessToken, refreshToken);
+            saveRefreshTokenToRedis(authentication.getName(), role.getValue(), authToken.getAccessToken(), authToken.getRefreshToken());
+            return authToken;
         } catch (AuthenticationException e) {
             throw new AuthenticationException("TELLER 인증 실패", e.getMessage());
         }
@@ -227,6 +235,24 @@ public class AuthService {
         String key = "refreshToken:" + username + ":" + role + ":" + DigestUtils.sha256Hex(accessToken);
         redisUtil.setDataExpire(key, refreshToken, 1000L * 60 * 60 * 24 * 14);
         log.info("[AuthService] 리프레시 토큰을 Redis에 저장: {}", key);
+    }
+
+    /**
+     * 토큰 정보를 기반으로 리프레시 토큰을 Redis 에 갱신한다.
+     *
+     * @param username     유저 아이디(email)
+     * @param role         유저 타입
+     * @param accessToken  엑세스 토큰 정보
+     * @param refreshToken 리프레시 토큰 정보
+     */
+    private void renewalTokenToRedis(String username, String role, String accessToken, String refreshToken) {
+        // 이전에 저장된 리프레시 토큰을 삭제
+        String existingTokenKeyPattern = "refreshToken:" + username + ":" + role + ":*";
+        redisUtil.deleteDataByPattern(existingTokenKeyPattern);
+        log.info("[AuthService] 기존 리프레시 토큰을 삭제: 패턴={}", existingTokenKeyPattern);
+
+        // 새로운 리프레시 토큰을 저장
+        saveRefreshTokenToRedis(username, role, accessToken, refreshToken);
     }
 
     /**
@@ -297,6 +323,7 @@ public class AuthService {
 
     /**
      * 숫자 4자리 비밀번호를 랜덤 생성한다.
+     *
      * @return 숫자 4자리 비밀번호
      */
     public String randomPassword() {
@@ -308,4 +335,26 @@ public class AuthService {
         return sb.toString();
     }
 
+    /**
+     * refresh토큰으로 access, refresh 토큰 재발급
+     *
+     * @param refreshToken refresh 토큰
+     */
+    public AuthToken reissue(String refreshToken) {
+        jwtProvider.validateToken(refreshToken, "refresh");
+
+        String email = jwtProvider.getEmailFromToken(refreshToken);
+        String role = jwtProvider.getRoleFromToken(refreshToken);
+
+        AuthToken newTokens = createTokens(email, role);
+        renewalTokenToRedis(email, role, newTokens.getAccessToken(), newTokens.getRefreshToken());
+
+        return newTokens;
+    }
+
+    private AuthToken createTokens(String email, String role) {
+        String newAccessToken = jwtProvider.createJwt("access", email, role, accessValidTime);
+        String newRefreshToken = jwtProvider.createJwt("refresh", email, role, refreshValidTime);
+        return new AuthToken(newAccessToken, newRefreshToken);
+    }
 }

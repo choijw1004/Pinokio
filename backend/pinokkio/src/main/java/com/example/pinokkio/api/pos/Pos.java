@@ -15,7 +15,6 @@ import java.util.UUID;
 @Entity
 @Table(name = "pos")
 @Getter
-@Setter(AccessLevel.PROTECTED)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 public class Pos extends BaseEntity {

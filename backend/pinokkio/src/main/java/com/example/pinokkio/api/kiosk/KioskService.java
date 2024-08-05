@@ -1,13 +1,14 @@
 package com.example.pinokkio.api.kiosk;
 
+import com.example.pinokkio.api.kiosk.dto.response.KioskResponse;
 import com.example.pinokkio.api.kiosk.grpc.LoginResponse;
+import com.example.pinokkio.exception.domain.pos.PosEmailNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.UUID;
-import java.util.logging.Logger;
 
 @Service
 @RequiredArgsConstructor
@@ -15,8 +16,24 @@ import java.util.logging.Logger;
 @Slf4j
 public class KioskService {
 
-    private KioskRepository kioskRepository;
+    private final KioskRepository kioskRepository;
 
+    /**
+     * 입력받은 이메일에 해당하는 키오스크의 핵심 필드를 반환한다.
+     *
+     * @param email 이메일 정보
+     * @return KioskResponse
+     */
+    public KioskResponse getMyKioskInfo(String email) {
+        Kiosk kiosk = kioskRepository
+                .findByEmail(email)
+                .orElseThrow(() -> new PosEmailNotFoundException(email));
+        return new KioskResponse(
+                kiosk.getId().toString(),
+                kiosk.getPos().getId().toString(),
+                kiosk.getEmail()
+        );
+    }
 
     /**
      * gRPC 로그인 요청을 처리합니다.

@@ -6,6 +6,7 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.stereotype.Service;
 import java.time.Duration;
+import java.util.Set;
 
 
 @Slf4j
@@ -39,5 +40,12 @@ public class RedisUtil {
 
     public void deleteData(String key) {
         template.delete(key);
+    }
+
+    public void deleteDataByPattern(String pattern) {
+        Set<String> keys = template.keys(pattern);
+        if (keys != null) {
+            template.delete(keys);
+        }
     }
 }

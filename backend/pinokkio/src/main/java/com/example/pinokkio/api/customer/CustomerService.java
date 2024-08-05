@@ -1,28 +1,30 @@
 package com.example.pinokkio.api.customer;
 
-import com.example.pinokkio.api.customer.dto.request.CustomerRegistrationEvent;
-import com.example.pinokkio.api.customer.dto.request.CustomerRegistrationRequest;
 import com.example.pinokkio.api.customer.dto.response.AnalysisResult;
 import com.example.pinokkio.api.customer.sse.SSEService;
+import com.example.pinokkio.api.kiosk.KioskService;
+import com.example.pinokkio.api.kiosk.dto.response.KioskResponse;
+import com.example.pinokkio.api.pos.Pos;
 import com.example.pinokkio.api.pos.PosRepository;
 import com.example.pinokkio.common.type.Gender;
-import com.example.pinokkio.common.utils.AESUtil;
+import com.example.pinokkio.config.jwt.JwtProvider;
 import com.example.pinokkio.exception.domain.customer.CustomerNotFoundException;
+import com.example.pinokkio.exception.domain.pos.PosNotFoundException;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.math3.linear.ArrayRealVector;
 import org.apache.commons.math3.linear.RealVector;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.Cacheable;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Comparator;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
 @Service
@@ -34,8 +36,10 @@ public class CustomerService {
     private final CustomerRepository customerRepository;
     private final RedisTemplate<String, String> redisTemplate;
     private final SSEService sseService;
-    private final ApplicationEventPublisher eventPublisher;
     private final PosRepository posRepository;
+    private final ObjectMapper objectMapper;
+    private final JwtProvider jwtProvider;
+    private final KioskService kioskService;
 
     @Value("${encryption.key}")
     private String encryptionKey;
@@ -62,9 +66,57 @@ public class CustomerService {
      */
     public Customer saveCustomer(Customer customer, byte[] faceEmbeddingData) {
         customer.updateFaceEmbedding(faceEmbeddingData);
+        customer.updatePos(getCurrenetPos());
+
+        log.info("customer 등록: " + customer);
         Customer savedCustomer = customerRepository.save(customer);
         cacheCustomerEmbedding(savedCustomer.getId(), faceEmbeddingData);
+
         return savedCustomer;
+    }
+
+    // 헤더에 토큰이 있어야 확인 가능
+    private Pos getCurrenetPos() {
+        String kioskEmail = jwtProvider.getCurrentUserEmail();
+        log.info("[getCurrentPos] current Kiosk Email: {}", kioskEmail);
+        KioskResponse kioskInfo = kioskService.getMyKioskInfo(kioskEmail);
+        UUID posId = UUID.fromString(kioskInfo.getPosId());
+
+        return posRepository.findById(posId)
+                .orElseThrow(() -> new PosNotFoundException(posId));
+    }
+
+    // 새로운 고객을 등록하는 메서드
+    // TODO 추후 수정 필
+    private void getFaceEmbedding(AnalysisResult analysisResult) {
+        String cacheKey = "analysis_result:" + analysisResult.getEncryptedEmbedding();
+
+        AnalysisResult cachedResult;
+        String cachedString = redisTemplate.opsForValue().get(cacheKey);
+
+        if (cachedString == null) {
+            cachedResult = analysisResult;
+            try {
+                String jsonString = objectMapper.writeValueAsString(cachedResult);
+                redisTemplate.opsForValue().set(cacheKey, jsonString, 30, TimeUnit.MINUTES);
+            } catch (JsonProcessingException e) {
+                return;
+            }
+        } else {
+            try {
+                cachedResult = objectMapper.readValue(cachedString, AnalysisResult.class);
+            } catch (JsonProcessingException e) {
+                return;
+            }
+        }
+
+//        Customer newCustomer = new Customer(cachedResult.getGender(), cachedResult.getAge());
+        byte[] embeddingData = Base64.getDecoder().decode(cachedResult.getEncryptedEmbedding());
+
+        CompletableFuture.runAsync(() -> {
+//            Customer savedCustomer = saveCustomer(newCustomer, embeddingData);
+//            sseService.sendAnalysisResult(cachedResult, savedCustomer);
+        });
     }
 
     /**
@@ -91,26 +143,22 @@ public class CustomerService {
             String cacheKey = "face_embedding:" + encryptedFaceEmbedding;
             redisTemplate.opsForValue().set(cacheKey, encryptedFaceEmbedding, redisCacheTTL, TimeUnit.SECONDS);
 
-            // 암호화된 얼굴 임베딩 데이터를 복호화 -> 벡터 변환
-            String decryptedEmbedding = AESUtil.decrypt(encryptionKey, encryptedFaceEmbedding);
-            RealVector inputVector = parseEmbedding(decryptedEmbedding);
-
+            RealVector inputVector = parseEmbedding(encryptedFaceEmbedding);
+            UUID posId = getCurrenetPos().getId();
             // 성별과 나이 범위 -> 범위 한정 탐색
-            List<Customer> potentialCustomers = customerRepository.findByGenderAndAgeBetween(Gender.valueOf(gender), age - 5, age + 5);
+            List<Customer> potentialCustomers = customerRepository.findByPosIdAndGenderAndAgeBetween(posId, Gender.valueOf(gender.toUpperCase()), age - 5, age + 5);
             Customer matchedCustomer = findMatchingCustomer(potentialCustomers, inputVector);
 
             // 매칭되는 고객이 없으면 모든 고객을 대상으로 다시 검색합니다.
             if (matchedCustomer == null) {
-                List<Customer> allCustomers = customerRepository.findAll();
+                List<Customer> allCustomers = customerRepository.findAllByPosId(posId);
                 matchedCustomer = findMatchingCustomer(allCustomers, inputVector);
             }
 
-            // SSE를 통해 분석 결과를 전송합니다.
-            sseService.sendAnalysisResult(
-                    new AnalysisResult(age, gender, true, encryptedFaceEmbedding),
-                    matchedCustomer
-            );
-
+//            sseService.sendAnalysisResult(
+//                    new AnalysisResult(age, gender, true, encryptedFaceEmbedding),
+//                    matchedCustomer
+//            );
             return matchedCustomer;
 
         } catch (Exception e) {
@@ -158,21 +206,17 @@ public class CustomerService {
                     .opsForValue()
                     .get("customer_embedding:" + customer.getId());
 
-            String decryptedCustomerEmbedding;
-            if (cachedEmbedding != null) {
-                // 캐시에 데이터가 있으면 그대로 사용
-                decryptedCustomerEmbedding = cachedEmbedding;
-            } else {
-                // 캐시에 데이터가 없으면 DB에서 조회
-                decryptedCustomerEmbedding = AESUtil.decrypt(encryptionKey, new String(faceEmbedding));
-                // 복호화된 데이터를 캐시에 저장합니다.
+            if (cachedEmbedding == null) {
+                cachedEmbedding = Base64.getEncoder().encodeToString(faceEmbedding);
                 cacheCustomerEmbedding(customer.getId(), faceEmbedding);
             }
+
+            RealVector customerVector = parseEmbedding(cachedEmbedding);
 
             // 고객의 얼굴 임베딩 데이터를 벡터로 변환합니다.
             return new CustomerSimilarity(
                     customer,
-                    calculateCosineSimilarity(inputVector, parseEmbedding(decryptedCustomerEmbedding))
+                    calculateCosineSimilarity(inputVector, customerVector)
             );
 
         } catch (Exception e) {
@@ -183,20 +227,20 @@ public class CustomerService {
 
 
     /**
-     * 얼굴 임베딩 정보를 AESUtil 로 복호화하고 Redis 에 캐싱한다.
+     * 얼굴 임베딩 정보를 캐싱
      *
      * @param customerId    고객 식별자
      * @param faceEmbedding 얼굴 임베딩 정보
      */
     private void cacheCustomerEmbedding(UUID customerId, byte[] faceEmbedding) {
         try {
-            // 복호화 -> 캐싱
-            String decryptedEmbedding = AESUtil.decrypt(encryptionKey, new String(faceEmbedding));
+            String embeddingString = new String(faceEmbedding);
+            String encodedEmbedding = Base64.getEncoder().encodeToString(embeddingString.getBytes());
             redisTemplate
                     .opsForValue()
                     .set(
                             "customer_embedding:" + customerId,
-                            decryptedEmbedding,
+                            encodedEmbedding,
                             redisCacheTTL,
                             TimeUnit.SECONDS
                     );
@@ -213,12 +257,21 @@ public class CustomerService {
      */
     @Cacheable(value = "embeddingVectors", key = "#embedding")
     public RealVector parseEmbedding(String embedding) {
-        String[] values = embedding.split(",");
-        double[] doubleValues = new double[values.length];
-        for (int i = 0; i < values.length; i++) {
-            doubleValues[i] = Double.parseDouble(values[i]);
+        try {
+            byte[] decodedBytes = Base64.getDecoder().decode(embedding);
+            String decodedString = new String(decodedBytes);
+
+            decodedString = decodedString.replaceAll("^\"|\"$", "");
+
+            List<Double> values = objectMapper.readValue(decodedString, new TypeReference<List<Double>>() {
+            });
+            double[] doubleValues = values.stream().mapToDouble(Double::doubleValue).toArray();
+            return new ArrayRealVector(doubleValues);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("임베딩 데이터 파싱 실패", e);
+        } catch (IllegalArgumentException e) {
+            throw new RuntimeException("임베딩 데이터 디코딩 실패", e);
         }
-        return new ArrayRealVector(doubleValues);
     }
 
     /**
@@ -229,11 +282,18 @@ public class CustomerService {
      * @return 벡터 유사도
      */
     private double calculateCosineSimilarity(RealVector v1, RealVector v2) {
-        return (v1.dotProduct(v2)) / (v1.getNorm() * v2.getNorm());
+        RealVector normalizedV1 = normalizeVector(v1);
+        RealVector normalizedV2 = normalizeVector(v2);
+        return normalizedV1.dotProduct(normalizedV2);
+    }
+
+    private RealVector normalizeVector(RealVector vector) {
+        double norm = vector.getNorm();
+        return norm > 0 ? vector.mapDivide(norm) : vector;
     }
 
     // 얼굴 분석 결과를 바탕으로 고객을 찾거나 등록하는 메서드
-    public void findOrRegisterCustomer(AnalysisResult analysisResult) {
+    public void findCustomer(AnalysisResult analysisResult) {
         // 얼굴 임베딩을 사용하여 고객을 찾습니다.
         Customer matchedCustomer = findCustomerByFaceEmbedding(
                 analysisResult.getAge(),
@@ -242,47 +302,5 @@ public class CustomerService {
 
         // 분석 결과와 매칭된 고객 정보를 SSE를 통해 전송합니다.
         sseService.sendAnalysisResult(analysisResult, matchedCustomer);
-
-        // 매칭된 고객이 없는 경우, 새로운 고객으로 등록합니다.
-        if (matchedCustomer == null) {
-            registerNewCustomer(analysisResult);
-        }
-    }
-
-    // 새로운 고객을 등록하는 메서드
-    private void registerNewCustomer(AnalysisResult analysisResult) {
-        // Redis 캐시 키를 생성합니다.
-        String cacheKey = "analysis_result:" + analysisResult.getEncryptedEmbedding();
-        // Redis에서 캐시된 분석 결과를 가져옵니다.
-
-        Object cachedObject = redisTemplate.opsForValue().get(cacheKey);
-        AnalysisResult cachedResult;
-
-        // 캐시된 객체가 AnalysisResult 타입인지 확인합니다.
-        if (cachedObject instanceof AnalysisResult) {
-            cachedResult = (AnalysisResult) cachedObject;
-        } else {
-            log.error("Cached analysis result is not of type AnalysisResult");
-            return;
-        }
-
-        // 캐시된 결과가 존재하는 경우
-        if (cachedResult != null) {
-            // 새로운 고객 등록 요청 객체를 생성합니다.
-            CustomerRegistrationRequest request = new CustomerRegistrationRequest();
-            Customer newCustomer = Customer.builder()
-                    .age(cachedResult.getAge())
-                    .gender(Gender.valueOf(cachedResult.getGender()))
-                    .build();
-
-            // 캐시된 분석 결과의 나이와 성별 정보를 새 고객 객체에 설정합니다.
-            request.setCustomer(newCustomer);
-            request.setFaceEmbeddingData(cachedResult.getEncryptedEmbedding().getBytes());
-
-            // 고객 등록 이벤트를 발행합니다.
-            eventPublisher.publishEvent(new CustomerRegistrationEvent(request));
-        } else {
-            log.error("Cached analysis result not found for registration");
-        }
     }
 }

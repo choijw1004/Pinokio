@@ -66,7 +66,7 @@ public class ItemController {
             @ApiResponse(responseCode = "404", description = "NOT FOUND",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
-    @PreAuthorize("hasRole('ROLE_POS')")
+    @PreAuthorize("hasAnyRole('ROLE_POS', 'ROLE_KIOSK')")
     @GetMapping("/pos/{posId}/items")
     public ResponseEntity<GroupItemResponse> getAllItems(
             @Parameter(description = "포스 ID", example = "123e4567-e89b-12d3-a456-426614174000")
@@ -84,7 +84,7 @@ public class ItemController {
             @ApiResponse(responseCode = "404", description = "NOT FOUND",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
-    @PreAuthorize("hasRole('ROLE_POS')")
+    @PreAuthorize("hasAnyRole('ROLE_POS', 'ROLE_KIOSK')")
     @GetMapping("/pos/{posId}/items/{itemId}")
     public ResponseEntity<ItemResponse> getItem(
             @Parameter(description = "아이템 ID", example = "123e4567-e89b-12d3-a456-426614174000")
@@ -104,7 +104,7 @@ public class ItemController {
             @ApiResponse(responseCode = "404", description = "NOT FOUND",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
-    @PreAuthorize("hasRole('ROLE_POS')")
+    @PreAuthorize("hasAnyRole('ROLE_POS', 'ROLE_KIOSK')")
     @GetMapping("/pos/{posId}/items/categories/{categoryId}")
     public ResponseEntity<GroupItemResponse> getItemsByCategory(
             @Parameter(description = "카테고리 ID", example = "123e4567-e89b-12d3-a456-426614174000")
@@ -126,7 +126,7 @@ public class ItemController {
             @ApiResponse(responseCode = "404", description = "NOT FOUND",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
-    @PreAuthorize("hasRole('ROLE_POS')")
+    @PreAuthorize("hasAnyRole('ROLE_POS', 'ROLE_KIOSK')")
     @GetMapping("/pos/{posId}/items/search")
     public ResponseEntity<GroupItemResponse> getItemsByKeyword(
             @Parameter(description = "포스 ID", example = "123e4567-e89b-12d3-a456-426614174000")
