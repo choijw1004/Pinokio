@@ -95,7 +95,7 @@ public class KioskHardwareService extends KioskServiceGrpc.KioskServiceImplBase 
     public void receiveDistanceData(DistanceData request, StreamObserver<Empty> responseObserver) {
         String kioskId = request.getKioskId();
         double distance = request.getDistance();
-
+        log.info("Received distance data from kiosk {}: {} cm", kioskId, distance);
         boolean shouldProcessFurther = processDistanceData(kioskId, distance);
         if (shouldProcessFurther) {
             handleUserDetected(kioskId);
