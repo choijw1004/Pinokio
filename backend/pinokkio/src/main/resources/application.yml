@@ -58,9 +58,7 @@ livekit:
     secret: ${LIVEKIT_API_SECRET}
 
 encryption:
-  key:
-    ${ENCRYPTION_KEY}
-
+          key: ${ENCRYPTION_KEY}
 
 fastapi:
   url: http://localhost:8000
