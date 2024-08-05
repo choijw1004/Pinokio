@@ -63,7 +63,7 @@ encryption:
 
 
 fastapi:
-  url: https://your-fastapi-server-url
+  url: http://localhost:8000
   timeout: 10000
 
 grpc:
