@@ -93,7 +93,7 @@ public class CustomerService {
             RealVector inputVector = parseEmbedding(encryptedFaceEmbedding);
 
             // 성별과 나이 범위 -> 범위 한정 탐색
-            List<Customer> potentialCustomers = customerRepository.findByGenderAndAgeBetween(Gender.valueOf(gender), age - 5, age + 5);
+            List<Customer> potentialCustomers = customerRepository.findByGenderAndAgeBetween(Gender.valueOf(gender.toUpperCase()), age - 5, age + 5);
             Customer matchedCustomer = findMatchingCustomer(potentialCustomers, inputVector);
 
             // 매칭되는 고객이 없으면 모든 고객을 대상으로 다시 검색합니다.
