@@ -77,6 +77,7 @@ public class SSEService {
         eventData.put("gender", analysisResult.getGender());
         eventData.put("isFace", analysisResult.isFace());
         eventData.put("isCustomer", customer != null);
+        eventData.put("faceEmbeddingData", analysisResult.getEncryptedEmbedding());
 
         if (customer != null) {
             eventData.put("customerId", customer.getId());
