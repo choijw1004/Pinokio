@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 
 function LoadingPage() {
   return <div>This is LoadingPage</div>;
