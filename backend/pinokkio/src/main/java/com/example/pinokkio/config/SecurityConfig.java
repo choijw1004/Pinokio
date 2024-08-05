@@ -50,7 +50,7 @@ public class SecurityConfig {
     private final String[] GET_PERMIT_API_URL = {
             "/",
             "/api/refresh",
-            "/api/customer", // 추후 수정
+            "/api/customer/**", // 추후 수정
             "/api/face-recognition-events"
     };
 
