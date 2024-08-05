@@ -51,7 +51,9 @@ public class SecurityConfig {
             "/",
             "/api/refresh",
             "/api/customer/**", // 추후 수정
-            "/api/face-recognition-events"
+            "/api/face-recognition-events",
+            "/api/pos/duplicate/**",
+            "/api/teller/duplicate/**",
     };
 
     private final String[] POST_PERMIT_API_URL = {
