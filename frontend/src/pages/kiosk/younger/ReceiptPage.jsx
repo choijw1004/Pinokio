@@ -1,5 +1,5 @@
-import React from 'react';
-import { Router, Route, Routes, useNavigate } from 'react-router-dom';
+import React from "react";
+import { Router, Route, Routes, useNavigate } from "react-router-dom";
 
 function ReceiptPage() {
   const navigate = useNavigate();

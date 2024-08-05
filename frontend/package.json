@@ -3,76 +3,28 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
-    "@reduxjs/toolkit": "^2.2.6",
     "@testing-library/jest-dom": "^5.17.0",
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^13.5.0",
-    "axios": "^1.7.2",
-    "chart.js": "^4.4.3",
-    "date-fns": "^2.30.0",
     "install": "^0.13.0",
-    "normalize.css": "^8.0.1",
-    "react": "^18.2.0",
-    "react-chartjs-2": "^5.2.0",
-    "react-datepicker": "^4.25.0",
-    "react-dom": "^18.2.0",
-    "react-modal": "^3.16.1",
-    "react-redux": "^9.1.2",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
     "react-router-dom": "^6.24.1",
-    "react-scripts": "5.0.1",
-    "react-transition-group": "^4.4.5",
-    "redux": "^5.0.1",
+    "react-scripts": "^3.0.1",
     "styled-components": "^6.1.11",
-    "web-vitals": "^2.1.4",
-    "webpack": "^5.93.0"
-  },
-  "devDependencies": {
-    "eslint-config-prettier": "^8.10.0",
-    "eslint-plugin-prettier": "^4.2.1",
-    "prettier": "^2.8.8",
-    "@babel/plugin-proposal-private-property-in-object": "^7.21.0"
+    "web-vitals": "^2.1.4"
   },
   "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
-    "test": "react-scripts test",
+    "start": "set NODE_OPTIONS=--openssl-legacy-provider && react-scripts start",
+    "build": "set NODE_OPTIONS=--openssl-legacy-provider && react-scripts build",
+    "test": "set NODE_OPTIONS=--openssl-legacy-provider && react-scripts test",
     "eject": "react-scripts eject"
   },
   "eslintConfig": {
     "extends": [
       "react-app",
-      "plugin:prettier/recommended"
-    ],
-    "rules": {
-      "no-var": "warn",
-      "no-multiple-empty-lines": "warn",
-      "no-console": [
-        "warn",
-        {
-          "allow": [
-            "warn",
-            "error"
-          ]
-        }
-      ],
-      "eqeqeq": "warn",
-      "dot-notation": "warn",
-      "no-unused-vars": "warn",
-      "react/destructuring-assignment": "warn",
-      "react/jsx-pascal-case": "warn",
-      "react/no-direct-mutation-state": "warn",
-      "react/jsx-no-useless-fragment": "warn",
-      "react/no-unused-state": "warn",
-      "react/jsx-key": "warn",
-      "react/self-closing-comp": "warn",
-      "react/jsx-curly-brace-presence": "warn",
-      "prettier/prettier": [
-        "error",
-        {
-          "endOfLine": "auto"
-        }
-      ]
-    }
+      "react-app/jest"
+    ]
   },
   "browserslist": {
     "production": [

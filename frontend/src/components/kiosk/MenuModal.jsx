@@ -1,5 +1,5 @@
-import React, { forwardRef, useState } from 'react';
-import styled from 'styled-components';
+import React, { forwardRef, useState } from "react";
+import styled from "styled-components";
 
 const ModalBg = styled.div`
   /* display: none; */
@@ -44,7 +44,6 @@ function MenuModal({ itemName, cartItems, setCartItems, setModal }) {
       {
         itemName: itemName,
         itemCount: count,
-        itemPrice: 5000,
       },
     ];
     setCartItems(updatedCartItems);
@@ -61,7 +60,9 @@ function MenuModal({ itemName, cartItems, setCartItems, setModal }) {
         <div>
           <button onClick={() => setCount(count + 1)}>+</button>
           <li>{count}</li>
-          <button onClick={() => (count > 0 ? setCount(count - 1) : null)}>-</button>
+          <button onClick={() => (count > 0 ? setCount(count - 1) : null)}>
+            -
+          </button>
         </div>
         <button onClick={addCart} disabled={!(count > 0)}>
           담기
