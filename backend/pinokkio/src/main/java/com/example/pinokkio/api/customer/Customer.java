@@ -24,6 +24,7 @@ import java.util.UUID;
 @Table(name = "customer")
 @Getter
 @AllArgsConstructor
+@NoArgsConstructor
 public class Customer extends BaseEntity {
 
     @Id
