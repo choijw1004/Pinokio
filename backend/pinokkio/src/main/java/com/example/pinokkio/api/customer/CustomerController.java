@@ -10,6 +10,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
+import java.util.Base64;
+
 @RestController
 @RequestMapping("/api/customer")
 @RequiredArgsConstructor
@@ -22,9 +24,12 @@ public class CustomerController {
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody CustomerRegistrationRequest request) {
         try {
-            Customer newCustomer = customerService.saveCustomer(request.getCustomer(), request.getFaceEmbeddingData());
+            log.info("Received registration request: {}", request);
+            byte[] faceEmbeddingDataBytes = Base64.getDecoder().decode(request.getFaceEmbeddingData());
+            Customer newCustomer = customerService.saveCustomer(request.getCustomer(), faceEmbeddingDataBytes);
             return ResponseEntity.ok(newCustomer);
         } catch (Exception e) {
+            log.error("Error registering customer", e);
             return ResponseEntity.badRequest().body("Error registering customer: " + e.getMessage());
         }
     }
