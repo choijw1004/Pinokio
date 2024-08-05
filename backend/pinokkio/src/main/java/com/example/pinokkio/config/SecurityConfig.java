@@ -62,7 +62,7 @@ public class SecurityConfig {
             "/api/mail/check-auth",
             "/api/refresh",
             "/api/users/auth/token/",
-            "/api/customer" // 추후 수정
+            "/api/customer/**" // 추후 수정
     };
 
     private final String[] POS_API_URL = {
