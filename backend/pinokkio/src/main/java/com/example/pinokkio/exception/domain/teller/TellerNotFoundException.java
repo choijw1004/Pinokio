@@ -16,4 +16,12 @@ public class TellerNotFoundException extends NotFoundException {
                 Map.of("tellerId", String.valueOf(tellerId))
         );
     }
+    
+    public TellerNotFoundException(String tellerEmail) {
+        super(
+                "NOT_FOUND_TELLER_01",
+                "이메일에 부합한 상담원을 찾을 수 없습니다.",
+                Map.of("tellerEmail", String.valueOf(tellerEmail))
+        );
+    }
 }
