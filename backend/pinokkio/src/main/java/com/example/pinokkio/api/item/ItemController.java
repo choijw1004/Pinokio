@@ -13,6 +13,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -34,8 +35,6 @@ import java.util.UUID;
 @Tag(name = "Item Controller", description = "아이템 관련 API")
 public class ItemController {
 
-    //TODO: @PreAuthorize가 모든 메서드에 붙어 있음
-
     private final ItemService itemService;
     private final ImageService imageService;
 
@@ -49,10 +48,14 @@ public class ItemController {
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     @PreAuthorize("hasRole('ROLE_POS')")
-    @PostMapping("/pos/items")
+    @PostMapping(value = "/pos/items", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ItemResponse> registerItem(
-            @Validated @ModelAttribute ItemRequest itemRequest) {
-        String imageURL = imageService.uploadImage(itemRequest.getFile());
+            @Parameter(description = "아이템 이미지", content = @Content(mediaType = MediaType.MULTIPART_FORM_DATA_VALUE))
+            @RequestPart(value = "file", required = false) MultipartFile file,
+            @Parameter(description = "아이템 정보", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE))
+            @RequestPart("itemRequest") @Valid ItemRequest itemRequest) {
+
+        String imageURL = imageService.uploadImage(file);
         Item item = itemService.createItem(itemRequest, imageURL);
         return new ResponseEntity<>(new ItemResponse(item), HttpStatus.CREATED);
     }
@@ -67,11 +70,9 @@ public class ItemController {
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     @PreAuthorize("hasAnyRole('ROLE_POS', 'ROLE_KIOSK')")
-    @GetMapping("/pos/{posId}/items")
-    public ResponseEntity<GroupItemResponse> getAllItems(
-            @Parameter(description = "포스 ID", example = "123e4567-e89b-12d3-a456-426614174000")
-            @PathVariable String posId) {
-        List<Item> items = itemService.getGroupItems(toUUID(posId));
+    @GetMapping("/pos/items")
+    public ResponseEntity<GroupItemResponse> getAllItems() {
+        List<Item> items = itemService.getGroupItems();
         return ResponseEntity.ok(new GroupItemResponse(items));
     }
 
@@ -85,13 +86,11 @@ public class ItemController {
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     @PreAuthorize("hasAnyRole('ROLE_POS', 'ROLE_KIOSK')")
-    @GetMapping("/pos/{posId}/items/{itemId}")
+    @GetMapping("/pos/items/{itemId}")
     public ResponseEntity<ItemResponse> getItem(
             @Parameter(description = "아이템 ID", example = "123e4567-e89b-12d3-a456-426614174000")
-            @PathVariable String itemId,
-            @Parameter(description = "포스 ID", example = "123e4567-e89b-12d3-a456-426614174000")
-            @PathVariable String posId) {
-        Item item = itemService.getItem(toUUID(itemId), toUUID(posId));
+            @PathVariable String itemId) {
+        Item item = itemService.getItem(toUUID(itemId));
         return ResponseEntity.ok(new ItemResponse(item));
     }
 
@@ -105,13 +104,11 @@ public class ItemController {
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     @PreAuthorize("hasAnyRole('ROLE_POS', 'ROLE_KIOSK')")
-    @GetMapping("/pos/{posId}/items/categories/{categoryId}")
+    @GetMapping("/pos/items/categories/{categoryId}")
     public ResponseEntity<GroupItemResponse> getItemsByCategory(
             @Parameter(description = "카테고리 ID", example = "123e4567-e89b-12d3-a456-426614174000")
-            @PathVariable String categoryId,
-            @Parameter(description = "포스 ID", example = "123e4567-e89b-12d3-a456-426614174000")
-            @PathVariable String posId) {
-        List<Item> items = itemService.getGroupItemsByCategory(toUUID(categoryId), toUUID(posId));
+            @PathVariable String categoryId) {
+        List<Item> items = itemService.getGroupItemsByCategory(toUUID(categoryId));
         return ResponseEntity.ok(new GroupItemResponse(items));
     }
 
@@ -127,12 +124,9 @@ public class ItemController {
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     @PreAuthorize("hasAnyRole('ROLE_POS', 'ROLE_KIOSK')")
-    @GetMapping("/pos/{posId}/items/search")
-    public ResponseEntity<GroupItemResponse> getItemsByKeyword(
-            @Parameter(description = "포스 ID", example = "123e4567-e89b-12d3-a456-426614174000")
-            @PathVariable String posId,
-            @ModelAttribute SearchItemRequest searchItemRequest) {
-        List<Item> items = itemService.getGroupItemsByKeyword(searchItemRequest.getKeyWord(), toUUID(posId));
+    @GetMapping("/pos/items/search")
+    public ResponseEntity<GroupItemResponse> getItemsByKeyword(@ModelAttribute SearchItemRequest searchItemRequest) {
+        List<Item> items = itemService.getGroupItemsByKeyword(searchItemRequest.getKeyWord());
         return ResponseEntity.ok(new GroupItemResponse(items));
     }
 
@@ -147,12 +141,10 @@ public class ItemController {
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
     })
     @PreAuthorize("hasRole('ROLE_POS')")
-    @PutMapping(value = "/pos/{posId}/items/{itemId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PutMapping(value = "/pos/items/{itemId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> updateItem(
             @Parameter(description = "아이템 ID", example = "123e4567-e89b-12d3-a456-426614174000")
             @PathVariable String itemId,
-            @Parameter(description = "포스 ID", example = "123e4567-e89b-12d3-a456-426614174000")
-            @PathVariable String posId,
             @RequestPart(value = "file", required = false) MultipartFile file,  // MultipartFile을 따로 받음
             @RequestPart("updateItemRequest") @Validated UpdateItemRequest updateItemRequest) {  // DTO를 받음
 
@@ -160,7 +152,7 @@ public class ItemController {
         log.info("amount={}", updateItemRequest.getAmount());
         log.info("file={}", file);
 
-        itemService.updateItem(toUUID(itemId), toUUID(posId), updateItemRequest, file);
+        itemService.updateItem(toUUID(itemId), updateItemRequest, file);
         return ResponseEntity.noContent().build();
     }
 
@@ -174,37 +166,31 @@ public class ItemController {
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     @PreAuthorize("hasRole('ROLE_POS')")
-    @DeleteMapping("/pos/{posId}/items/{itemId}")
+    @DeleteMapping("/pos/items/{itemId}")
     public ResponseEntity<?> deleteItem(
             @Parameter(description = "아이템 ID", example = "123e4567-e89b-12d3-a456-426614174000")
-            @PathVariable String itemId,
-            @Parameter(description = "포스 ID", example = "123e4567-e89b-12d3-a456-426614174000")
-            @PathVariable String posId) {
-        itemService.deleteItem(toUUID(itemId), toUUID(posId));
+            @PathVariable String itemId) {
+        itemService.deleteItem(toUUID(itemId));
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
     @Operation(summary = "특정 아이템의 키오스크 표출 여부 TOGGLE", description = "키오스크 표출 여부 TOGGLE")
     @PreAuthorize("hasRole('ROLE_POS')")
-    @PutMapping("/pos/{posId}/items/{itemId}/toggle/screen")
+    @PutMapping("/pos/items/{itemId}/toggle/screen")
     public ResponseEntity<?> toggleScreen(
             @Parameter(description = "아이템 ID", example = "123e4567-e89b-12d3-a456-426614174000")
-            @PathVariable String itemId,
-            @Parameter(description = "포스 ID", example = "123e4567-e89b-12d3-a456-426614174000")
-            @PathVariable String posId) {
-        itemService.toggleScreenStatus(toUUID(itemId), toUUID(posId));
+            @PathVariable String itemId) {
+        itemService.toggleScreenStatus(toUUID(itemId));
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
     @Operation(summary = "특정 아이템의 키오스크 품절 여부 TOGGLE", description = "키오스크 품절 여부 TOGGLE")
     @PreAuthorize("hasRole('ROLE_POS')")
-    @PutMapping("/pos/{posId}/items/{itemId}/toggle/sold-out")
+    @PutMapping("/pos/items/{itemId}/toggle/sold-out")
     public ResponseEntity<?> toggleSoldOut(
             @Parameter(description = "아이템 ID", example = "123e4567-e89b-12d3-a456-426614174000")
-            @PathVariable String itemId,
-            @Parameter(description = "포스 ID", example = "123e4567-e89b-12d3-a456-426614174000")
-            @PathVariable String posId) {
-        itemService.toggleSoldOutStatus(toUUID(itemId), toUUID(posId));
+            @PathVariable String itemId) {
+        itemService.toggleSoldOutStatus(toUUID(itemId));
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 

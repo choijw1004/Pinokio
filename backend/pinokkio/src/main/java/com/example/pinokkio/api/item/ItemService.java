@@ -7,6 +7,7 @@ import com.example.pinokkio.api.item.dto.request.UpdateItemRequest;
 import com.example.pinokkio.api.item.image.ImageService;
 import com.example.pinokkio.api.pos.Pos;
 import com.example.pinokkio.api.pos.PosRepository;
+import com.example.pinokkio.api.user.UserService;
 import com.example.pinokkio.common.utils.EntityUtils;
 import com.example.pinokkio.exception.domain.category.CategoryNotFoundException;
 import com.example.pinokkio.exception.domain.item.ItemNotFoundException;
@@ -32,35 +33,40 @@ public class ItemService {
     private final PosRepository posRepository;
     private final CategoryRepository categoryRepository;
     private final ImageService imageService;
+    private final UserService userService;
 
     /**
      * 특정 포스의 개별 아이템 조회
      */
-    public Item getItem(UUID itemId, UUID posId) {
+    public Item getItem(UUID itemId) {
+        UUID posId = userService.getCurrentPosId();
         validateItem(itemId, posId);
         return itemRepository
                 .findById(itemId)
-                .orElseThrow(()->new ItemNotFoundException(itemId));
+                .orElseThrow(() -> new ItemNotFoundException(itemId));
     }
 
     /**
      * 특정 포스의 전체 아이템 조회
      */
-    public List<Item> getGroupItems(UUID posId) {
+    public List<Item> getGroupItems() {
+        UUID posId = userService.getCurrentPosId();
         return itemRepository.findAllByPosId(posId);
     }
 
     /**
      * 특정 포스의 특정 카테고리 전체 아이템 조회
      */
-    public List<Item> getGroupItemsByCategory(UUID categoryId, UUID posId) {
+    public List<Item> getGroupItemsByCategory(UUID categoryId) {
+        UUID posId = userService.getCurrentPosId();
         return itemRepository.findByCategoryIdAndPosId(categoryId, posId);
     }
 
     /**
      * 특정 포스의 키워드 접두사 기반 아이템 검색
      */
-    public List<Item> getGroupItemsByKeyword(String keyword, UUID posId) {
+    public List<Item> getGroupItemsByKeyword(String keyword) {
+        UUID posId = userService.getCurrentPosId();
         return itemRepository.findItemsByKeyWordAndPosId(keyword, posId);
     }
 
@@ -69,14 +75,13 @@ public class ItemService {
      */
     @Transactional
     public Item createItem(ItemRequest itemRequest, String imageURL) {
-        Pos findPos = posRepository
-                .findById(UUID.fromString(itemRequest.getPosId()))
-                .orElseThrow(()->new PosNotFoundException(itemRequest.getPosId()));
+        Pos pos = userService.getCurrentPos();
+
         Category findCategory = categoryRepository.findById(UUID.fromString(itemRequest.getCategoryId()))
                 .orElseThrow(() -> new CategoryNotFoundException(itemRequest.getCategoryId()));
 
         Item item = Item.builder()
-                .pos(findPos)
+                .pos(pos)
                 .category(findCategory)
                 .price(itemRequest.getPrice())
                 .amount(itemRequest.getAmount())
@@ -90,8 +95,8 @@ public class ItemService {
      * 특정 포스의 아이템 수정
      */
     @Transactional
-    public void updateItem(UUID itemId, UUID posId, UpdateItemRequest updateItemRequest, MultipartFile file) {
-        Pos pos = EntityUtils.getEntityById(posRepository, posId.toString(), PosNotFoundException::new);
+    public void updateItem(UUID itemId, UpdateItemRequest updateItemRequest, MultipartFile file) {
+        UUID posId = userService.getCurrentPosId();
         Item item = EntityUtils.getEntityById(itemRepository, itemId.toString(), ItemNotFoundException::new);
         validateItem(itemId, posId);
 
@@ -118,21 +123,24 @@ public class ItemService {
      * 특정 포스의 아이템 삭제
      */
     @Transactional
-    public void deleteItem(UUID itemId, UUID posId) {
+    public void deleteItem(UUID itemId) {
+        UUID posId = userService.getCurrentPosId();
         EntityUtils.getEntityById(itemRepository, itemId.toString(), ItemNotFoundException::new);
         validateItem(itemId, posId);
         itemRepository.deleteByItemIdAndPosId(itemId, posId);
     }
 
     @Transactional
-    public void toggleScreenStatus(UUID itemId, UUID posId) {
+    public void toggleScreenStatus(UUID itemId) {
+        UUID posId = userService.getCurrentPosId();
         Item item = EntityUtils.getEntityById(itemRepository, itemId.toString(), ItemNotFoundException::new);
         validateItem(itemId, posId);
         item.toggleIsScreen();
     }
 
     @Transactional
-    public void toggleSoldOutStatus(UUID itemId, UUID posId) {
+    public void toggleSoldOutStatus(UUID itemId) {
+        UUID posId = userService.getCurrentPosId();
         Item item = EntityUtils.getEntityById(itemRepository, itemId.toString(), ItemNotFoundException::new);
         validateItem(itemId, posId);
         item.toggleIsSoldOut();
@@ -141,8 +149,9 @@ public class ItemService {
 
     /**
      * 해당 아이템이 입력받은 포스의 아이템인지 검증한다.
+     *
      * @param itemId 아이템 식별자
-     * @param posId 포스 식별자
+     * @param posId  포스 식별자
      */
     public void validateItem(UUID itemId, UUID posId) {
         EntityUtils.getEntityById(posRepository, posId.toString(), PosNotFoundException::new);
