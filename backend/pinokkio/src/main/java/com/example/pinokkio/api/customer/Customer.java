@@ -46,9 +46,12 @@ public class Customer extends BaseEntity {
     @Column(nullable = false)
     private int age;
 
-    @Column(nullable = false, columnDefinition = "BLOB")
+    @Column(nullable = true, columnDefinition = "VARBINARY(8000)")
     private byte[] faceEmbedding;
 
+    /**
+     * 실제 고객 생성자
+     */
     @Builder
     public Customer(Pos pos, Gender gender, String phoneNumber, int age, byte[] faceEmbedding) {
         this.pos = pos;
@@ -58,13 +61,18 @@ public class Customer extends BaseEntity {
         this.faceEmbedding = faceEmbedding;
     }
 
-    //
-    public Customer(Pos pos) {
+    /**
+     * 더미 고객 생성자 : FaceEmbed 정보가 없다
+     * UUID = 00000000-0000-0000-0000-000000000000
+     */
+    @Builder
+    public Customer(UUID id, Pos pos, Gender gender, String phoneNumber, int age) {
+        this.id = new UUID(0L, 0L);
         this.pos = pos;
-        this.gender = Gender.MALE;
-        this.phoneNumber = "010-0000-0000";
-        this.age = 99;
+        this.gender = gender;
+        this.phoneNumber = phoneNumber;
         this.faceEmbedding = null;
+        this.age = age;
     }
 
     public void updateFaceEmbedding(byte[] faceEmbedding) {
