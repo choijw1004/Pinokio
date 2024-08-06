@@ -6,12 +6,14 @@ import com.example.pinokkio.api.item.dto.request.ItemRequest;
 import com.example.pinokkio.api.item.dto.request.UpdateItemRequest;
 import com.example.pinokkio.api.item.image.ImageService;
 import com.example.pinokkio.api.pos.Pos;
-import com.example.pinokkio.api.pos.PosRepository;
 import com.example.pinokkio.api.user.UserService;
+import com.example.pinokkio.common.type.IsScreen;
+import com.example.pinokkio.common.type.IsSoldOut;
 import com.example.pinokkio.common.utils.EntityUtils;
+import com.example.pinokkio.exception.base.BadInputException;
 import com.example.pinokkio.exception.domain.category.CategoryNotFoundException;
+import com.example.pinokkio.exception.domain.image.ImageUpdateException;
 import com.example.pinokkio.exception.domain.item.ItemNotFoundException;
-import com.example.pinokkio.exception.domain.pos.PosNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -30,7 +32,6 @@ import java.util.UUID;
 public class ItemService {
 
     private final ItemRepository itemRepository;
-    private final PosRepository posRepository;
     private final CategoryRepository categoryRepository;
     private final ImageService imageService;
     private final UserService userService;
@@ -95,28 +96,74 @@ public class ItemService {
      * 특정 포스의 아이템 수정
      */
     @Transactional
-    public void updateItem(UUID itemId, UpdateItemRequest updateItemRequest, MultipartFile file) {
+    public void updateItem(UUID itemId, UpdateItemRequest updateRequest, MultipartFile file) {
         UUID posId = userService.getCurrentPosId();
-        Item item = EntityUtils.getEntityById(itemRepository, itemId.toString(), ItemNotFoundException::new);
-        validateItem(itemId, posId);
+        Item item = getAndValidateItem(itemId, posId);
+        Category category = getCategory(posId, updateRequest.getCategoryId());
 
-        // 기존 이미지 삭제
-        if (item.getItemImage() != null) {
-            imageService.deleteImage(item.getItemImage());
+        updateItemDetails(item, updateRequest, category);
+        updateItemImage(item, file);
+    }
+
+    private Item getAndValidateItem(UUID itemId, UUID posId) {
+        return itemRepository.findItemByIdAndPosId(itemId, posId)
+                .orElseThrow(() -> new ItemNotFoundException(itemId));
+    }
+
+    private Category getCategory(UUID posId, String categoryId) {
+        return categoryRepository.findByCategoryIdAndPosId(UUID.fromString(categoryId), posId)
+                .orElseThrow(() -> new CategoryNotFoundException(categoryId));
+    }
+
+    private void updateItemDetails(Item item, UpdateItemRequest updateRequest, Category category) {
+        item.updateCategory(category);
+        item.updateAmount(updateRequest.getAmount());
+        item.updatePrice(updateRequest.getPrice());
+        item.updateName(updateRequest.getName());
+        item.updateDetail(updateRequest.getDetail());
+        try {
+            item.updateIsScreen(IsScreen.valueOf(updateRequest.getIsScreen().toUpperCase()));
+            item.updateIsSoldOut(IsSoldOut.valueOf(updateRequest.getIsSoldOut().toUpperCase()));
+        } catch (IllegalArgumentException e) {
+            throw new BadInputException("BAD_INPUT_001", e.getMessage());
         }
+    }
 
-        // 새 이미지가 있을 경우 업로드
-        String imageUrl = null;
-        if (file != null && !file.isEmpty()) {
-            imageUrl = imageService.uploadImage(file);
+    private void updateItemImage(Item item, MultipartFile file) {
+        try {
+            String currentImageUrl = item.getItemImage();
+            String newImageUrl = null;
+
+            // 새 파일이 제공된 경우에만 이미지 업데이트 진행
+            if (file != null && !file.isEmpty()) {
+                // 기존 이미지 삭제
+                if (currentImageUrl != null) {
+                    try {
+                        // TODO 더미데이터 적절한 이미지값 추가
+//                        imageService.deleteImage(currentImageUrl);
+                    } catch (Exception e) {
+                        log.warn("기존 이미지 삭제 실패: {}", currentImageUrl, e);
+                        // 기존 이미지 삭제 실패를 로그로 남기고 계속 진행
+                    }
+                }
+
+                // 새 이미지 업로드
+                newImageUrl = imageService.uploadImage(file);
+            }
+
+            // 아이템 이미지 URL 업데이트
+            if (newImageUrl != null) {
+                item.updateItemImage(newImageUrl);
+            } else if (file != null && file.isEmpty()) {
+                // 파일이 제공되었지만 비어있는 경우, 이미지 제거로 간주
+                item.updateItemImage(null);
+            }
+            // 파일이 null인 경우 기존 이미지 유지 (아무 작업도 하지 않음)
+
+        } catch (Exception e) {
+            log.error("이미지 업데이트 중 오류 발생", e);
+            throw new ImageUpdateException();
         }
-
-        // 아이템 정보 업데이트
-        item.updateItemImage(imageUrl); // 새 이미지 URL로 업데이트
-        item.updateAmount(updateItemRequest.getAmount());
-        item.updatePrice(updateItemRequest.getPrice());
-        item.updateName(updateItemRequest.getName());
-        item.updateDetail(updateItemRequest.getDetail());
     }
 
     /**
@@ -154,10 +201,8 @@ public class ItemService {
      * @param posId  포스 식별자
      */
     public void validateItem(UUID itemId, UUID posId) {
-        EntityUtils.getEntityById(posRepository, posId.toString(), PosNotFoundException::new);
         if (!itemRepository.existsByItemIdAndPosId(itemId, posId)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "아이템이 해당 포스에 존재하지 않습니다.");
         }
     }
-
 }

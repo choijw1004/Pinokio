@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 public interface CategoryRepository extends JpaRepository<Category, UUID> {
@@ -46,4 +47,8 @@ public interface CategoryRepository extends JpaRepository<Category, UUID> {
             "AND c.id = :categoryId")
     boolean existsByPosIdAndCategoryId(@Param("posId") UUID posId, @Param("categoryId") UUID categoryId);
 
+    @Query("SELECT c " +
+            "FROM Category c " +
+            "WHERE c.id = :categoryId AND c.pos.id = :posId ")
+    Optional<Category> findByCategoryIdAndPosId(@Param("categoryId") UUID categoryId, @Param("posId") UUID posId);
 }
