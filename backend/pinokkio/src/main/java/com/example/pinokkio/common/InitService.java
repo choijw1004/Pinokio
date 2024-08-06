@@ -47,7 +47,7 @@ public class InitService implements ApplicationListener<ContextRefreshedEvent> {
 
     @Override
     public void onApplicationEvent(ContextRefreshedEvent event) {
-        makeInitData();
+//        makeInitData();
     }
 
     private void makeInitData() {
