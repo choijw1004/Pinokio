@@ -1,11 +1,13 @@
 package com.example.pinokkio.api.item;
 
-import java.util.List;
-import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 
 public interface ItemRepository extends JpaRepository<Item, UUID> {
 
@@ -70,4 +72,5 @@ public interface ItemRepository extends JpaRepository<Item, UUID> {
             "WHERE i.pos.id = :posId")
     List<Item> findAllByPosId(@Param("posId") UUID posId);
 
+    Optional<Item> findItemByIdAndPosId(UUID id, UUID posId);
 }
