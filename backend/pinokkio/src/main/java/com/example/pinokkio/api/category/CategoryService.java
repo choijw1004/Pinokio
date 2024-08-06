@@ -1,8 +1,10 @@
 package com.example.pinokkio.api.category;
 
 
+import com.example.pinokkio.api.category.dto.request.CategoryRequest;
 import com.example.pinokkio.api.pos.Pos;
 import com.example.pinokkio.api.user.UserService;
+import com.example.pinokkio.exception.domain.category.CategoryNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -56,6 +58,19 @@ public class CategoryService {
     }
 
     /**
+     * 특정 포스의 카테고리명 수정
+     */
+    @Transactional
+    public void updateCategory(UUID categoryId, CategoryRequest categoryRequest) {
+        UUID posId = userService.getCurrentPosId();
+        Category category = categoryRepository.findByCategoryIdAndPosId(categoryId, posId)
+                .orElseThrow(() -> new CategoryNotFoundException(categoryId.toString()));
+
+        category.updateName(categoryRequest.getName());
+        log.info("category updated: " + category.getName());
+    }
+
+    /**
      * 카테고리 검증 함수
      * 해당 카테고리가 입력받은 포스의 카테고리인지 검증한다.
      *
@@ -66,5 +81,4 @@ public class CategoryService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "카테고리가 해당 포스에 존재하지 않습니다.");
         }
     }
-
 }

@@ -47,5 +47,8 @@ public interface CategoryRepository extends JpaRepository<Category, UUID> {
             "AND c.id = :categoryId")
     boolean existsByPosIdAndCategoryId(@Param("posId") UUID posId, @Param("categoryId") UUID categoryId);
 
-    Optional<Category> findByIdAndPosId(UUID id, UUID posId);
+    @Query("SELECT c " +
+            "FROM Category c " +
+            "WHERE c.id = :categoryId AND c.pos.id = :posId ")
+    Optional<Category> findByCategoryIdAndPosId(@Param("categoryId") UUID categoryId, @Param("posId") UUID posId);
 }
