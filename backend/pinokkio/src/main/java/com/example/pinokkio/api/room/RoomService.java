@@ -24,6 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -40,6 +41,7 @@ public class RoomService {
     private final TellerRepository tellerRepository;
     private final KioskRepository kioskRepository;
     private final JwtProvider jwtProvider;
+    private final WebSocketService webSocketService;
 
     private RoomServiceClient roomServiceClient;
 
@@ -85,25 +87,41 @@ public class RoomService {
         Teller teller = getCurrentTeller();
 
         roomRepository.deleteByTeller(teller);
-        log.info("[deleteRoom] complete for tellerId: {}",teller.getId());
+        log.info("[deleteRoom] complete for tellerId: {}", teller.getId());
     }
 
     /**
      * 상담원 - 상담 요청 수락시 고객의 방 접근을 위한 roomId 정보 제공
      */
-    public String acceptInvitation(String roomId, String kioskId) {
-        Teller teller = getCurrentTeller();
-
-        try {
-            EntityUtils.getEntityById(roomRepository, roomId, RoomNotFoundException::new);
-            EntityUtils.getEntityById(kioskRepository, kioskId, KioskNotFoundException::new);
-        } catch (Exception e) {
-            log.info("[acceptInvitation] failed to find : {}",e.getMessage());
+    public void acceptInvitation(String roomId, String kioskId) {
+        // 이미 토큰이 발급된 경우
+        if (webSocketService.isTokenIssued(kioskId)) {
+            throw new RoomAccessRestrictedException(kioskId);
         }
-        log.info("[acceptInvitation] roomId: {}, participantName: {}", roomId, teller.getId());
-        return roomId;
+
+        // 상담원, room 유효성 검사
+        Teller teller = getCurrentTeller();
+        Room room = roomRepository.findByTeller(teller)
+                .orElseThrow(() -> new RoomNotFoundException(teller.getId()));
+
+        // roomId와 실제 room의 id가 일치하는지 확인
+        if (!room.getRoomId().toString().equals(roomId)) {
+            throw new RoomNotFoundException(UUID.fromString(roomId));
+        }
+
+        // kioskId 유효성 검사
+        EntityUtils.getEntityById(kioskRepository, kioskId, KioskNotFoundException::new);
+
+        // 키오스크에 roomId 전송
+        webSocketService.sendRoomId(kioskId, room.getRoomId().toString());
+        log.info("Invitation accepted for room: {}, kiosk: {}, teller: {}", roomId, kioskId, teller.getId());
     }
 
+    /**
+     * 토큰으로부터 Teller를 찾아 반환
+     *
+     * @return Teller
+     */
     private Teller getCurrentTeller() {
         String tellerEmail = jwtProvider.getCurrentUserEmail();
         return tellerRepository.findByEmail(tellerEmail)
@@ -113,8 +131,11 @@ public class RoomService {
     /**
      * 상담원 - 상담 요청 거절
      */
-    public void rejectInvitation(String roomId, String tellerId) {
-        log.info("[rejectInvitation] roomId: {}, tellerId: {}", roomId, tellerId);
+    public void rejectInvitation() {
+        Teller teller = getCurrentTeller();
+        Room room = roomRepository.findByTeller(teller)
+                .orElseThrow(() -> new RoomNotFoundException(teller.getId()));
+        log.info("[rejectInvitation] roomId: {}, tellerId: {}", room.getRoomId(), teller.getId());
     }
 
     /**
@@ -152,7 +173,7 @@ public class RoomService {
         if (room.getNumberOfCustomers() >= MAX_CAPACITY) {
             throw new RoomNotAvailableException(UUID.fromString(roomId));
         }
-        room.updateNumberOfCustomers(currentCustomerCount+1);
+        room.updateNumberOfCustomers(currentCustomerCount + 1);
 
         // 토큰 발급
         AccessToken roomToken = createToken(roomId, kioskId);

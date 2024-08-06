@@ -15,6 +15,6 @@ public class RoomEnterRequest {
     @Schema(description = "상담실 ID", example = "123e4567-e89b-12d3-a456-426614174000")
     private String roomId;
 
-    @Schema(description = "사용자 ID", example = "123e4567-e89b-12d3-a456-426614174000")
-    private String userId;
+    @Schema(description = "키오스크 ID", example = "123e4567-e89b-12d3-a456-426614174000")
+    private String kioskId;
 }

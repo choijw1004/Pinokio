@@ -2,6 +2,7 @@ package com.example.pinokkio.api.room;
 
 import com.example.pinokkio.api.room.dto.request.RoomEnterRequest;
 import com.example.pinokkio.api.room.dto.response.RoomResponse;
+import com.example.pinokkio.exception.domain.room.RoomAccessRestrictedException;
 import io.livekit.server.AccessToken;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -12,11 +13,12 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.UUID;
 
 @RestController
 @RequiredArgsConstructor
@@ -26,7 +28,6 @@ import org.springframework.web.bind.annotation.*;
 public class RoomController {
 
     private final RoomService roomService;
-    private final WebSocketService webSocketService;
 
     @Operation(summary = "상담 생성", description = "Teller의 경우 상담방 생성 가능")
     @ApiResponses(value = {
@@ -52,21 +53,15 @@ public class RoomController {
         return ResponseEntity.noContent().build();
     }
 
-    @Operation(summary = "상담 요청 수락", description = "Teller가 상담 요청을 수락하는 경우 Room ID를 전송")
+    @Operation(summary = "상담 요청 수락", description = "Teller가 상담 요청을 수락하는 경우 키오스크에 Room ID를 전송")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "204", description = "NO CONTENT",
-                    content = @Content(schema = @Schema(implementation = RoomResponse.class)))
+            @ApiResponse(responseCode = "204", description = "NO CONTENT")
     })
     @PreAuthorize("hasRole('ROLE_TELLER')")
     @PostMapping("/teller/accept")
     public ResponseEntity<RoomResponse> acceptInvitation(
             @Validated @RequestBody RoomEnterRequest enterRequest) {
-        if (webSocketService.isTokenIssued(enterRequest.getUserId())) {
-            //TODO conflict 예외처리 하기
-        }
-        String acceptRoomId = roomService.acceptInvitation(enterRequest.getRoomId(), enterRequest.getUserId());
-        webSocketService.sendRoomId(enterRequest.getUserId(), acceptRoomId);
-        //TODO bad input 예외처리 하기
+        roomService.acceptInvitation(enterRequest.getRoomId(), enterRequest.getKioskId());
         return ResponseEntity.noContent().build();
     }
 
@@ -76,16 +71,14 @@ public class RoomController {
     })
     @PreAuthorize("hasRole('ROLE_KIOSK')")
     @PostMapping("/kiosk/reject")
-    public ResponseEntity<RoomResponse> rejectInvitation(
-            @Validated @RequestBody RoomEnterRequest roomEnterRequest) {
-        roomService.rejectInvitation(roomEnterRequest.getRoomId(), roomEnterRequest.getUserId());
+    public ResponseEntity<RoomResponse> rejectInvitation() {
+        roomService.rejectInvitation();
         return ResponseEntity.noContent().build();
     }
 
     @Operation(summary = "상담 요청", description = "Kiosk의 경우 생성된 모든 상담방에 상담 요청 전송 가능")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "204", description = "NO CONTENT",
-                    content = @Content(schema = @Schema(implementation = RoomResponse.class)))
+            @ApiResponse(responseCode = "204", description = "NO CONTENT")
     })
     @PreAuthorize("hasRole('ROLE_KIOSK')")
     @PostMapping("/kiosk/request-enter")
@@ -103,7 +96,7 @@ public class RoomController {
     @PutMapping("/kiosk/enter")
     public ResponseEntity<RoomResponse> enterRoom(
             @Validated @RequestBody RoomEnterRequest enterRequest) {
-        AccessToken roomToken = roomService.enterRoom(enterRequest.getRoomId(), enterRequest.getUserId());
+        AccessToken roomToken = roomService.enterRoom(enterRequest.getRoomId(), enterRequest.getKioskId());
         return ResponseEntity.ok(new RoomResponse(roomToken.toJwt(), enterRequest.getRoomId()));
     }
 
