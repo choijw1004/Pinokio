@@ -2,6 +2,7 @@ version: '3'
 
 services:
   backend:
+    container_name: pinokkio-backend
     build:
       context: ./backend/pinokkio
       dockerfile: Dockerfile
@@ -49,6 +50,8 @@ services:
             - "443:443"
     volumes:
             - /etc/letsencrypt:/etc/letsencrypt:ro
+    depends_on:
+      - pinokkio-backend
 
   mysql:
     image: mysql:8.0
