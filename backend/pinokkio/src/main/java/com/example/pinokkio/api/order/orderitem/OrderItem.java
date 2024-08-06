@@ -3,9 +3,10 @@
 // (powered by FernFlower decompiler)
 //
 
-package com.example.pinokkio.api.order;
+package com.example.pinokkio.api.order.orderitem;
 
 import com.example.pinokkio.api.item.Item;
+import com.example.pinokkio.api.order.Order;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -23,7 +24,6 @@ import java.util.UUID;
 @Getter
 @Setter(AccessLevel.PROTECTED)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@AllArgsConstructor
 public class OrderItem {
 
     @Id
@@ -39,4 +39,20 @@ public class OrderItem {
     @JoinColumn(name = "order_id")
     private Order order;
 
+    @Column(nullable = false)
+    private int quantity;
+
+    @Column(nullable = false)
+    private UUID customerId;
+
+    public OrderItem(Order order, Item item, UUID customerId, int quantity) {
+        this.order = order;
+        this.item = item;
+        this.customerId = customerId;
+        this.quantity = quantity;
+    }
+
+    public void updateOrder(Order order) {
+        this.order = order;
+    }
 }
