@@ -130,14 +130,14 @@ function Login() {
         console.log('kiosk login response:', res);
       }
 
-      if (res && res.accessToken) {
-        axios.defaults.headers.common['Authorization'] = `Bearer ${res.accessToken}`;
+      if (res && res.authToken && res.authToken.accessToken) {
+        axios.defaults.headers.common['Authorization'] = `Bearer ${res.authToken.accessToken}`;
 
         // accessToken을 localStorage에 저장
-        localStorage.setItem('accessToken', res.accessToken);
+        localStorage.setItem('accessToken', res.authToken.accessToken);
 
         // refreshToken을 쿠키에 저장
-        Cookies.set('refreshToken', res.refreshToken);
+        Cookies.set('refreshToken', res.authToken.refreshToken);
 
         // 사용자 데이터 준비
         const newUserData = {
@@ -149,7 +149,7 @@ function Login() {
               : usertype === 'pos'
               ? await getPosInfo()
               : null,
-          token: res.accessToken,
+          token: res.authToken.accessToken,
         };
 
         console.log('userData before dispatch:', newUserData);
