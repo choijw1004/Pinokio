@@ -12,7 +12,7 @@ import { setUser, clearUser } from '../features/user/userSlice';
 import { jwtDecode } from 'jwt-decode';
 import Cookies from 'js-cookie';
 
-const baseURL = 'https://3.36.113.101:8080';
+const baseURL = 'https://i11a601.p.ssafy.io';
 
 // Axios 인스턴스 생성
 const axios = Axios.create({
