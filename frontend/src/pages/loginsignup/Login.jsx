@@ -130,14 +130,29 @@ function Login() {
         console.log('kiosk login response:', res);
       }
 
-      if (res && res.authToken && res.authToken.accessToken) {
-        axios.defaults.headers.common['Authorization'] = `Bearer ${res.authToken.accessToken}`;
+      let accessToken;
+      let refreshToken;
+      if (usertype === 'kiosk') {
+        accessToken = res.authToken?.accessToken;
+        refreshToken = res.authToken?.refreshToken;
+      } else if (usertype === 'pos') {
+        accessToken = res.accessToken;
+        refreshToken = res.refreshToken;
+      } else {
+        accessToken = res.accessToken;
+        refreshToken = res.refreshToken;
+      }
+      console.log(`accessToken : ${accessToken}`);
+
+      if (accessToken) {
+        console.log('yes');
+        axios.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
 
         // accessToken을 localStorage에 저장
-        localStorage.setItem('accessToken', res.authToken.accessToken);
+        localStorage.setItem('accessToken', accessToken);
 
         // refreshToken을 쿠키에 저장
-        Cookies.set('refreshToken', res.authToken.refreshToken);
+        Cookies.set('refreshToken', refreshToken);
 
         // 사용자 데이터 준비
         const newUserData = {
@@ -149,7 +164,7 @@ function Login() {
               : usertype === 'pos'
               ? await getPosInfo()
               : null,
-          token: res.authToken.accessToken,
+          token: accessToken,
         };
 
         console.log('userData before dispatch:', newUserData);

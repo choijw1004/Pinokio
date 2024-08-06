@@ -7,6 +7,7 @@ import CategoryModal from '../../components/pos/CategoryModal';
 import Button from '../../components/common/Button';
 import Toast from '../../components/common/Toast';
 import { getItems } from '../../apis/Item'; // Import the API function
+import { getCategories } from '../../apis/Category'; // Import the API function
 import { useSelector } from 'react-redux'; // Assuming you use Redux to get posId
 
 const TabContainer = styled.div`
@@ -17,8 +18,8 @@ const TabContainer = styled.div`
 const Tab = styled.div`
   padding: 10px 20px;
   cursor: pointer;
-  background-color: ${(props) => (props.active ? '#007bff' : '#f8f9fa')};
-  color: ${(props) => (props.active ? 'white' : 'black')};
+  background-color: ${(props) => (props.isActive ? '#007bff' : '#f8f9fa')};
+  color: ${(props) => (props.isActive ? 'white' : 'black')};
 `;
 
 const ProductManagementPage = () => {
@@ -31,22 +32,26 @@ const ProductManagementPage = () => {
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [toastMessage, setToastMessage] = useState('');
   const [selectedCategoryFilter, setSelectedCategoryFilter] = useState('전체');
-  const posId = 'b48b8afe-0eec-4048-9b47-ebfffb190866';
+
+  const userData = useSelector((store) => store.user);
 
   useEffect(() => {
     const fetchItems = async () => {
       try {
-        const data = await getItems(posId);
-        setProducts(data.products || []); // Adjust based on actual API response
-        setCategories(data.categories || []); // Adjust based on actual API response
-        console.log(data.map((name) => `${name.name}`));
+        const data = await getItems(userData.typeInfo.posId);
+        setProducts(data.responseList); // Adjust based on actual API response
+        const categoryList = await getCategories(userData.typeInfo.posId);
+        setCategories(categoryList.responseList); // Adjust based on actual API response
+        // const productName = data.responseList.map((product, idx) => {
+        //   console.log(product);
+        // });
       } catch (error) {
         setToastMessage('상품 및 카테고리 데이터를 가져오는 데 실패했습니다.');
       }
     };
 
     fetchItems();
-  }, [posId]);
+  }, [userData.typeInfo.posId]);
 
   const handleAddProduct = () => {
     setSelectedProduct(null);
@@ -110,15 +115,15 @@ const ProductManagementPage = () => {
   const filteredProducts =
     selectedCategoryFilter === '전체'
       ? products
-      : products.filter((product) => product.category === selectedCategoryFilter);
+      : products.filter((product) => product.categoryId === selectedCategoryFilter);
 
   return (
     <div>
       <TabContainer>
-        <Tab active={activeTab === '상품'} onClick={() => setActiveTab('상품')}>
+        <Tab isActive={activeTab === '상품'} onClick={() => setActiveTab('상품')}>
           상품
         </Tab>
-        <Tab active={activeTab === '카테고리'} onClick={() => setActiveTab('카테고리')}>
+        <Tab isActive={activeTab === '카테고리'} onClick={() => setActiveTab('카테고리')}>
           카테고리
         </Tab>
       </TabContainer>
@@ -132,7 +137,7 @@ const ProductManagementPage = () => {
           >
             <option value="전체">전체</option>
             {categories.map((category) => (
-              <option key={category.id} value={category.name}>
+              <option key={category.id} value={category.id}>
                 {category.name}
               </option>
             ))}
