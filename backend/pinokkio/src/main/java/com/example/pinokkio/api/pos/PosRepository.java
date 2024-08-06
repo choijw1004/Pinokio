@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -25,4 +26,10 @@ public interface PosRepository extends JpaRepository<Pos, UUID> {
      */
     boolean existsByEmail(String email);
 
+    /**
+     * 특정 codeId 를 가지는 Pos 리스트를 반환한다.
+     * @param codeId 코드 식별자
+     * @return 특정 codeId 를 가지는 Pos 리스트
+     */
+    List<Pos> findByCodeId(UUID codeId); // 특정 code_id를 가진 모든 Pos 를 찾는 메소드
 }

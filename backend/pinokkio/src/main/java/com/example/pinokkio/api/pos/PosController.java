@@ -1,7 +1,9 @@
 package com.example.pinokkio.api.pos;
 
 import com.example.pinokkio.api.auth.dto.response.EmailDuplicationResponse;
+import com.example.pinokkio.api.order.OrderService;
 import com.example.pinokkio.api.pos.dto.response.PosResponse;
+import com.example.pinokkio.api.pos.dto.response.PosStatisticsResponse;
 import com.example.pinokkio.config.jwt.JwtProvider;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -16,6 +18,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import retrofit2.http.Path;
 
+import java.util.UUID;
+
 @Slf4j
 @RestController
 @RequiredArgsConstructor
@@ -25,6 +29,7 @@ public class PosController {
 
     private final PosService posService;
     private final JwtProvider jwtProvider;
+    private final OrderService orderService;
 
     /**
      * 요청한 포스의 자기 정보 조회
@@ -47,4 +52,17 @@ public class PosController {
         EmailDuplicationResponse posResponse = new EmailDuplicationResponse(posService.isEmailDuplicated(email));
         return ResponseEntity.ok(posResponse);
     }
+
+    /**
+     * 현재 posId를 기준으로 가지는 code를 포함하는 포스들의 30일 매출 평균, 포스 수, 등수를 반환한다.
+     */
+    @Operation(summary = "포스 통계 조회", description = "현재 포스의 통계 조회 (30일 매출 평균, 포스 수, 등수)")
+    @PreAuthorize("hasRole('ROLE_POS')")
+    @GetMapping("/statistics/")
+    public ResponseEntity<?> getPosStatistics() {
+        UUID posId = posService.getPosByEmail(jwtProvider.getCurrentUserEmail()).getId();
+        PosStatisticsResponse statistics = orderService.getPosStatistics(posId);
+        return ResponseEntity.ok(statistics);
+    }
+
 }

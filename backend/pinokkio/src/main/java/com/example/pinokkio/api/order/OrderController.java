@@ -91,7 +91,16 @@ public class OrderController {
         return ResponseEntity.ok(new GroupOrderItemResponse(customerId, orderItemResponses));
     }
 
-
+    @Operation(summary = "주문 상태 전환", description = "특정 주문의 상태를 전환합니다. [완료, 취소]")
+    @PreAuthorize("hasRole('ROLE_POS')")
+    @PutMapping("/orders/{orderId}/status")
+    public ResponseEntity<Void> toggleOrderStatus(@PathVariable UUID orderId) {
+        orderService.toggleOrderStatus(
+                orderId,
+                posService.getPosByEmail(jwtProvider.getCurrentUserEmail()).getId()
+        );
+        return ResponseEntity.noContent().build(); // No Content 반환
+    }
 
     public UUID toUUID(String input) {
         return UUID.fromString(input);

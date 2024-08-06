@@ -9,6 +9,7 @@ import com.example.pinokkio.api.customer.Customer;
 import com.example.pinokkio.api.order.orderitem.OrderItem;
 import com.example.pinokkio.api.pos.Pos;
 import com.example.pinokkio.common.BaseEntity;
+import com.example.pinokkio.common.type.OrderStatus;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -39,11 +40,25 @@ public class Order extends BaseEntity {
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OrderItem> items = new ArrayList<>();
 
+    @Enumerated(EnumType.STRING)
+    private OrderStatus status;
+
+    // 총 가격 필드 추가
+    @Column(nullable = false)
+    private long totalPrice;
+
     @Builder
-    public Order(Pos pos, Customer customer, List<OrderItem> items) {
+    public Order(Pos pos, Customer customer, List<OrderItem> items, long totalPrice) {
         this.pos = pos;
         this.customer = customer;
         this.items = items;
+        this.status = OrderStatus.ACTIVE;
+        this.totalPrice = totalPrice;
+    }
+
+    public void toggleOrderStatus() {
+        if(status.equals(OrderStatus.ACTIVE)) this.status = OrderStatus.CANCELLED;
+        else this.status = OrderStatus.ACTIVE;
     }
 
 }
