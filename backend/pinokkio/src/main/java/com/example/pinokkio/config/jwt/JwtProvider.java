@@ -1,5 +1,7 @@
 package com.example.pinokkio.config.jwt;
 
+import com.example.pinokkio.exception.base.AuthenticationException;
+import com.example.pinokkio.exception.base.AuthorizationException;
 import com.example.pinokkio.exception.domain.auth.ExpiredTokenException;
 import com.example.pinokkio.exception.domain.auth.TokenNotValidException;
 import io.jsonwebtoken.*;
@@ -25,8 +27,6 @@ import java.util.Optional;
 public class JwtProvider {
 
     private final CustomUserDetailService customUserDetailService;
-    private final long accessValidTime = 1000L * 60 * 60;    // 액세스 토큰 유효 시간 60분
-    private final long refreshValidTime = 1000L * 60 * 60 * 24 * 14;    // 리프레쉬 토큰 유효 시간 2주
 
     @Value("${jwt.secret}")
     private String secretKey;
@@ -199,6 +199,18 @@ public class JwtProvider {
                 .map(Authentication::getPrincipal)
                 .filter(principal -> principal instanceof UserDetails)
                 .map(principal -> ((UserDetails) principal).getUsername())
-                .orElse(null);
+                .orElseThrow(() -> new AuthenticationException("AUTH_001", "User is not authenticated"));
+    }
+
+    /**
+     * 현재 인증된 사용자로부터 역할을 가져오는 메서드
+     */
+    public String getCurrentUserRole() {
+        return Optional.ofNullable(SecurityContextHolder.getContext().getAuthentication())
+                .filter(Authentication::isAuthenticated)
+                .map(Authentication::getCredentials)
+                .map(Object::toString)
+                .map(this::getRoleFromToken)
+                .orElseThrow(() -> new AuthorizationException("AUTH_002", "User role not found"));
     }
 }
