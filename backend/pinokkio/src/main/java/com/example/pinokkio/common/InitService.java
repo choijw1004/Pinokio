@@ -2,6 +2,8 @@ package com.example.pinokkio.common;
 
 import com.example.pinokkio.api.category.Category;
 import com.example.pinokkio.api.category.CategoryRepository;
+import com.example.pinokkio.api.customer.Customer;
+import com.example.pinokkio.api.customer.CustomerRepository;
 import com.example.pinokkio.api.item.Item;
 import com.example.pinokkio.api.item.ItemRepository;
 import com.example.pinokkio.api.kiosk.Kiosk;
@@ -12,15 +14,18 @@ import com.example.pinokkio.api.pos.code.Code;
 import com.example.pinokkio.api.pos.code.CodeRepository;
 import com.example.pinokkio.api.teller.Teller;
 import com.example.pinokkio.api.teller.TellerRepository;
+import com.example.pinokkio.common.type.Gender;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Map;
 
 @Service
+@Transactional
 @RequiredArgsConstructor
 public class InitService implements ApplicationListener<ContextRefreshedEvent> {
 
@@ -36,34 +41,66 @@ public class InitService implements ApplicationListener<ContextRefreshedEvent> {
     private final CategoryRepository categoryRepository;
     private final PosRepository posRepository;
     private final KioskRepository kioskRepository;
+    private final CustomerRepository customerRepository;
     private final TellerRepository tellerRepository;
     private final ItemRepository itemRepository;
 
     @Override
     public void onApplicationEvent(ContextRefreshedEvent event) {
+        YEONDORI();
+    }
+
+    private void YEONDORI() {
         // Code Repository 데이터 추가
         Code starbucksCode = codeRepository.save(new Code("스타벅스"));
         Code tomntomsCoffeeCode = codeRepository.save(new Code("탐앤탐스"));
         Code hollysCode = codeRepository.save(new Code("할리스"));
 
-        // Pos Repository 데이터 추가
+        // Pos Repository 데이터 추가 + 비고객 생성
         Pos starbucks = posRepository.save(Pos.builder()
                 .code(starbucksCode)
                 .email("starbucks@example.com")
                 .password(passwordEncoder.encode("스타벅스"))
                 .build());
+        Customer starbucksCustomer = customerRepository.save(Customer.builder()
+                .phoneNumber("00000000")
+                .pos(starbucks)
+                .age(99)
+                .gender(Gender.MALE)
+                .faceEmbedding(null)
+                .build());
+        starbucks.updateDummyCustomerUUID(starbucksCustomer.getId().toString());
+
 
         Pos tomntomsCoffee = posRepository.save(Pos.builder()
                 .code(tomntomsCoffeeCode)
                 .email("tomntoms@example.com")
                 .password(passwordEncoder.encode("탐앤탐스"))
                 .build());
+        Customer tomntomsCustomer = customerRepository.save(Customer.builder()
+                .phoneNumber("00000000")
+                .pos(tomntomsCoffee)
+                .age(99)
+                .gender(Gender.MALE)
+                .faceEmbedding(null)
+                .build());
+        tomntomsCoffee.updateDummyCustomerUUID(tomntomsCustomer.getId().toString());
+
 
         Pos hollys = posRepository.save(Pos.builder()
                 .code(hollysCode)
                 .email("hollys@example.com")
                 .password(passwordEncoder.encode("할리스"))
                 .build());
+        Customer hollysCustomer = customerRepository.save(Customer.builder()
+                .phoneNumber("00000000")
+                .pos(hollys)
+                .age(99)
+                .gender(Gender.MALE)
+                .faceEmbedding(null)
+                .build());
+        hollys.updateDummyCustomerUUID(hollysCustomer.getId().toString());
+
 
         // Category Repository 데이터 추가
         Category coffeeStarbucks = categoryRepository.save(Category.builder()

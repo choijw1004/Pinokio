@@ -42,9 +42,13 @@ public class OrderItem {
     @Column(nullable = false)
     private int quantity;
 
-    public OrderItem(Order order, Item item, int quantity) {
+    @Column(nullable = false)
+    private UUID customerId;
+
+    public OrderItem(Order order, Item item, UUID customerId, int quantity) {
         this.order = order;
         this.item = item;
+        this.customerId = customerId;
         this.quantity = quantity;
     }
 

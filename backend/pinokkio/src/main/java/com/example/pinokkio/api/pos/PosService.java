@@ -21,6 +21,11 @@ public class PosService {
         return new PosResponse(pos.getCode().getName(), pos.getId().toString(), pos.getEmail());
     }
 
+    public Pos getPosByEmail(String email) {
+        return posRepository
+                .findByEmail(email)
+                .orElseThrow(() -> new PosEmailNotFoundException(email));
+    }
 
     public boolean isEmailDuplicated(String email) {
         return posRepository.existsByEmail(email);
