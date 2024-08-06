@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
-import ToggleButton from '../common/ToggleButton';
+import ToggleButton from '../common/Toggle';
 
 const ProductTable = styled.table`
   width: 100%;
