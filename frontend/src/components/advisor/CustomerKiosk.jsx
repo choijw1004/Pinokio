@@ -1,27 +1,33 @@
-import React from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import styled from 'styled-components';
 
 const CustomerScreen = styled.div`
-  color: blue;
-  font-size: 20px;
-  width: 100%;
+  width: auto;
   height: 100%;
-  border: solid black 1px;
-  border-radius: 12px;
+  border-radius: 1rem;
   text-align: center;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+  text-align: center;
+  line-height: ${(props) => `${props.height}px`};
+  background-color: #efefef;
+  font-family: 'CafeOhsquareAir';
+  font-size: ${(props) => `calc(${props.height}px / 12)`};
 `;
 
-function CustomerKiosk(props) {
+function CustomerKiosk() {
+  const divRef = useRef(null);
+  const [thisHeight, setThisHeight] = useState(0);
+  const [thisWidth, setThisWidth] = useState(0);
+
+  useEffect(() => {
+    if (divRef.current) {
+      setThisHeight(divRef.current.offsetHeight);
+      setThisWidth(divRef.current.offsetWidth);
+    }
+  });
   return (
-    <div>
-      <CustomerScreen>
-        <p>유저가 보고있는 화면입니다.</p>
-        <p>components/advisor/CustomerKiosk.jsx</p>
-      </CustomerScreen>
-    </div>
+    <CustomerScreen ref={divRef} width={thisWidth} height={thisHeight}>
+      연결된 고객이 없습니다.
+    </CustomerScreen>
   );
 }
 

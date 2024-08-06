@@ -5,6 +5,7 @@ import KioskMain from '../assets/images/main/kioskmain.png';
 import KioskSenior from '../assets/images/main/kiosksenior.png';
 import PosMain from '../assets/images/main/posmain.png';
 import LOGO from '../components/common/Logo';
+import Toggle from '../components/common/Toggle';
 
 const MainContainer = styled.div`
   display: flex;

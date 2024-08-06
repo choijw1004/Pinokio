@@ -4,14 +4,9 @@ import CustomerWaitingRooms from './CustomerWaitingRooms';
 
 // 스타일 컴포넌트 정의
 const CustomerWaitingSection = styled.div`
-  width: auto;
-  border: 1px solid #ccc;
   border-radius: 8px;
-  padding: 20px;
-  margin-top: 20px;
   background-color: #fff;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  flex: 1; /* 남은 공간을 차지하도록 설정 */
 `;
 
 function CustomerWaiting({ connectedKiosks, setRooms }) {

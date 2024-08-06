@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
-import ToggleButton from '../common/ToggleButton';
+import ToggleButton from '../common/Toggle';
 
 const Modal = styled.div`
   position: fixed;

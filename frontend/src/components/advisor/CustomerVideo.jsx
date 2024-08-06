@@ -1,23 +1,32 @@
-import React from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import styled from 'styled-components';
 
 const VideoSection = styled.div`
-  width: 695px;
-  height: 300px;
-  border: solid black 1px;
-  border-radius: 12px;
-  margin-bottom: 10px;
+  width: auto;
+  height: 100%;
+  border-radius: 1rem;
   text-align: center;
+  line-height: ${(props) => `${props.height}px`};
+  background-color: #efefef;
+  font-family: 'CafeOhsquareAir';
+  font-size: ${(props) => `calc(${props.height}px / 12)`};
 `;
 
-function CustomerVideo(props) {
+function CustomerVideo() {
+  const divRef = useRef(null);
+  const [thisHeight, setThisHeight] = useState(0);
+  const [thisWidth, setThisWidth] = useState(0);
+
+  useEffect(() => {
+    if (divRef.current) {
+      setThisHeight(divRef.current.offsetHeight);
+      setThisWidth(divRef.current.offsetWidth);
+    }
+  });
   return (
-    <div>
-      <VideoSection>
-        <p>연결 대기중</p>
-        <p>components/advisor/CustomerVideo.jsx</p>
-      </VideoSection>
-    </div>
+    <VideoSection ref={divRef} width={thisWidth} height={thisHeight}>
+      연결된 고객이 없습니다.
+    </VideoSection>
   );
 }
 

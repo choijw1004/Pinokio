@@ -2,15 +2,23 @@ import React from 'react';
 import styled from 'styled-components';
 
 const LogoStyle = styled.div`
-  font-size: 40px;
+  font-size: ${(props) => props.size};
   color: #7392ff;
-  font-family: 'Alfa Slab One', serif;
+  font-family: 'Alfa Slab One';
   font-weight: 400;
   font-style: normal;
 `;
 
-function LOGO({ onClick }) {
-  return <LogoStyle onClick={onClick}>Pinokio</LogoStyle>;
+Logo.defaultProps = {
+  size: '3rem',
+};
+
+function Logo({ onClick, size }) {
+  return (
+    <LogoStyle onClick={onClick} size={size}>
+      Pinokio
+    </LogoStyle>
+  );
 }
 
-export default LOGO;
+export default Logo;
