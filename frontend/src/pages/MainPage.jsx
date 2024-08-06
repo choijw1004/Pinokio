@@ -6,6 +6,7 @@ import KioskSenior from '../assets/images/main/kiosksenior.png';
 import PosMain from '../assets/images/main/posmain.png';
 import LOGO from '../components/common/Logo';
 import Toggle from '../components/common/Toggle';
+import UpDownButtons from '../components/common/UpDownButtons';
 
 const MainContainer = styled.div`
   display: flex;
@@ -152,6 +153,7 @@ const DiscriptionBox = styled.div`
 
 function MainPage() {
   const navigate = useNavigate();
+  const [maxAvailable, setMaxAvailable] = useState(1);
 
   const goPosLogin = () => {
     navigate('/login');
@@ -220,6 +222,12 @@ function MainPage() {
       <LinksContainer>
         <LogoContainer>
           <LOGO />
+          <UpDownButtons
+            value={maxAvailable}
+            setValue={setMaxAvailable}
+            color={'#7392ff'}
+            size={'2rem'}
+          />
         </LogoContainer>
         <Links>
           <Link onClick={goPosLogin}>PosLogin</Link>

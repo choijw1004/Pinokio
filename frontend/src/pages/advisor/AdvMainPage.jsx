@@ -110,7 +110,12 @@ function AdvMainPage() {
         <Logo size={'2.5rem'} />
         <HeaderRight>
           <MaxButtonContainer>
-            <UpDownButtons value={maxAvailable} setValue={setMaxAvailable} />
+            <UpDownButtons
+              value={maxAvailable}
+              setValue={setMaxAvailable}
+              color={'#7392ff'}
+              size={'2rem'}
+            />
           </MaxButtonContainer>
           <ToggleContainer>
             <Toggle
