@@ -9,12 +9,17 @@
 import Axios from 'axios'; // 인스턴스와 구분하기 위해 대문자 사용
 import { store } from '../app/store';
 import { setUser, clearUser } from '../features/user/userSlice';
-import { jwtDecode } from 'jwt-decode';
+import { jwtDecode } from 'jwt-decode'; // Import without destructuring
 import Cookies from 'js-cookie';
 
 const baseURL = 'http://i11a601.p.ssafy.io';
 
-// Axios 인스턴스 생성
+// 별도의 axios 인스턴스를 사용하여 토큰 갱신 요청
+const refreshInstance = Axios.create({
+  baseURL: baseURL,
+});
+
+// 기존 Axios 인스턴스
 const axios = Axios.create({
   baseURL: baseURL,
 });
@@ -29,7 +34,6 @@ const isTokenExpired = (token) => {
 
 // Helper 함수: 쿠키에서 refreshToken 가져오기
 const getRefreshTokenFromCookies = () => {
-  // 쿠키에서 refreshToken을 가져오는 로직 (예: js-cookie 사용)
   return Cookies.get('refreshToken');
 };
 
@@ -43,13 +47,18 @@ axios.interceptors.request.use(
     if (accessToken && isTokenExpired(accessToken)) {
       try {
         const refreshToken = getRefreshTokenFromCookies();
+        console.log(`리프레시 토큰 받는 중 : ${refreshToken}`);
         if (!refreshToken) {
           throw new Error('No refresh token available');
         }
-
         // Refresh Token을 사용하여 새로운 Access Token 요청
-        const response = await axios.post(`${baseURL}/api/refresh`, { refreshToken });
+        const response = await refreshInstance.get('/api/refresh', {
+          headers: {
+            refresh: refreshToken,
+          },
+        });
         accessToken = response.data.accessToken;
+        console.log(`액세스 토큰 받아옴 ${accessToken}`);
 
         // 새로운 Access Token을 store에 저장
         store.dispatch(
@@ -63,9 +72,8 @@ axios.interceptors.request.use(
         store.dispatch(clearUser());
         localStorage.removeItem('accessToken');
         Cookies.remove('refreshToken');
-        // 필요에 따라 로그인 페이지로 리디렉션
-        // navigate('/login'); // If using react-router
-        throw error; // 계속 오류를 throw하여 후속 요청도 실패하게 함
+        // window.location.reload();
+        throw error;
       }
     }
 

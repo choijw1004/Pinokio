@@ -10,7 +10,7 @@ import axios from './Axios'; // 인스턴스와 구분하기 위해 대문자 �
 
 export const makeMeetingRoom = async (tellerId) => {
   try {
-    const response = await axios.post(`/api/meeting/teller/${tellerId}`);
+    const response = await axios.get('/api/meeting/teller/room');
     return response.data;
   } catch (error) {
     console.error('makeMeetingRoom error', error);

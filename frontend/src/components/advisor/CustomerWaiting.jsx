@@ -14,15 +14,17 @@ const CustomerWaitingSection = styled.div`
   flex: 1; /* 남은 공간을 차지하도록 설정 */
 `;
 
-function CustomerWaiting({ rooms, setRooms }) {
+function CustomerWaiting({ connectedKiosks, setRooms }) {
   // 대기 중인 인원 수 계산
-  const people = rooms.filter((room) => room.status === 'waiting').length;
+  const people = connectedKiosks.filter(
+    (connectedKiosks) => connectedKiosks.status === 'waiting'
+  ).length;
 
   return (
     <div>
       <CustomerWaitingSection>
         <p>대기 인원 ({people}/3)</p>
-        <CustomerWaitingRooms rooms={rooms} setRooms={setRooms} />
+        <CustomerWaitingRooms connectedKiosks={connectedKiosks} setRooms={setRooms} />
       </CustomerWaitingSection>
     </div>
   );
