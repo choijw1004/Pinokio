@@ -1,11 +1,13 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useSelector } from 'react-redux';
 import styled from 'styled-components';
 import carouselimage from '../../assets/images/carouselimage.jpg';
 import carouselimage2 from '../../assets/images/carouselimage2.jpg';
 import carouselimage3 from '../../assets/images/carouselimage3.jpg';
 import menudata from '../../data/MenuData.json';
 import NumberModal from '../../components/kiosk/modal/NumberModal';
+import axios from 'axios';
 
 const CarouselPageStyle = styled.div`
   display: flex;
@@ -86,13 +88,33 @@ function CarouselPage() {
 
   const [result, setResult] = useState(false);
   const [carouselIndex, setCarouselIndex] = useState(0);
-
+  const userData = useSelector((state) => state.user);
+  const kioskId = userData.typeInfo.kioskId;
+  const isFirstRender = useRef(true);
   const [carouselimages, setCarouselimages] = useState([
     carouselimage,
     carouselimage2,
     carouselimage3,
     carouselimage,
   ]);
+
+  const startKiosk = async (kioskId) => {
+    try {
+      const response = await axios.post(`http://localhost:5001/start`, { kiosk_id: kioskId });
+      console.log(response);
+    } catch (error) {
+      console.error('키오스크 컨트롤러 시작 실패:', error);
+    }
+  };
+
+  useEffect(() => {
+    if (isFirstRender.current) {
+      console.log(kioskId);
+      startKiosk(kioskId);
+      isFirstRender.current = false;
+      return;
+    }
+  }, []);
 
   // useEffect(() => {
   //   /* 여기서부터 SSE 관련 코드 */
