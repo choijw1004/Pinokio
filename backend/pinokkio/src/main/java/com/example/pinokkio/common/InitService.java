@@ -47,10 +47,10 @@ public class InitService implements ApplicationListener<ContextRefreshedEvent> {
 
     @Override
     public void onApplicationEvent(ContextRefreshedEvent event) {
-        YEONDORI();
+        makeInitData();
     }
 
-    private void YEONDORI() {
+    private void makeInitData() {
         // Code Repository 데이터 추가
         Code starbucksCode = codeRepository.save(new Code("스타벅스"));
         Code tomntomsCoffeeCode = codeRepository.save(new Code("탐앤탐스"));
