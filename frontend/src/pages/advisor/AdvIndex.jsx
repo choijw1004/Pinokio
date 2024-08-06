@@ -7,11 +7,11 @@ import ToggleSwitch from '../../components/advisor/ToggleSwitch';
 import styled from 'styled-components';
 import { makeMeetingRoom } from '../../apis/Room';
 import { useDispatch, useSelector } from 'react-redux';
-import { setRoomActive, setRoomAdvising, resetRoom } from '../../features/advisor/RoomSlice';
 import {
   setAvailability,
-  addConnection,
-  removeConnection,
+  setRoomInfo,
+  connectKiosk,
+  disconnectKiosk,
 } from '../../features/advisor/AdvisorSlice';
 
 // 스타일 컴포넌트 정의
@@ -66,9 +66,9 @@ const ToggleContainer = styled.div`
 `;
 
 function AdvIndex() {
-  const roomData = useSelector((state) => state.room.roomData);
+  const advisorData = useSelector((state) => state.advisor);
   const userData = useSelector((state) => state.user);
-  const { isAvailable, currentConnections } = useSelector((state) => state.advisor);
+  const { isAvailable, currentConnections, roomToken, roomId, connectedKiosks } = advisorData;
   const dispatch = useDispatch();
 
   useEffect(() => {
@@ -76,10 +76,16 @@ function AdvIndex() {
     createRoom();
   }, []);
 
+  useEffect(() => {
+    console.log('Updated advisorData:', advisorData);
+  }, [advisorData]);
+
   const createRoom = async () => {
     try {
       const response = await makeMeetingRoom(userData.user.id);
       console.log(`Room creation response:`, response);
+      dispatch(setRoomInfo(response));
+      console.log(advisorData);
     } catch (error) {
       console.error(`Error creating room :`, error);
     }
@@ -108,7 +114,7 @@ function AdvIndex() {
         <LeftSection>
           <CustomerVideo />
           <CustomerWaiting
-            rooms={roomData}
+            connectedKiosks={connectedKiosks}
             onConnect={handleCustomerConnect}
             onDisconnect={handleCustomerDisconnect}
           />

@@ -26,12 +26,12 @@ const Room = styled.div`
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 `;
 
-function CustomerWaitingRooms({ rooms }) {
+function CustomerWaitingRooms({ connectedKiosks }) {
   return (
     <RoomsContainer>
-      {rooms.map((room, index) => (
-        <Room key={index} status={room.status}>
-          Room {room.id} - {room.status}
+      {connectedKiosks.map((connectedKiosks, index) => (
+        <Room key={index} status={connectedKiosks.status}>
+          Room {connectedKiosks.id} - {connectedKiosks.status}
         </Room>
       ))}
     </RoomsContainer>
