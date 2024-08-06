@@ -111,7 +111,7 @@ public class ItemService {
     }
 
     private Category getCategory(UUID posId, String categoryId) {
-        return categoryRepository.findByIdAndPosId(UUID.fromString(categoryId), posId)
+        return categoryRepository.findByCategoryIdAndPosId(UUID.fromString(categoryId), posId)
                 .orElseThrow(() -> new CategoryNotFoundException(categoryId));
     }
 
