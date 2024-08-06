@@ -51,7 +51,7 @@ services:
     volumes:
             - /etc/letsencrypt:/etc/letsencrypt:ro
     depends_on:
-      - pinokkio-backend
+      - backend
 
   mysql:
     image: mysql:8.0
