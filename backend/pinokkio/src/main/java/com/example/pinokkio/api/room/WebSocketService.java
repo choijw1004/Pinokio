@@ -53,13 +53,26 @@ public class WebSocketService {
         sessions.put(participantName, session);
     }
 
-    public boolean isTokenIssued(String participantName) {
-        WebSocketSession session = sessions.get(participantName);
+    public boolean isTokenIssued(String userId) {
+        WebSocketSession session = sessions.get(userId);
         return session != null && Boolean.TRUE.equals(session.getAttributes().get("tokenIssued"));
     }
 
-    public void sendRoomId(String participantName, String roomId) {
-        WebSocketSession session = sessions.get(participantName);
+    public void sendMessage(String recipientId, TextMessage message) {
+        WebSocketSession session = sessions.get(recipientId);
+        if (session != null && session.isOpen()) {
+            try {
+                session.sendMessage(message);
+            } catch (IOException e) {
+                log.error("Error sending message to session: " + recipientId, e);
+            }
+        } else {
+            log.warn("Session not found or closed for recipient: " + recipientId);
+        }
+    }
+
+    public void sendRoomId(String userId, String roomId) {
+        WebSocketSession session = sessions.get(userId);
 
         if (session != null && session.isOpen()) {
             try {
@@ -68,13 +81,13 @@ public class WebSocketService {
                 jsonMessage.put("roomId", roomId);
                 session.sendMessage(new TextMessage(jsonMessage.toString()));
                 session.getAttributes().put("tokenIssued", true);
-                log.info("RoomId sent successfully to participant: {}", participantName);
+                log.info("RoomId sent successfully to participant: {}", userId);
             } catch (IOException | JSONException e) {
                 log.error("[sendRoomId] Error: {}", e.getMessage());
                 throw new RuntimeException("Failed to send roomId", e);
             }
         } else {
-            throw new RuntimeException("Session not found or closed for participant: " + participantName);
+            throw new RuntimeException("Session not found or closed for participant: " + userId);
         }
     }
 }
