@@ -91,6 +91,7 @@ function CarouselPage() {
   const userData = useSelector((state) => state.user);
   const kioskId = userData.typeInfo.kioskId;
   const isFirstRender = useRef(true);
+  const [isWaiting, setIsWaiting] = useState(false);
   const [carouselimages, setCarouselimages] = useState([
     carouselimage,
     carouselimage2,
@@ -111,37 +112,111 @@ function CarouselPage() {
     if (isFirstRender.current) {
       console.log(kioskId);
       startKiosk(kioskId);
+      const connectEventSource = () => {
+        const url = 'http://localhost:8080/api/customer/face-recognition-events';
+        console.log('Connecting to:', url);
+
+        const eventSource = new EventSource(url);
+
+        eventSource.addEventListener('waitingStatus', (event) => {
+          const data = JSON.parse(event.data);
+          console.log('Received waitingStatus event:', data);
+          setIsWaiting(data.waiting);
+          setShowModal(data.waiting);
+        });
+
+        eventSource.addEventListener('faceDetectionResult', (event) => {
+          const data = JSON.parse(event.data);
+          console.log('Received faceDetectionResult event:', data);
+          if (!data.isFace) {
+            setIsWaiting(false);
+            setShowModal(false);
+            setResult(null);
+          }
+        });
+
+        eventSource.addEventListener('analysisResult', (event) => {
+          const data = JSON.parse(event.data);
+          console.log('Received analysisResult event:', data);
+          setResult({
+            age: data.age,
+            gender: data.gender,
+            isFace: data.isFace,
+            isCustomer: data.isCustomer,
+            customerId: data.customerId,
+            customerAge: data.customerAge,
+            customerGender: data.customerGender,
+            faceEmbeddingData: data.faceEmbeddingData,
+          });
+          setIsWaiting(false);
+          setShowModal(true);
+        });
+
+        eventSource.onerror = (error) => {
+          console.error('SSE error:', error);
+          eventSource.close();
+          setTimeout(connectEventSource, 5000); // Retry connection
+        };
+
+        return () => {
+          eventSource.close();
+        };
+      };
+
+      connectEventSource();
       isFirstRender.current = false;
       return;
     }
   }, []);
 
-  // useEffect(() => {
-  //   /* 여기서부터 SSE 관련 코드 */
-  //   // SSE 연결 생성
-  //   const eventSource = new EventSource('http://localhost:8080/api/face-recognition-events');
+  // const connectEventSource = () => {
+  //   const url = 'http://localhost:8080/api/customer/face-recognition-events';
+  //   console.log('Connecting to:', url);
 
-  //   // 서버로부터 메시지를 받았을 때 실행될 핸들러
-  //   eventSource.onmessage = (event) => {
+  //   const eventSource = new EventSource(url);
+
+  //   eventSource.addEventListener('waitingStatus', (event) => {
   //     const data = JSON.parse(event.data);
-  //     console.log('Received SSE data:', data);
-  //     // 받은 데이터로 상태 업데이트
-  //     setResult(data);
-  //   };
+  //     console.log('Received waitingStatus event:', data);
+  //     setIsWaiting(data.waiting);
+  //   });
 
-  //   // 에러 발생 시 실행될 핸들러
+  //   eventSource.addEventListener('faceDetectionResult', (event) => {
+  //     const data = JSON.parse(event.data);
+  //     console.log('Received faceDetectionResult event:', data);
+  //     if (!data.isFace) {
+  //       setIsWaiting(false);
+  //       setResult(null);
+  //     }
+  //   });
+
+  //   eventSource.addEventListener('analysisResult', (event) => {
+  //     const data = JSON.parse(event.data);
+  //     console.log('Received analysisResult event:', data);
+  //     setResult({
+  //       age: data.age,
+  //       gender: data.gender,
+  //       isFace: data.isFace,
+  //       isCustomer: data.isCustomer,
+  //       customerId: data.customerId,
+  //       customerAge: data.customerAge,
+  //       customerGender: data.customerGender,
+  //       faceEmbeddingData: data.faceEmbeddingData,
+  //     });
+  //     setIsWaiting(false);
+  //     setShowModal(true);
+  //   });
+
   //   eventSource.onerror = (error) => {
   //     console.error('SSE error:', error);
   //     eventSource.close();
+  //     setTimeout(connectEventSource, 5000); // 재연결 시도
   //   };
 
   //   return () => {
-  //     // 컴포넌트 언마운트 시 SSE 연결 종료
   //     eventSource.close();
   //   };
-  // });
-
-  // 결과가 없을 때 표시할 내용
+  // };
 
   const havingHere = () => {
     navigate('/kiosk/menu', { state: { where: 'having here' } });
@@ -215,15 +290,15 @@ function CarouselPage() {
         {result ? (
           <div>
             <h2>얼굴 인식 결과:</h2>
-            <p>회원 여부: {result.is_member ? '회원' : '비회원'}</p>
+            <p>회원 여부: {result.isCustomer ? '회원' : '비회원'}</p>
             <p>나이: {result.age}</p>
             <p>성별: {result.gender}</p>
-            {result.is_member && result.member_info && (
+            {result.isCustomer && (
               <div>
                 <h3>회원 정보:</h3>
-                <p>ID: {result.member_info.id}</p>
-                <p>등록된 나이: {result.member_info.age}</p>
-                <p>등록된 성별: {result.member_info.gender}</p>
+                <p>ID: {result.customerId}</p>
+                <p>등록된 나이: {result.customerAge}</p>
+                <p>등록된 성별: {result.customerGender}</p>
               </div>
             )}
           </div>

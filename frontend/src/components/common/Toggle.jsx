@@ -35,9 +35,10 @@ function Toggle({ value, setValue, color, size }) {
   const handleToggle = () => {
     setValue(!value);
   };
+
   return (
     <ToggleWrapper isToggled={value} onClick={handleToggle} color={color} size={size}>
-      <Slider isToggled={value} size={size} onClick={handleToggle} />
+      <Slider isToggled={value} size={size} />
     </ToggleWrapper>
   );
 }

@@ -80,7 +80,8 @@ const ProductList = ({ products, onEdit, onDelete, onToggle }) => {
   };
 
   const handleToggle = (product, field) => {
-    onToggle({ ...product, [field]: !product[field] });
+    const updatedProduct = { ...product, [field]: product[field] === 'YES' ? 'NO' : 'YES' };
+    onToggle(updatedProduct);
   };
 
   return (
@@ -105,20 +106,20 @@ const ProductList = ({ products, onEdit, onDelete, onToggle }) => {
                 </DeleteButton>
               </DeleteCell>
               <ProductCell>
-                <ProductImage src={product.image} alt={product.name} />
+                <ProductImage src={product.file} alt={product.name} />
               </ProductCell>
               <ProductCell onClick={() => onEdit(product)}>{product.name}</ProductCell>
               <ProductCell>{product.price.toLocaleString()} 원</ProductCell>
               <ProductCell>
                 <ToggleButton
-                  toggled={product.isSoldout}
-                  onClick={() => handleToggle(product, 'isSoldout')}
+                  value={product.isSoldOut === 'YES'}
+                  setValue={() => handleToggle(product, 'isSoldOut')}
                 />
               </ProductCell>
               <ProductCell>
                 <ToggleButton
-                  toggled={product.isScreen}
-                  onClick={() => handleToggle(product, 'isScreen')}
+                  value={product.isScreen === 'YES'}
+                  setValue={() => handleToggle(product, 'isScreen')}
                 />
               </ProductCell>
             </ProductRow>
