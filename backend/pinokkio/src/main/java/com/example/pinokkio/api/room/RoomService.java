@@ -13,6 +13,8 @@ import com.example.pinokkio.exception.domain.kiosk.KioskNotFoundException;
 import com.example.pinokkio.exception.domain.room.RoomNotFoundException;
 import com.example.pinokkio.exception.domain.teller.TellerNotFoundException;
 import io.livekit.server.*;
+import io.openvidu.java.client.OpenVidu;
+import io.openvidu.java.client.SessionProperties;
 import jakarta.annotation.PostConstruct;
 import livekit.LivekitModels;
 import livekit.LivekitWebhook;
@@ -32,7 +34,8 @@ import java.util.UUID;
 @Slf4j
 @Transactional(readOnly = true)
 public class RoomService {
-//TODO: 상담원, 고객 서비스 로직 분리
+
+    private OpenVidu openvidu;
 
     // 상담원의 최대 응대 고객 수
     private final int MAX_CAPACITY = 3;
@@ -51,9 +54,18 @@ public class RoomService {
     @Value("${livekit.api.secret}")
     private String LIVEKIT_API_SECRET;
 
+
+    @Value("${OPENVIDU_URL}")
+    public String OPENVIDU_URL;
+
+    @Value("${OPENVIDU_SECRET}")
+    private String OPENVIDU_SECRET;
+
+
     @PostConstruct
     public void init() {
         this.roomServiceClient = RoomServiceClient.create("http://localhost:7880/", LIVEKIT_API_KEY, LIVEKIT_API_SECRET);
+        this.openvidu = new OpenVidu(OPENVIDU_URL, OPENVIDU_SECRET);
     }
 
     /**

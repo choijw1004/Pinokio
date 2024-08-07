@@ -2,7 +2,6 @@ package com.example.pinokkio.api.room;
 
 import com.example.pinokkio.api.room.dto.request.RoomEnterRequest;
 import com.example.pinokkio.api.room.dto.response.RoomResponse;
-import com.example.pinokkio.exception.domain.room.RoomAccessRestrictedException;
 import io.livekit.server.AccessToken;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -17,8 +16,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.UUID;
 
 @RestController
 @RequiredArgsConstructor
