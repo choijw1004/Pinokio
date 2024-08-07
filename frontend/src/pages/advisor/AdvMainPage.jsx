@@ -88,7 +88,7 @@ function AdvMainPage() {
 
   const createRoom = async () => {
     try {
-      const response = await makeMeetingRoom(userData.user.id);
+      const response = await makeMeetingRoom();
       console.log(`Room creation response:`, response);
       dispatch(setRoomInfo(response));
       console.log(advisorData);
