@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
 import Logo from '../../components/common/Logo';
-import { Navigate, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
+import { sendTellerNewPassword, sendPosNewPassword } from '../../apis/Mail';
 
 const LoginWrapper = styled.div`
   display: flex;
@@ -13,7 +14,7 @@ const LoginWrapper = styled.div`
   padding: 20px;
 `;
 
-const FindPasswordForm = styled.div`
+const FindPasswordForm = styled.form`
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -64,46 +65,79 @@ const StyledButton = styled.button`
     background-color: #d8ff75;
   }
 `;
+
+const SelectInput = styled.select`
+  width: 100%;
+  padding: 10px;
+  margin: 10px 0;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 16px;
+  box-sizing: border-box;
+  color: #333;
+  &:focus {
+    outline: 1px solid #7392ff;
+  }
+`;
+
 function FindPassword1() {
+  const [email, setEmail] = useState('');
+  const [usertype, setUserType] = useState('');
   const navigate = useNavigate();
 
-  const [id, setId] = useState('');
-  const [clickedSendEmailButton, setClickedSendEmailButton] = useState(false);
-  const [certificationNumber, setCertificationNumber] = useState('');
-
-  const sendEmail = () => {
-    setClickedSendEmailButton(true);
-    sendCertificationCode();
-    // navigate('/findpassword2');
+  const handleUserType = (e) => {
+    setUserType(e.target.value);
   };
 
-  const sendCertificationCode = () => {};
+  const sendEmail = async () => {
+    try {
+      if (usertype === 'advisor') {
+        await sendTellerNewPassword(email);
+        alert('상담원 새 비밀번호가 이메일로 전송되었습니다.');
+      } else if (usertype === 'pos') {
+        await sendPosNewPassword(email);
+        alert('포스 새 비밀번호가 이메일로 전송되었습니다.');
+      } else {
+        alert('직종을 선택하세요.');
+        return;
+      }
+      navigate('/findpassword2');
+    } catch (error) {
+      console.error('이메일 전송 실패:', error);
+      alert('이메일 전송에 실패했습니다. 다시 시도해주세요.');
+    }
+  };
+
+  const handleFindPassword = (e) => {
+    e.preventDefault();
+    if (!email) {
+      alert('이메일을 입력해주세요.');
+      return;
+    }
+    sendEmail();
+  };
+
   return (
     <LoginWrapper>
       <Logo />
-      <FindPasswordForm>
+      <FindPasswordForm onSubmit={handleFindPassword}>
         <h2>비밀번호 찾기</h2>
+        <SelectInput value={usertype} onChange={handleUserType}>
+          <option value="" disabled>
+            선택하세요
+          </option>
+          <option value="pos">포스</option>
+          <option value="advisor">상담원</option>
+        </SelectInput>
         <InputWrapper>
           <Input
             type="text"
-            className="Id"
-            placeholder="아이디"
-            onChange={(e) => setId(e.target.value)}
+            className="email"
+            placeholder="이메일"
+            onChange={(e) => setEmail(e.target.value)}
           />
-          <StyledButton onClick={sendEmail}>이메일 전송</StyledButton>
+          <StyledButton type="submit">이메일 전송</StyledButton>
         </InputWrapper>
-        {clickedSendEmailButton ? (
-          <InputWrapper>
-            <Input
-              type="text"
-              className="certification-number"
-              placeholder="인증번호"
-              onChange={(e) => setCertificationNumber(e.target.value)}
-            />
-            <StyledButton onClick={sendCertificationCode}>인증번호 재전송</StyledButton>
-          </InputWrapper>
-        ) : null}
-        <StyledButton onClick={() => navigate('/findPassword2')}>다음</StyledButton>
       </FindPasswordForm>
     </LoginWrapper>
   );

@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import Logo from '../../components/common/Logo';
 import styled from 'styled-components';
-import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import {
   posDuplicateEmail,
@@ -9,6 +8,7 @@ import {
   postRegisterAdvisor,
   postRegisterPos,
 } from '../../apis/Auth';
+import { sendEmail, checkAuth } from '../../apis/Mail';
 
 const SignUpWrapper = styled.div`
   display: flex;
@@ -43,6 +43,7 @@ const SignUpTitle = styled.div`
   font-weight: Bold;
   margin: 10px 0 20px 0;
 `;
+
 const Input = styled.input`
   width: 100%;
   padding: 10px;
@@ -57,7 +58,37 @@ const Input = styled.input`
   }
 `;
 
-const LabelContainer = styled.label`
+const EmailLabelContainer = styled.div`
+  position: relative;
+  width: 100%;
+`;
+
+const EmailSendBtn = styled.button`
+  position: absolute;
+  top: 50%;
+  right: 10px;
+  transform: translateY(-50%);
+  width: 4rem;
+  height: 1.7rem;
+  font-size: 10px;
+`;
+
+const VerifyLabelContainer = styled.div`
+  position: relative;
+  width: 100%;
+`;
+
+const VerifyBtn = styled.button`
+  position: absolute;
+  top: 42%;
+  right: 10px;
+  transform: translateY(-50%);
+  width: 4rem;
+  height: 1.7rem;
+  font-size: 10px;
+`;
+
+const LabelContainer = styled.div`
   width: 100%;
 `;
 
@@ -109,6 +140,9 @@ function SignUp() {
   const [position, setPosition] = useState('');
   const [code, setCode] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
+  const [emailSent, setEmailSent] = useState(false);
+  const [verificationCode, setVerificationCode] = useState('');
+  const [verificationMessage, setVerificationMessage] = useState('');
 
   const navigate = useNavigate();
 
@@ -135,6 +169,33 @@ function SignUp() {
     }
   };
 
+  const handleEmailSend = async () => {
+    if (!id) {
+      alert('이메일을 입력해주세요.');
+      return;
+    }
+    try {
+      await sendEmail(id);
+      setEmailSent(true);
+      setVerificationMessage('인증 코드가 이메일로 전송되었습니다.');
+    } catch (error) {
+      setVerificationMessage('이메일 전송에 실패했습니다. 다시 시도해주세요.');
+    }
+  };
+
+  const handleVerifyCode = async () => {
+    try {
+      const response = await checkAuth(verificationCode);
+      if (response.success) {
+        setVerificationMessage('이메일 인증이 완료되었습니다.');
+      } else {
+        setVerificationMessage('인증 코드가 올바르지 않습니다.');
+      }
+    } catch (error) {
+      setVerificationMessage('인증 코드 확인 중 오류가 발생했습니다.');
+    }
+  };
+
   const handleSignUp = async (e) => {
     e.preventDefault();
     if (!isUsableId) {
@@ -151,14 +212,8 @@ function SignUp() {
     }
     try {
       if (position === 'advisor') {
-        console.log('상담원 로그인 중');
         await postRegisterAdvisor(code, id, password, passwordChecking);
       } else if (position === 'pos') {
-        console.log('포스 로그인 중');
-        console.log(`code : ${code}`);
-        console.log(`id : ${id}`);
-        console.log(`password : ${password}`);
-        console.log(`passwordChecking : ${passwordChecking}`);
         await postRegisterPos(code, id, password, passwordChecking);
       }
       navigate('/');
@@ -191,7 +246,7 @@ function SignUp() {
           </SelectInput>
         </LabelContainer>
 
-        <LabelContainer>
+        <EmailLabelContainer>
           <Input
             type="text"
             className="Email"
@@ -203,7 +258,25 @@ function SignUp() {
           {isUsableId && !errorMessage && (
             <AddedMessage isUsableId={isUsableId}>사용할 수 있는 이메일입니다.</AddedMessage>
           )}
-        </LabelContainer>
+          <EmailSendBtn type="button" onClick={handleEmailSend} disabled={!position}>
+            인증하기
+          </EmailSendBtn>
+        </EmailLabelContainer>
+
+        {emailSent && (
+          <VerifyLabelContainer>
+            <Input
+              type="text"
+              className="VerificationCode"
+              placeholder="인증 코드를 입력해주세요"
+              onChange={(e) => setVerificationCode(e.target.value)}
+            />
+            <VerifyBtn type="button" onClick={handleVerifyCode}>
+              인증 확인
+            </VerifyBtn>
+            {verificationMessage && <AddedMessage>{verificationMessage}</AddedMessage>}
+          </VerifyLabelContainer>
+        )}
 
         <Input
           id="password"
@@ -252,5 +325,4 @@ function SignUp() {
     </SignUpWrapper>
   );
 }
-
 export default SignUp;
