@@ -14,8 +14,6 @@ public class RoomResponse {
     @Schema(description = "Room UUID", example = "123e4567-e89b-12d3-a456-426614174000")
     private String roomId;
 
-    @Schema(description = "Livekit Access Token", example = "{\n" +
-            "    \"token\": \"eyJ0eXAiOiJKV1QiLCJhbG...\"\n" +
-            "}")
+    @Schema(description = "OpenVidu Access Token")
     private String token;
 }
