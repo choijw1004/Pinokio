@@ -77,13 +77,12 @@ export const getItemsByKeyword = (posId, keyword) => {
     });
 };
 
-export const getItemsByCategoryId = async (posId, categoryId) => {
-  // console.log('axios');
-  // console.log(axios.defaults.headers.common['Authorization']);
-  // console.log(posId);
-  // console.log(categoryId);
+export const getItemsByCategoryId = async (categoryId) => {
+  console.log('axios');
+  console.log(axios.defaults.headers.common['Authorization']);
+  console.log(categoryId);
   try {
-    const response = await axios.get(`/api/pos/${posId}/items/categories/${categoryId}`);
+    const response = await axios.get(`/api/pos/items/categories/${categoryId}`);
     return response.data;
   } catch (error) {
     console.error('get menus by category failed:', error);

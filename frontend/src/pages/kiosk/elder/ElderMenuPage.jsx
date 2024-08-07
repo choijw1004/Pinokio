@@ -147,7 +147,7 @@ function ElderMenuPage() {
 
   const getMenu = async () => {
     if (selectedCategory && userData) {
-      const menu_data = await getItemsByCategoryId(userData.typeInfo.posId, selectedCategory.id);
+      const menu_data = await getItemsByCategoryId(selectedCategory.id);
       console.log('received menus datas : ', menu_data);
       menu_data.responseList.map((menu) => {
         menu['count'] = 0;
