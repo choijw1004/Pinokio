@@ -14,6 +14,9 @@ public class ItemResponse {
     @Schema(description = "카테고리 ID", example = "123e4567-e89b-12d3-a456-426614174000")
     private final String categoryId;
 
+    @Schema(description = "상품 ID", example = "123e4567-e89b-12d3-a456-426614174000")
+    private final String itemId;
+
     @Schema(description = "아이템 가격", example = "10000")
     private final int price;
 
@@ -38,6 +41,7 @@ public class ItemResponse {
     public ItemResponse(Item item) {
         this.posId = item.getPos().getId().toString();
         this.categoryId = item.getCategory().getId().toString();
+        this.itemId = item.getId().toString();
         this.price = item.getPrice();
         this.amount = item.getAmount();
         this.name = item.getName();
