@@ -8,10 +8,10 @@ import axios from './Axios';
 3. 가져오는 대상이 리스트라면 복수형으로 쓴다.
 */
 
-export const deleteCategory = async (posId, categoryId) => {
+export const deleteCategory = async (categoryId) => {
   try {
-    const response = await axios.delete('/api/pos/:posId/categories/:categoryId', {
-      params: { posId: posId, categoryId: categoryId },
+    const response = await axios.delete('/api/pos/categories/:categoryId', {
+      params: { categoryId: categoryId },
     });
     return response.data;
   } catch (error) {
@@ -20,9 +20,9 @@ export const deleteCategory = async (posId, categoryId) => {
   }
 };
 
-export const getCategories = async (posId) => {
+export const getCategories = async () => {
   try {
-    const response = await axios.get(`/api/pos/${posId}/categories`);
+    const response = await axios.get(`/api/pos/categories`);
     return response.data;
   } catch (error) {
     console.error('get categories failed:', error);
@@ -30,15 +30,26 @@ export const getCategories = async (posId) => {
   }
 };
 
-export const createCategory = async (posId, name) => {
+export const createCategory = async (name) => {
   try {
-    const response = await axios.post('/api/pos/:posId/categories', {
-      params: { posId: posId },
+    const response = await axios.post('/api/pos/categories', {
       name: name,
     });
     return response.data;
   } catch (error) {
     console.error('create categories failed:', error);
+    throw error;
+  }
+};
+
+export const modifyCategory = async (categoryId) => {
+  try {
+    const response = await axios.put('/api/pos/categories/:categoryId', {
+      params: { categoryId: categoryId },
+    });
+    return response.data;
+  } catch (error) {
+    console.error('modify category failed:', error);
     throw error;
   }
 };

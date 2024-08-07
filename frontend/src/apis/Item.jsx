@@ -45,7 +45,8 @@ export const getItemByItemId = (posId, itemId) => {
 
 export const getItems = async (posId) => {
   try {
-    const response = await axios.get(`/api/pos/${posId}/items`); // Adjust endpoint as needed
+    const response = await axios.get(`/api/pos/items`); // Adjust endpoint as needed
+    console.log(response.data);
     return response.data;
   } catch (error) {
     console.error('Failed to fetch items:', error);
@@ -128,4 +129,26 @@ export const putItem = (itemId, posId, itemData) => {
     .then(() => {
       // 항상 실행
     });
+};
+
+// 키오스크에 특정 아이템 표출 여부
+export const itemScreenToggle = async (itemId) => {
+  try {
+    const response = await axios.put(`/api/pos/items/${itemId}/toggle/screen`);
+    return response.data;
+  } catch (error) {
+    console.error('get Kiosk info failed:', error);
+    throw error;
+  }
+};
+
+// 키오스크에 특정 아이템 품절 여부
+export const itemSoldOutToggle = async (itemId) => {
+  try {
+    const response = await axios.put(`/api/pos/items/${itemId}/toggle/sold-out`);
+    return response.data;
+  } catch (error) {
+    console.error('get Kiosk info failed:', error);
+    throw error;
+  }
 };

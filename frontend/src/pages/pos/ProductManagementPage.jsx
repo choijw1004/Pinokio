@@ -6,7 +6,7 @@ import CategoryList from '../../components/pos/CategoryList';
 import CategoryModal from '../../components/pos/CategoryModal';
 import Button from '../../components/common/Button';
 import Toast from '../../components/common/Toast';
-import { getItems } from '../../apis/Item'; // Import the API function
+import { getItems, itemScreenToggle, itemSoldOutToggle } from '../../apis/Item'; // Import the API functions
 import { getCategories } from '../../apis/Category'; // Import the API function
 import { useSelector } from 'react-redux'; // Assuming you use Redux to get posId
 
@@ -39,12 +39,13 @@ const ProductManagementPage = () => {
     const fetchItems = async () => {
       try {
         const data = await getItems(userData.typeInfo.posId);
-        setProducts(data.responseList); // Adjust based on actual API response
-        const categoryList = await getCategories(userData.typeInfo.posId);
-        setCategories(categoryList.responseList); // Adjust based on actual API response
-        // const productName = data.responseList.map((product, idx) => {
-        //   console.log(product);
-        // });
+        // console.log(data.responseList);
+        setProducts(data.responseList);
+        console.log('pos아이디는!!');
+        console.log(userData.typeInfo.posId);
+        const categoryList = await getCategories();
+        console.log(categoryList);
+        setCategories(categoryList.responseList);
       } catch (error) {
         setToastMessage('상품 및 카테고리 데이터를 가져오는 데 실패했습니다.');
       }
@@ -63,22 +64,32 @@ const ProductManagementPage = () => {
     setIsProductModalOpen(true);
   };
 
-  const handleToggleProduct = (product) => {
-    setProducts(products.map((p) => (p.id === product.id ? product : p)));
-    setToastMessage(`${product.name} 상품 정보가 업데이트되었습니다.`);
+  const handleToggleProduct = async (product) => {
+    try {
+      if (product.hasOwnProperty('isScreen')) {
+        await itemScreenToggle(product.itemId);
+      }
+      if (product.hasOwnProperty('isSoldOut')) {
+        await itemSoldOutToggle(product.itemId);
+      }
+      setProducts(products.map((p) => (p.itemId === product.itemId ? product : p)));
+      setToastMessage(`${product.name} 상품 정보가 업데이트되었습니다.`);
+    } catch (error) {
+      setToastMessage('상품 정보를 업데이트하는 데 실패했습니다.');
+    }
   };
 
   const handleDeleteProduct = (productId) => {
-    setProducts(products.filter((p) => p.id !== productId));
-    setToastMessage(`${products.find((p) => p.id === productId).name} 상품 삭제 완료!`);
+    setProducts(products.filter((p) => p.itemId !== productId));
+    setToastMessage(`${products.find((p) => p.itemId === productId).name} 상품 삭제 완료!`);
   };
 
   const handleSaveProduct = (product) => {
     if (product.id) {
-      setProducts(products.map((p) => (p.id === product.id ? product : p)));
+      setProducts(products.map((p) => (p.itemId === product.itemId ? product : p)));
       setToastMessage(`${product.name} 상품 수정 완료!`);
     } else {
-      const newProduct = { ...product, id: Date.now() };
+      const newProduct = { ...product, itemId: Date.now() };
       setProducts([...products, newProduct]);
       setToastMessage(`${product.name} 상품 추가 완료!`);
     }
