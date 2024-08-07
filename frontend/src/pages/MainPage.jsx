@@ -222,12 +222,6 @@ function MainPage() {
       <LinksContainer>
         <LogoContainer>
           <LOGO />
-          <UpDownButtons
-            value={maxAvailable}
-            setValue={setMaxAvailable}
-            color={'#7392ff'}
-            size={'2rem'}
-          />
         </LogoContainer>
         <Links>
           <Link onClick={goPosLogin}>PosLogin</Link>

@@ -8,9 +8,9 @@ import axios from './Axios'; // 인스턴스와 구분하기 위해 대문자 �
 3. 가져오는 대상이 리스트라면 복수형으로 쓴다.
 */
 
-export const makeMeetingRoom = async () => {
+export const makeMeetingRoom = async (tellerId) => {
   try {
-    const response = await axios.get('/api/meeting/teller/room');
+    const response = await axios.post(`/api/meeting/teller/${tellerId}`);
     return response.data;
   } catch (error) {
     console.error('makeMeetingRoom error', error);
@@ -18,15 +18,25 @@ export const makeMeetingRoom = async () => {
   }
 };
 
-// export const getMeetingRequest = async (tellerId) => {
-//   try {
-//     const response = await axios.get(`/api/meeting/teller/${tellerId}`);
-//     return response.data;
-//   } catch (error) {
-//     console.error('getMeetingRequest error', error);
-//     throw error;
-//   }
-// };
+export const acceptMeetingRequest = async (tellerId) => {
+  try {
+    const response = await axios.post(`/api/meeting/teller/${tellerId}/accept`);
+    return response.data;
+  } catch (error) {
+    console.error('makeMeetingRoom error', error);
+    throw error;
+  }
+};
+
+export const rejectMeetingRequest = async () => {
+  try {
+    const response = await axios.post(`/api/meeting/kiosk/reject`);
+    return response.data;
+  } catch (error) {
+    console.error('makeMeetingRoom error', error);
+    throw error;
+  }
+};
 
 export const requestMeeting = async () => {
   try {
