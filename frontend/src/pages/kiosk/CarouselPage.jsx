@@ -101,7 +101,7 @@ function CarouselPage() {
 
   const startKiosk = async (kioskId) => {
     try {
-      const response = await axios.post(`https://localhost:5001/start`, { kiosk_id: kioskId });
+      const response = await axios.post(`http://localhost:5001/start`, { kiosk_id: kioskId });
       console.log(response);
     } catch (error) {
       console.error('키오스크 컨트롤러 시작 실패:', error);
@@ -113,7 +113,7 @@ function CarouselPage() {
       console.log(kioskId);
       startKiosk(kioskId);
       const connectEventSource = () => {
-        const url = 'https://i11a601.p.ssafy.io/api/customer/face-recognition-events';
+        const url = 'http://i11a601.p.ssafy.io/api/customer/face-recognition-events';
         console.log('Connecting to:', url);
 
         const eventSource = new EventSource(url);
