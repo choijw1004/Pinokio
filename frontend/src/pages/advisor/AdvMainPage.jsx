@@ -17,6 +17,7 @@ import {
   disconnectKiosk,
   resetAdvisor,
 } from '../../features/advisor/AdvisorSlice';
+import { OpenVidu } from 'openvidu-browser';
 
 // 스타일 컴포넌트 정의
 const AdvMainPageWrapper = styled.div`
@@ -83,6 +84,11 @@ const AdvMainPage = () => {
   const dispatch = useDispatch();
   const { sendMessage, lastMessage, isConnected, connect } = useWebSocket(userData.token);
 
+  const [OV, setOV] = useState(null);
+  const [session, setSession] = useState(null);
+  const [subscribers, setSubscribers] = useState([]);
+  const [isInitialized, setIsInitialized] = useState(false);
+
   const initializeAdvisor = useCallback(async () => {
     if (!isConnected) {
       try {
@@ -96,6 +102,35 @@ const AdvMainPage = () => {
     }
   }, [dispatch, connect, isConnected]);
 
+  const initializeSession = useCallback(
+    async (roomId, token) => {
+      const ov = new OpenVidu();
+      setOV(ov);
+
+      const session = ov.initSession();
+      setSession(session);
+
+      session.on('streamCreated', (event) => {
+        const subscriber = session.subscribe(event.stream, undefined);
+        setSubscribers((prevSubscribers) => [...prevSubscribers, subscriber]);
+      });
+
+      session.on('streamDestroyed', (event) => {
+        setSubscribers((prevSubscribers) =>
+          prevSubscribers.filter((subscriber) => subscriber !== event.stream.streamManager)
+        );
+      });
+
+      try {
+        await session.connect(token, { clientData: userData.email });
+        console.log('OpenVidu 세션 연결 성공');
+      } catch (error) {
+        console.error('세션 연결 오류:', error);
+      }
+    },
+    [userData.email]
+  );
+
   useEffect(() => {
     if (userData.token && !isConnected) {
       initializeAdvisor();
@@ -104,6 +139,13 @@ const AdvMainPage = () => {
       dispatch(resetAdvisor());
     };
   }, [initializeAdvisor, userData.token, dispatch, isConnected]);
+
+  useEffect(() => {
+    if (roomId && roomToken && !isInitialized) {
+      initializeSession(roomId, roomToken);
+      setIsInitialized(true);
+    }
+  }, [roomId, roomToken, initializeSession, isInitialized]);
 
   useEffect(() => {
     if (lastMessage) {
