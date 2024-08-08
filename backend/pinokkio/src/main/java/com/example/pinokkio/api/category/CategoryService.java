@@ -61,7 +61,7 @@ public class CategoryService {
         if(!ObjectUtils.isEmpty(findList)) {
             throw new CanDeleteCategoryException(categoryId);
         }
-        categoryRepository.deleteByPosIdAndCategoryId(categoryId, posId);
+        categoryRepository.deleteByPosIdAndCategoryId(posId, categoryId);
         log.info("카테고리 삭제 성공: 카테고리 ID = {}", categoryId);
     }
 
