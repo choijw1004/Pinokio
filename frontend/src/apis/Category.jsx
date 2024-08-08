@@ -10,9 +10,7 @@ import axios from './Axios';
 
 export const deleteCategory = async (categoryId) => {
   try {
-    const response = await axios.delete('/api/pos/categories/:categoryId', {
-      params: { categoryId: categoryId },
-    });
+    const response = await axios.delete(`/api/pos/categories/${categoryId}`);
     return response.data;
   } catch (error) {
     console.error('delete category failed:', error);

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
+import { deleteCategory } from '../../apis/Category'; // API 함수 import
 
 const CategoryTable = styled.table`
   width: 100%;
@@ -71,9 +72,16 @@ const CategoryList = ({ categories, onEdit, onDelete }) => {
     setShowConfirmModal(true);
   };
 
-  const confirmDelete = () => {
-    onDelete(categoryToDelete.id);
-    setShowConfirmModal(false);
+  const confirmDelete = async () => {
+    try {
+      console.log(categoryToDelete.id);
+      await deleteCategory(categoryToDelete.id);
+      onDelete(categoryToDelete.id); // 부모 컴포넌트에 삭제 알림
+      setShowConfirmModal(false);
+    } catch (error) {
+      console.error('카테고리 삭제 실패:', error);
+      alert('카테고리 삭제에 실패했습니다.');
+    }
   };
 
   return (

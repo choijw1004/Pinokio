@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createCategory, modifyCategory } from '../../apis/Category';
 import styled from 'styled-components';
 
 const Modal = styled.div`
@@ -18,12 +19,15 @@ const CategoryModal = ({ category, onSave, onClose }) => {
     }
   }, [category]);
 
-  const handleSave = () => {
+  const handleSave = async (e) => {
     if (!name.trim()) {
       alert('카테고리 이름을 입력해주세요.');
       return;
     }
+    console.log(e);
+    await createCategory(name);
     onSave({ id: category?.id, name });
+    onClose();
   };
 
   return (
