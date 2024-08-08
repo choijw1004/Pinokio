@@ -2,14 +2,18 @@ package com.example.pinokkio.api.category;
 
 
 import com.example.pinokkio.api.category.dto.request.CategoryRequest;
+import com.example.pinokkio.api.item.Item;
+import com.example.pinokkio.api.item.ItemRepository;
 import com.example.pinokkio.api.pos.Pos;
 import com.example.pinokkio.api.user.UserService;
+import com.example.pinokkio.exception.domain.category.CanDeleteCategoryException;
 import com.example.pinokkio.exception.domain.category.CategoryNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.ObjectUtils;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
@@ -22,6 +26,7 @@ import java.util.UUID;
 public class CategoryService {
 
     private final CategoryRepository categoryRepository;
+    private final ItemRepository itemRepository;
     private final UserService userService;
 
     /**
@@ -51,10 +56,13 @@ public class CategoryService {
     @Transactional
     public void deleteCategory(UUID categoryId) {
         UUID posId = userService.getCurrentPosId();
-        //소유권 검증
         validateCategory(categoryId, posId);
-        log.info("category deleted: " + categoryId);
+        List<Item> findList = itemRepository.findAllByCategoryId(categoryId);
+        if(!ObjectUtils.isEmpty(findList)) {
+            throw new CanDeleteCategoryException(categoryId);
+        }
         categoryRepository.deleteByPosIdAndCategoryId(categoryId, posId);
+        log.info("카테고리 삭제 성공: 카테고리 ID = {}", categoryId);
     }
 
     /**
@@ -65,9 +73,8 @@ public class CategoryService {
         UUID posId = userService.getCurrentPosId();
         Category category = categoryRepository.findByCategoryIdAndPosId(categoryId, posId)
                 .orElseThrow(() -> new CategoryNotFoundException(categoryId.toString()));
-
         category.updateName(categoryRequest.getName());
-        log.info("category updated: " + category.getName());
+        log.info("카테고리 업데이트 성공: 카테고리 ID = {}", categoryId);
     }
 
     /**
