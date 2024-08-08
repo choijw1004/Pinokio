@@ -125,6 +125,9 @@ const ProductManagementPage = () => {
     e.preventDefault();
     try {
       const result = await getItemsByKeyword(searchKeyword);
+      console.log(`result : ${result}`);
+      console.log(`searchKeyword : ${searchKeyword}`);
+      console.log(`result.name: ${result.name}`);
       console.log(result);
       setProducts(result.responseList);
     } catch (error) {

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import Modal from 'react-modal';
 import styled from 'styled-components';
-import { postRegisterPos } from '../../apis/Auth'; // API 함수 import
+import { postRegisterKiosk } from '../../apis/Auth'; // API 함수 import
 
 const Container = styled.div`
   text-align: center;
@@ -95,12 +95,8 @@ function KioskManagementPage() {
     }
 
     try {
-      const response = await postRegisterPos(
-        newKiosk.code,
-        newKiosk.id,
-        newKiosk.password,
-        newKiosk.confirmPassword
-      );
+      console.log(`hi : ${newKiosk.code}`);
+      const response = await postRegisterKiosk(newKiosk.code);
       setKiosks([...kiosks, newKiosk]);
       closeModal();
     } catch (error) {
@@ -167,7 +163,7 @@ function KioskManagementPage() {
           ) : (
             <>
               <h2>키오스크 추가</h2>
-              <input
+              {/* <input
                 type="text"
                 placeholder="아이디"
                 value={newKiosk.id}
@@ -184,7 +180,7 @@ function KioskManagementPage() {
                 placeholder="비밀번호 확인"
                 value={newKiosk.confirmPassword}
                 onChange={(e) => setNewKiosk({ ...newKiosk, confirmPassword: e.target.value })}
-              />
+              /> */}
               <input
                 type="text"
                 placeholder="코드"

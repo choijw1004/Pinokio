@@ -46,7 +46,10 @@ export const getItems = async () => {
 
 export const getItemsByKeyword = async (keyWord) => {
   try {
-    const response = await axios.get('/api/pos/items/search', { keyWord: keyWord });
+    const response = await axios.get('/api/pos/items/search', {
+      params: { keyWord: keyWord },
+    });
+    console.log(`keyWord : ${keyWord}`);
     return response.data;
   } catch (error) {
     console.error('Cannot get items by keyword');
