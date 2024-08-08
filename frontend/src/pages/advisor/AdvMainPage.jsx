@@ -1,19 +1,22 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
+import styled from 'styled-components';
+import Modal from 'react-modal';
 import Logo from '../../components/common/Logo';
 import CustomerVideo from '../../components/advisor/CustomerVideo';
 import CustomerKiosk from '../../components/advisor/CustomerKiosk';
 import CustomerWaiting from '../../components/advisor/CustomerWaiting';
 import Toggle from '../../components/common/Toggle';
-import styled from 'styled-components';
-import { makeMeetingRoom } from '../../apis/Room';
-import { useDispatch, useSelector } from 'react-redux';
+import UpDownButtons from '../../components/common/UpDownButtons';
+import useWebSocket from '../../hooks/useWebSocket';
+import { makeMeetingRoom, acceptMeeting, deleteMeetingRoom } from '../../apis/Room';
 import {
   setAvailability,
   setRoomInfo,
   connectKiosk,
   disconnectKiosk,
+  resetAdvisor,
 } from '../../features/advisor/AdvisorSlice';
-import UpDownButtons from '../../components/common/UpDownButtons';
 
 // 스타일 컴포넌트 정의
 const AdvMainPageWrapper = styled.div`
@@ -70,38 +73,76 @@ const ToggleContainer = styled.div`
   display: flex;
 `;
 
-function AdvMainPage() {
+const AdvMainPage = () => {
   const advisorData = useSelector((state) => state.advisor);
   const userData = useSelector((state) => state.user);
   const { isAvailable, currentConnections, roomToken, roomId, connectedKiosks } = advisorData;
   const [maxAvailable, setMaxAvailable] = useState(1);
+  const [showModal, setShowModal] = useState(false);
+  const [consultationRequest, setConsultationRequest] = useState(null);
   const dispatch = useDispatch();
+  const { sendMessage, lastMessage, isConnected, connect } = useWebSocket(userData.token);
+
+  const initializeAdvisor = useCallback(async () => {
+    if (!isConnected) {
+      try {
+        const response = await makeMeetingRoom();
+        console.log(`방 생성 응답:`, response);
+        dispatch(setRoomInfo(response));
+        connect();
+      } catch (error) {
+        console.error(`방 생성 오류:`, error);
+      }
+    }
+  }, [dispatch, connect, isConnected]);
 
   useEffect(() => {
-    console.log(userData);
-    createRoom();
-  }, []);
+    if (userData.token && !isConnected) {
+      initializeAdvisor();
+    }
+    return () => {
+      dispatch(resetAdvisor());
+    };
+  }, [initializeAdvisor, userData.token, dispatch, isConnected]);
 
   useEffect(() => {
-    console.log('Updated advisorData:', advisorData);
-  }, [advisorData]);
+    if (lastMessage) {
+      const data = JSON.parse(lastMessage.data);
+      console.log('WebSocket 메시지 수신:', data);
+      if (data.type === 'consultationRequest') {
+        handleConsultationRequest(data);
+      }
+    }
+  }, [lastMessage]);
 
-  const createRoom = async () => {
-    try {
-      const response = await makeMeetingRoom();
-      console.log(`Room creation response:`, response);
-      dispatch(setRoomInfo(response));
-      console.log(advisorData);
-    } catch (error) {
-      console.error(`Error creating room :`, error);
+  const handleConsultationRequest = (data) => {
+    console.log('상담 요청 받음:', data);
+    if (isAvailable && currentConnections < maxAvailable) {
+      setConsultationRequest(data);
+      setShowModal(true);
     }
   };
-  const handleCustomerConnect = (customerId, roomId) => {
-    console.log(customerId, roomId);
+
+  const handleAcceptMeeting = async () => {
+    try {
+      await acceptMeeting(roomId, consultationRequest.kioskId);
+      dispatch(
+        connectKiosk({ id: consultationRequest.kioskId, kioskId: consultationRequest.kioskId })
+      );
+      setShowModal(false);
+      setConsultationRequest(null);
+    } catch (error) {
+      console.error('상담 수락 오류:', error);
+    }
   };
 
-  const handleCustomerDisconnect = (customerId, roomId) => {
-    console.log(customerId, roomId);
+  const handleRejectMeeting = () => {
+    setShowModal(false);
+    setConsultationRequest(null);
+  };
+
+  const handleCustomerDisconnect = (kioskId) => {
+    dispatch(disconnectKiosk(kioskId));
   };
 
   return (
@@ -123,22 +164,20 @@ function AdvMainPage() {
               setValue={(value) => dispatch(setAvailability(value))}
               size={'5rem'}
             />
-            <p>연결 거절모드 토글 (현재 연결: {currentConnections}/3)</p>
+            <p>
+              연결 거절모드 토글 (현재 연결: {currentConnections}/{maxAvailable})
+            </p>
           </ToggleContainer>
         </HeaderRight>
       </AdvHeader>
       <AdvBody>
         <LeftSection>
           <LeftTopSection>
-            <CustomerVideo>
-              <p>연결 대기중</p>
-              <p>components/advisor/CustomerVideo.jsx</p>
-            </CustomerVideo>
+            <CustomerVideo roomToken={roomToken} />
           </LeftTopSection>
           <LeftBottomSection>
             <CustomerWaiting
               connectedKiosks={connectedKiosks}
-              onConnect={handleCustomerConnect}
               onDisconnect={handleCustomerDisconnect}
             />
           </LeftBottomSection>
@@ -147,8 +186,14 @@ function AdvMainPage() {
           <CustomerKiosk />
         </RightSection>
       </AdvBody>
+      <Modal isOpen={showModal} onRequestClose={handleRejectMeeting} contentLabel="상담 요청">
+        <h2>상담 요청이 왔습니다</h2>
+        <p>수락하시겠습니까?</p>
+        <button onClick={handleAcceptMeeting}>수락</button>
+        <button onClick={handleRejectMeeting}>거절</button>
+      </Modal>
     </AdvMainPageWrapper>
   );
-}
+};
 
 export default AdvMainPage;

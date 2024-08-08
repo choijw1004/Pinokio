@@ -14,6 +14,7 @@
     "js-cookie": "^3.0.5",
     "jwt-decode": "^4.0.0",
     "normalize.css": "^8.0.1",
+    "openvidu-browser": "^2.30.1",
     "react": "^18.2.0",
     "react-chartjs-2": "^5.2.0",
     "react-datepicker": "^4.25.0",
@@ -30,10 +31,10 @@
     "webpack": "^5.93.0"
   },
   "devDependencies": {
+    "@babel/plugin-proposal-private-property-in-object": "^7.21.0",
     "eslint-config-prettier": "^8.10.0",
     "eslint-plugin-prettier": "^4.2.1",
-    "prettier": "^2.8.8",
-    "@babel/plugin-proposal-private-property-in-object": "^7.21.0"
+    "prettier": "^2.8.8"
   },
   "scripts": {
     "start": "react-scripts start",

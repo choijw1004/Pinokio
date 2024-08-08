@@ -1,6 +1,5 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { useSelector } from 'react-redux';
-import { Router, Route, Routes, useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import { getCategories } from '../../../apis/Category';
 import { getItemsByCategoryId } from '../../../apis/Item';
@@ -9,6 +8,7 @@ import MenuMain from '../../../components/kiosk/MenuMain';
 import Cart from '../../../components/kiosk/Cart';
 import MenuModal from '../../../components/kiosk/modal/MenuModal';
 import { requestMeeting } from '../../../apis/Room';
+import useWebSocket from '../../../hooks/useWebSocket';
 
 const ElderMenuPageStyle = styled.div`
   display: flex;
@@ -86,75 +86,97 @@ const KioskCategoriesStyle = styled.div`
 
 function ElderMenuPage() {
   const [categories, setCategories] = useState([]);
-  const categoriesMounted = useRef(false);
-
   const [menus, setMenus] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState(null);
-  const selectedCategoryMounted = useRef(false);
   const [selectedMenu, setSelectedMenu] = useState(null);
-
   const [cartItems, setCartItems] = useState([]);
-
-  const userData = useSelector((store) => store.user);
-
   const [modal, setModal] = useState(false);
 
-  const isFirstRender = useRef(true);
+  const userData = useSelector((store) => store.user);
+  const { sendMessage, lastMessage, isConnected, connect } = useWebSocket(userData.token);
+
+  const initializeWebSocket = useCallback(() => {
+    if (!isConnected) {
+      connect();
+    }
+  }, [isConnected, connect]);
 
   useEffect(() => {
-    if (isFirstRender.current) {
-      console.log('first rendering');
-      console.log(userData.typeInfo.kioskId);
+    initializeWebSocket();
+    return () => {
+      // Cleanup logic if needed
+    };
+  }, [initializeWebSocket]);
+
+  useEffect(() => {
+    if (isConnected) {
+      console.log('WebSocket 연결됨');
       requestRoomEnter();
       getCategory();
-      isFirstRender.current = false;
+    }
+  }, [isConnected]);
+
+  const requestRoomEnter = useCallback(async () => {
+    try {
+      await requestMeeting();
+      console.log('상담 요청 전송 완료');
+    } catch (error) {
+      console.error('상담 요청 실패:', error);
+      // 여기에 사용자에게 오류를 표시하는 로직을 추가할 수 있습니다.
     }
   }, []);
 
-  const requestRoomEnter = async () => {
-    const response = await requestMeeting();
-    console.log(response);
-  };
+  const getCategory = useCallback(async () => {
+    try {
+      const category_data = await getCategories(userData.typeInfo.posId);
+      console.log('카테고리 데이터 수신:', category_data);
+      setCategories(category_data.responseList);
+    } catch (error) {
+      console.error('카테고리 데이터 가져오기 실패:', error);
+      // 여기에 사용자에게 오류를 표시하는 로직을 추가할 수 있습니다.
+    }
+  }, [userData.typeInfo.posId]);
 
-  const getCategory = async () => {
-    /* axios를 이용하여 category를 가져온다. */
-    const category_data = await getCategories(userData.typeInfo.posId);
-    console.log('received categories datas : ', category_data);
-    setCategories(category_data.responseList);
-  };
+  const getMenu = useCallback(async () => {
+    if (selectedCategory && userData) {
+      try {
+        const menu_data = await getItemsByCategoryId(selectedCategory.id);
+        console.log('메뉴 데이터 수신:', menu_data);
+        const updatedMenus = menu_data.responseList.map((menu) => ({ ...menu, count: 0 }));
+        setMenus(updatedMenus);
+      } catch (error) {
+        console.error('메뉴 데이터 가져오기 실패:', error);
+        // 여기에 사용자에게 오류를 표시하는 로직을 추가할 수 있습니다.
+      }
+    }
+  }, [selectedCategory, userData]);
 
   useEffect(() => {
-    if (!categoriesMounted.current) {
-      console.log('categories mounted : ');
-      categoriesMounted.current = true;
-    } else {
-      console.log('categories updated');
-      console.log(categories);
+    if (categories.length > 0 && !selectedCategory) {
       setSelectedCategory(categories[0]);
     }
-  }, [categories]);
+  }, [categories, selectedCategory]);
 
   useEffect(() => {
-    if (!selectedCategoryMounted.current) {
-      console.log('selectedCategory mounted : ');
-      selectedCategoryMounted.current = true;
-    } else {
-      console.log('selectedCategory updated');
-      console.log(selectedCategory);
+    if (selectedCategory) {
       getMenu();
     }
-  }, [selectedCategory]);
+  }, [selectedCategory, getMenu]);
 
-  const getMenu = async () => {
-    if (selectedCategory && userData) {
-      const menu_data = await getItemsByCategoryId(selectedCategory.id);
-      console.log('received menus datas : ', menu_data);
-      menu_data.responseList.map((menu) => {
-        menu['count'] = 0;
-      });
-      setMenus(menu_data.responseList);
+  useEffect(() => {
+    if (lastMessage) {
+      try {
+        const data = JSON.parse(lastMessage.data);
+        if (data.type === 'consultationAccepted') {
+          console.log('상담 요청이 수락되었습니다.');
+          console.log('수락된 상담 정보:', data);
+          // 여기에 상담 수락에 대한 추가 처리 로직을 구현할 수 있습니다.
+        }
+      } catch (error) {
+        console.error('WebSocket 메시지 파싱 오류:', error);
+      }
     }
-  };
+  }, [lastMessage]);
 
   return (
     <ElderMenuPageStyle>
