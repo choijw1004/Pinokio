@@ -2,6 +2,7 @@ package com.example.pinokkio.api.item.dto.request;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -16,7 +17,7 @@ import java.util.UUID;
 @Schema(description = "아이템 등록 요청 DTO")
 public class ItemRequest {
 
-    @NotEmpty(message = "categoryId는 필수 값입니다.")
+    @NotNull(message = "categoryId는 필수 값입니다.")
     @Schema(description = "카테고리 ID", example = "123e4567-e89b-12d3-a456-426614174000")
     private UUID categoryId;
 
