@@ -1,5 +1,9 @@
 package com.example.pinokkio.api.room;
 
+import com.example.pinokkio.api.kiosk.Kiosk;
+import com.example.pinokkio.api.teller.Teller;
+import com.example.pinokkio.api.user.UserService;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -13,23 +17,36 @@ import java.util.concurrent.ConcurrentHashMap;
 
 @Service
 @Slf4j
+@RequiredArgsConstructor
 public class WebSocketService {
 
+    private final UserService userService;
     private final ConcurrentHashMap<UUID, WebSocketSession> sessions = new ConcurrentHashMap<>();
 
     public void addSession(WebSocketSession session) {
-        sessions.put(UUID.fromString(session.getId()), session);
+        UUID userId = getUserId(userService.getCurrentUser());
+        sessions.put(userId, session);
+        log.info("Added WebSocket session for user ID: {}", userId);
+    }
+
+    private UUID getUserId(Object user) {
+        return switch (user) {
+            case Teller teller -> teller.getId();
+            case Kiosk kiosk -> kiosk.getId();
+            default -> throw new IllegalArgumentException("Unknown user type: " + user.getClass().getName());
+        };
     }
 
     public void removeSession(WebSocketSession session) {
-        if (session != null && sessions.containsKey(session.getId())) {
-            sessions.remove(session.getId());
+        UUID sessionId = UUID.fromString(session.getId());
+        if (sessions.containsKey(sessionId)) {
+            sessions.remove(sessionId);
             try {
                 if (session.isOpen()) {
                     session.close();
                 }
             } catch (IOException e) {
-                log.error("Error closing WebSocket session: " + session.getId(), e);
+                log.error("Error closing WebSocket session: {}", session.getId(), e);
             }
         }
     }
@@ -65,10 +82,10 @@ public class WebSocketService {
             try {
                 session.sendMessage(message);
             } catch (IOException e) {
-                log.error("Error sending message to session: " + recipientId, e);
+                log.error("Error sending message to session: {}", recipientId, e);
             }
         } else {
-            log.warn("Session not found or closed for recipient: " + recipientId);
+            log.warn("Session not found or closed for recipient: {}", recipientId);
         }
     }
 
