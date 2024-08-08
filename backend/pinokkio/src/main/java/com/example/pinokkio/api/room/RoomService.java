@@ -73,7 +73,8 @@ public class RoomService {
         }
     }
 
-    private RoomResponse createRoomResponseForNewRoom(Teller teller) {
+    @Transactional
+    public RoomResponse createRoomResponseForNewRoom(Teller teller) {
         Room newRoom = Room.builder()
                 .teller(teller)
                 .numberOfCustomers(0)
