@@ -61,7 +61,7 @@ encryption:
           key: ${ENCRYPTION_KEY}
 
 fastapi:
-  url: http://localhost:8000
+  url: https://pinokkio-fast-backend:5000
   timeout: 10000
 
 grpc:
