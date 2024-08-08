@@ -27,12 +27,12 @@ public interface ItemRepository extends JpaRepository<Item, UUID> {
      * 검색어를 접두사로 포함하고 특정 posId를 가진 아이템 리스트를 반환한다.
      * @param keyword 입력받는 검색어
      * @param posId 포스 아이디
-     * @return 검색어로 시작하고 특정 posId를 가진 아이템 리스트
+     * @return 검색어를 포함하고 특정 posId를 가진 아이템 리스트
      */
     @Query("SELECT i " +
             "FROM Item i " +
             "WHERE i.name " +
-            "LIKE :keyword% " +
+            "LIKE %:keyword% " +
             "AND i.pos.id = :posId")
     List<Item> findItemsByKeyWordAndPosId(@Param("keyword") String keyword, @Param("posId") UUID posId);
 

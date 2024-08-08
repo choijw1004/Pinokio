@@ -79,7 +79,7 @@ public class ItemController {
         return ResponseEntity.ok(new GroupItemResponse(items));
     }
 
-    @Operation(summary = "키워드로 아이템 검색", description = "특정 포스의 키워드 접두사 기반 아이템 검색")
+    @Operation(summary = "키워드로 아이템 검색", description = "특정 포스의 키워드 기반 아이템 검색")
     @PreAuthorize("hasAnyRole('ROLE_POS', 'ROLE_KIOSK')")
     @GetMapping("/pos/items/search")
     public ResponseEntity<GroupItemResponse> getItemsByKeyword(@ModelAttribute SearchItemRequest searchItemRequest) {

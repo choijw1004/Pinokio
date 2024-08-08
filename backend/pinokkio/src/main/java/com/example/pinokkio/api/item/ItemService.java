@@ -64,7 +64,7 @@ public class ItemService {
     }
 
     /**
-     * 특정 포스의 키워드 접두사 기반 아이템 검색
+     * 특정 포스의 키워드 기반 아이템 검색
      */
     public List<Item> getGroupItemsByKeyword(String keyword) {
         UUID posId = userService.getCurrentPosId();
