@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Modal from 'react-modal';
 import styled from 'styled-components';
 import { postRegisterKiosk } from '../../apis/Auth'; // API 함수 import
+import { getKiosks, deleteKiosk } from '../../apis/Pos';
 
 const Container = styled.div`
   text-align: center;
@@ -62,17 +63,30 @@ const ModalContent = styled.div`
   }
 `;
 
-function KioskManagementPage() {
+const KioskManagementPage = () => {
   const [kiosks, setKiosks] = useState([]);
   const [modalIsOpen, setModalIsOpen] = useState(false);
   const [editingKiosk, setEditingKiosk] = useState(null);
-  const [newKiosk, setNewKiosk] = useState({ id: '', password: '', confirmPassword: '', code: '' });
+  const [newKiosk, setNewKiosk] = useState({ code: '' });
+
+  const fetchKiosks = async () => {
+    try {
+      const data = await getKiosks();
+      setKiosks(data);
+    } catch (error) {
+      console.error('키오스크 데이터를 불러오는 데 실패했습니다:', error);
+    }
+  };
+
+  useEffect(() => {
+    fetchKiosks();
+  }, []);
 
   const openModal = (kiosk = null) => {
     if (kiosk) {
-      setEditingKiosk({ ...kiosk }); // Create a new object to avoid direct mutation
+      setEditingKiosk({ ...kiosk });
     } else {
-      setNewKiosk({ id: '', password: '', confirmPassword: '', code: '' });
+      setNewKiosk({ code: '' });
     }
     setModalIsOpen(true);
   };
@@ -80,24 +94,14 @@ function KioskManagementPage() {
   const closeModal = () => {
     setModalIsOpen(false);
     setEditingKiosk(null);
-    setNewKiosk({ id: '', password: '', confirmPassword: '', code: '' });
-  };
-
-  const handleEditSubmit = () => {
-    setKiosks(kiosks.map((k) => (k.id === editingKiosk.id ? { ...editingKiosk } : k)));
-    closeModal();
+    setNewKiosk({ code: '' });
   };
 
   const handleAddSubmit = async () => {
-    if (kiosks.some((kiosk) => kiosk.id === newKiosk.id)) {
-      alert('이미 존재하는 아이디입니다.');
-      return;
-    }
-
     try {
-      console.log(`hi : ${newKiosk.code}`);
       const response = await postRegisterKiosk(newKiosk.code);
-      setKiosks([...kiosks, newKiosk]);
+      setKiosks([...kiosks, response]);
+      await fetchKiosks(); // Fetch the updated kiosks list after adding a new kiosk
       closeModal();
     } catch (error) {
       console.error('키오스크 등록 실패:', error);
@@ -105,9 +109,15 @@ function KioskManagementPage() {
     }
   };
 
-  const deleteKiosk = (index) => {
+  const handleDeleteKiosk = async (kioskId) => {
     if (window.confirm('정말로 삭제하시겠습니까?')) {
-      setKiosks(kiosks.filter((_, i) => i !== index));
+      try {
+        await deleteKiosk(kioskId);
+        await fetchKiosks(); // Fetch the updated kiosks list after deleting a kiosk
+      } catch (error) {
+        console.error('키오스크 삭제 실패:', error);
+        alert('키오스크 삭제에 실패했습니다.');
+      }
     }
   };
 
@@ -126,14 +136,11 @@ function KioskManagementPage() {
           {kiosks.map((kiosk, index) => (
             <TableRow key={index}>
               <TableCell>{index + 1}번 키오스크</TableCell>
-              <TableCell>{kiosk.id}</TableCell>
+              <TableCell>{kiosk.email}</TableCell>
               <TableCell>••••••</TableCell>
               <TableCell>
-                <ActionButton color="red" onClick={() => deleteKiosk(index)}>
+                <ActionButton color="red" onClick={() => handleDeleteKiosk(kiosk.kioskId)}>
                   삭제
-                </ActionButton>
-                <ActionButton color="blue" onClick={() => openModal(kiosk)}>
-                  편집
                 </ActionButton>
               </TableCell>
             </TableRow>
@@ -143,58 +150,17 @@ function KioskManagementPage() {
       <AddButton onClick={() => openModal()}>+</AddButton>
       <Modal isOpen={modalIsOpen} onRequestClose={closeModal} contentLabel="Edit Kiosk">
         <ModalContent>
-          {editingKiosk ? (
-            <>
-              <h2>키오스크 편집</h2>
-              <input
-                type="text"
-                placeholder="아이디"
-                value={editingKiosk.id}
-                onChange={(e) => setEditingKiosk({ ...editingKiosk, id: e.target.value })}
-              />
-              <input
-                type="password"
-                placeholder="비밀번호"
-                value={editingKiosk.password}
-                onChange={(e) => setEditingKiosk({ ...editingKiosk, password: e.target.value })}
-              />
-              <ActionButton onClick={handleEditSubmit}>저장</ActionButton>
-            </>
-          ) : (
-            <>
-              <h2>키오스크 추가</h2>
-              {/* <input
-                type="text"
-                placeholder="아이디"
-                value={newKiosk.id}
-                onChange={(e) => setNewKiosk({ ...newKiosk, id: e.target.value })}
-              />
-              <input
-                type="password"
-                placeholder="비밀번호"
-                value={newKiosk.password}
-                onChange={(e) => setNewKiosk({ ...newKiosk, password: e.target.value })}
-              />
-              <input
-                type="password"
-                placeholder="비밀번호 확인"
-                value={newKiosk.confirmPassword}
-                onChange={(e) => setNewKiosk({ ...newKiosk, confirmPassword: e.target.value })}
-              /> */}
-              <input
-                type="text"
-                placeholder="코드"
-                value={newKiosk.code}
-                onChange={(e) => setNewKiosk({ ...newKiosk, code: e.target.value })}
-              />
-              <ActionButton onClick={handleAddSubmit}>추가</ActionButton>
-            </>
-          )}
+          <>
+            <h2>키오스크 추가</h2>
+
+            <ActionButton onClick={handleAddSubmit}>추가</ActionButton>
+          </>
+
           <ActionButton onClick={closeModal}>취소</ActionButton>
         </ModalContent>
       </Modal>
     </Container>
   );
-}
+};
 
 export default KioskManagementPage;
