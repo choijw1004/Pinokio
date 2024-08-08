@@ -95,7 +95,7 @@ public class RoomController {
     public ResponseEntity<RoomResponse> enterRoom(
             @Validated @RequestBody RoomEnterRequest enterRequest) throws OpenViduJavaClientException, OpenViduHttpException {
         String roomToken = roomService.enterRoom(enterRequest.getRoomId(), enterRequest.getKioskId());
-        return ResponseEntity.ok(new RoomResponse(roomToken, enterRequest.getRoomId()));
+        return ResponseEntity.ok(new RoomResponse(enterRequest.getRoomId().toString(), roomToken));
     }
 
     @Operation(summary = "상담 퇴장", description = "Kiosk가 화상 상담에서 퇴장")

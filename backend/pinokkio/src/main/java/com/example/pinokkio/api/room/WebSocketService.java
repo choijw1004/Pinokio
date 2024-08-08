@@ -8,16 +8,17 @@ import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 
 import java.io.IOException;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Service
 @Slf4j
 public class WebSocketService {
 
-    private final ConcurrentHashMap<String, WebSocketSession> sessions = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<UUID, WebSocketSession> sessions = new ConcurrentHashMap<>();
 
     public void addSession(WebSocketSession session) {
-        sessions.put(session.getId(), session);
+        sessions.put(UUID.fromString(session.getId()), session);
     }
 
     public void removeSession(WebSocketSession session) {
@@ -49,16 +50,16 @@ public class WebSocketService {
     }
 
     private void handleParticipantInfo(WebSocketSession session, JSONObject jsonMessage) throws JSONException {
-        String participantName = jsonMessage.getString("participantName");
+        UUID participantName = UUID.fromString(jsonMessage.getString("participantName"));
         sessions.put(participantName, session);
     }
 
-    public boolean isTokenIssued(String userId) {
+    public boolean isTokenIssued(UUID userId) {
         WebSocketSession session = sessions.get(userId);
         return session != null && Boolean.TRUE.equals(session.getAttributes().get("tokenIssued"));
     }
 
-    public void sendMessage(String recipientId, TextMessage message) {
+    public void sendMessage(UUID recipientId, TextMessage message) {
         WebSocketSession session = sessions.get(recipientId);
         if (session != null && session.isOpen()) {
             try {
@@ -71,7 +72,7 @@ public class WebSocketService {
         }
     }
 
-    public void sendRoomId(String userId, String roomId) {
+    public void sendRoomId(UUID userId, UUID roomId) {
         WebSocketSession session = sessions.get(userId);
 
         if (session != null && session.isOpen()) {

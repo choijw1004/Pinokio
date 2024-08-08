@@ -65,7 +65,7 @@ public class RoomService {
 
     private RoomResponse createRoomResponseForExistingRoom(Room room, Teller teller) {
         try {
-            String token = createToken(room.getRoomId().toString(), teller.getId().toString(), TELLER_ROLE);
+            String token = createToken(room.getRoomId(), teller.getId(), TELLER_ROLE);
             return new RoomResponse(room.getRoomId().toString(), token);
         } catch (OpenViduJavaClientException | OpenViduHttpException e) {
             log.error("Error creating token for existing room: {}", room.getRoomId(), e);
@@ -85,7 +85,7 @@ public class RoomService {
                     .customSessionId(newRoom.getRoomId().toString())
                     .build();
             Session session = openvidu.createSession(properties);
-            String token = createToken(session.getSessionId(), teller.getId().toString(), TELLER_ROLE);
+            String token = createToken(UUID.fromString(session.getSessionId()), teller.getId(), TELLER_ROLE);
             return new RoomResponse(session.getSessionId(), token);
         } catch (OpenViduJavaClientException | OpenViduHttpException e) {
             log.error("Error creating new room for teller: {}", teller.getId(), e);
@@ -100,7 +100,7 @@ public class RoomService {
         log.info("Room deleted for teller: {}", teller.getId());
     }
 
-    public void acceptInvitation(String roomId, String kioskId) {
+    public void acceptInvitation(UUID roomId, UUID kioskId) {
         if (webSocketService.isTokenIssued(kioskId)) {
             throw new RoomAccessRestrictedException("Token already issued for kiosk: " + kioskId);
         }
@@ -112,12 +112,12 @@ public class RoomService {
         validateRoomId(roomId, room);
         EntityUtils.getEntityById(kioskRepository, kioskId, KioskNotFoundException::new);
 
-        webSocketService.sendRoomId(kioskId, room.getRoomId().toString());
+        webSocketService.sendRoomId(kioskId, room.getRoomId());
         log.info("Invitation accepted for room: {}, kiosk: {}, teller: {}", roomId, kioskId, teller.getId());
     }
 
-    private void validateRoomId(String roomId, Room room) {
-        if (!room.getRoomId().toString().equals(roomId)) {
+    private void validateRoomId(UUID roomId, Room room) {
+        if (!room.getRoomId().equals(roomId)) {
             throw new RoomNotFoundException("Room not found: " + roomId);
         }
     }
@@ -164,21 +164,21 @@ public class RoomService {
                     .put("kioskId", kiosk.getId().toString())
                     .put("sessionId", sessionId);
 
-            webSocketService.sendMessage(teller.getId().toString(), new TextMessage(jsonMessage.toString()));
+            webSocketService.sendMessage(teller.getId(), new TextMessage(jsonMessage.toString()));
         } catch (JSONException e) {
             log.error("Error creating JSON message for consultation request", e);
         }
     }
 
     @Transactional
-    public String enterRoom(String roomId, String kioskId) throws OpenViduJavaClientException, OpenViduHttpException {
+    public String enterRoom(UUID roomId, UUID kioskId) throws OpenViduJavaClientException, OpenViduHttpException {
         roomLock.lock();
         try {
-            Room room = roomRepository.findById(UUID.fromString(roomId))
+            Room room = roomRepository.findById(roomId)
                     .orElseThrow(() -> new RoomNotFoundException("Room not found: " + roomId));
 
             if (room.getNumberOfCustomers() >= MAX_CAPACITY) {
-                throw new RoomNotAvailableException(UUID.fromString(roomId));
+                throw new RoomNotAvailableException(roomId);
             }
 
             room.updateNumberOfCustomers(room.getNumberOfCustomers() + 1);
@@ -208,8 +208,8 @@ public class RoomService {
         }
     }
 
-    private String createToken(String roomId, String userId, String userRole) throws OpenViduJavaClientException, OpenViduHttpException {
-        Session session = openvidu.getActiveSession(roomId);
+    private String createToken(UUID roomId, UUID userId, String userRole) throws OpenViduJavaClientException, OpenViduHttpException {
+        Session session = openvidu.getActiveSession(roomId.toString());
         if (session == null) {
             throw new RoomNotFoundException("Active session not found: " + roomId);
         }
