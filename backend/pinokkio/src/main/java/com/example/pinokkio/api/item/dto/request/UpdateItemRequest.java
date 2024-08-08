@@ -8,6 +8,8 @@
     import lombok.NoArgsConstructor;
     import lombok.Setter;
 
+    import java.util.UUID;
+
     @Getter
     @Setter
     @NoArgsConstructor
@@ -17,7 +19,7 @@
 
         @NotEmpty(message = "CategoryId는 필수 값입니다.")
         @Schema(description = "변경 카테고리 Id", example = "123e4567-e89b-12d3-a456-426614174000")
-        private String categoryId;
+        private UUID categoryId;
 
         @Positive(message = "price는 양수여야 합니다.")
         @Schema(description = "아이템 가격", example = "12000")

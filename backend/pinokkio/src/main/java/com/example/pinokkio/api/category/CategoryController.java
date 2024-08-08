@@ -29,16 +29,6 @@ public class CategoryController {
     private final CategoryService categoryService;
 
     @Operation(summary = "카테고리 조회", description = "특정 포스의 모든 카테고리 조회")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "카테고리 조회 성공",
-                    content = @Content(schema = @Schema(implementation = GroupCategoryResponse.class))),
-            @ApiResponse(responseCode = "401", description = "인증 실패",
-                    content = @Content(schema = @Schema(implementation = String.class))),
-            @ApiResponse(responseCode = "403", description = "권한 없음",
-                    content = @Content(schema = @Schema(implementation = String.class))),
-            @ApiResponse(responseCode = "404", description = "리소스를 찾을 수 없음",
-                    content = @Content(schema = @Schema(implementation = String.class)))
-    })
     @PreAuthorize("hasAnyRole('ROLE_POS', 'ROLE_KIOSK')")
     @GetMapping({"/pos/categories"})
     public ResponseEntity<?> getAllCategories() {
@@ -47,16 +37,6 @@ public class CategoryController {
     }
 
     @Operation(summary = "카테고리 생성", description = "특정 포스의 카테고리 생성")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "201", description = "카테고리 생성 성공",
-                    content = @Content(schema = @Schema(implementation = CategoryResponse.class))),
-            @ApiResponse(responseCode = "401", description = "인증 실패",
-                    content = @Content(schema = @Schema(implementation = String.class))),
-            @ApiResponse(responseCode = "403", description = "권한 없음",
-                    content = @Content(schema = @Schema(implementation = String.class))),
-            @ApiResponse(responseCode = "404", description = "리소스를 찾을 수 없음",
-                    content = @Content(schema = @Schema(implementation = String.class)))
-    })
     @PreAuthorize("hasRole('ROLE_POS')")
     @PostMapping({"/pos/categories"})
     public ResponseEntity<?> makeCategory(
@@ -66,46 +46,22 @@ public class CategoryController {
     }
 
     @Operation(summary = "카테고리 삭제", description = "특정 포스의 카테고리 삭제")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "204", description = "카테고리 삭제 성공"),
-            @ApiResponse(responseCode = "401", description = "인증 실패",
-                    content = @Content(schema = @Schema(implementation = String.class))),
-            @ApiResponse(responseCode = "403", description = "권한 없음",
-                    content = @Content(schema = @Schema(implementation = String.class))),
-            @ApiResponse(responseCode = "404", description = "리소스를 찾을 수 없음",
-                    content = @Content(schema = @Schema(implementation = String.class)))
-    })
     @PreAuthorize("hasRole('ROLE_POS')")
     @DeleteMapping({"pos/categories/{categoryId}"})
     public ResponseEntity<?> deleteCategory(
-            @PathVariable String categoryId) {
-        categoryService.deleteCategory(toUUID(categoryId));
+            @PathVariable UUID categoryId) {
+        categoryService.deleteCategory(categoryId);
         return ResponseEntity.noContent().build();
     }
 
     @Operation(summary = "카테고리 수정", description = "특정 포스의 카테고리 수정")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "204", description = "카테고리 수정 성공"),
-            @ApiResponse(responseCode = "401", description = "인증 실패",
-                    content = @Content(schema = @Schema(implementation = String.class))),
-            @ApiResponse(responseCode = "403", description = "권한 없음",
-                    content = @Content(schema = @Schema(implementation = String.class))),
-            @ApiResponse(responseCode = "404", description = "리소스를 찾을 수 없음",
-                    content = @Content(schema = @Schema(implementation = String.class)))
-    })
     @PreAuthorize("hasRole('ROLE_POS')")
     @PutMapping({"pos/categories/{categoryId}"})
     public ResponseEntity<?> updateCategory(
-            @PathVariable String categoryId,
+            @PathVariable UUID categoryId,
             @RequestBody CategoryRequest categoryRequest) {
-        categoryService.updateCategory(toUUID(categoryId), categoryRequest);
+        categoryService.updateCategory(categoryId, categoryRequest);
         return ResponseEntity.noContent().build();
     }
 
-    /**
-     * String to UUID
-     */
-    public UUID toUUID(String input) {
-        return UUID.fromString(input);
-    }
 }

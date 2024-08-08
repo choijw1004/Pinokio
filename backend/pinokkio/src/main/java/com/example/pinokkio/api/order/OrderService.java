@@ -5,14 +5,16 @@ import com.example.pinokkio.api.customer.CustomerRepository;
 import com.example.pinokkio.api.item.Item;
 import com.example.pinokkio.api.item.ItemRepository;
 import com.example.pinokkio.api.order.dto.request.GroupOrderItemRequest;
+import com.example.pinokkio.api.order.dto.request.OrderDurationRequest;
 import com.example.pinokkio.api.order.dto.request.OrderItemRequest;
+import com.example.pinokkio.api.order.dto.response.OrderDetailResponse;
+import com.example.pinokkio.api.order.dto.response.OrderItemDetail;
 import com.example.pinokkio.api.order.dto.response.TopOrderedItemResponse;
 import com.example.pinokkio.api.order.orderitem.OrderItem;
 import com.example.pinokkio.api.order.orderitem.OrderItemRepository;
 import com.example.pinokkio.api.pos.Pos;
 import com.example.pinokkio.api.pos.PosRepository;
 import com.example.pinokkio.api.pos.dto.response.PosStatisticsResponse;
-import com.example.pinokkio.common.type.OrderStatus;
 import com.example.pinokkio.config.RedisUtil;
 import com.example.pinokkio.exception.domain.customer.CustomerNotFoundException;
 import com.example.pinokkio.exception.domain.customer.NotCustomerOfPosException;
@@ -22,10 +24,13 @@ import com.example.pinokkio.exception.domain.order.OrderNotFoundException;
 import com.example.pinokkio.exception.domain.pos.PosNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.core.parameters.P;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -56,8 +61,8 @@ public class OrderService {
                 .orElseThrow(() -> new PosNotFoundException(posId));
 
         UUID customerId = dtoList.getCustomerId() == null
-                ? toUUID(pos.getDummyCustomerUUID())
-                : toUUID(dtoList.getCustomerId());
+                ? pos.getDummyCustomerUUID()
+                : dtoList.getCustomerId();
 
         validateCustomer(customerId, posId);
 
@@ -69,8 +74,8 @@ public class OrderService {
         List<OrderItem> orderItems = new ArrayList<>();
         for (OrderItemRequest request : dtoList.getOrderItems()) {
             Item item = itemRepository
-                    .findById(toUUID(request.getItemId()))
-                    .orElseThrow(() -> new ItemNotFoundException(toUUID(request.getItemId())));
+                    .findById(request.getItemId())
+                    .orElseThrow(() -> new ItemNotFoundException(request.getItemId()));
 
             // Item 수량 체크
             if (item.getAmount() < request.getQuantity()) {
@@ -119,7 +124,7 @@ public class OrderService {
             Item item = (Item) topItem[0];
             int totalQuantity = ((Number) topItem[1]).intValue();
             return Optional.of(new TopOrderedItemResponse(
-                    item.getId().toString(),
+                    item.getId(),
                     item.getName(),
                     totalQuantity)
             );
@@ -140,7 +145,7 @@ public class OrderService {
         Customer customer = customerRepository
                 .findById(customerId)
                 .orElseThrow(() -> new CustomerNotFoundException(customerId));
-        if (!customer.getId().equals(toUUID(pos.getDummyCustomerUUID())))
+        if (!customer.getId().equals(pos.getDummyCustomerUUID()))
             throw new NotCustomerOfPosException(customerId);
     }
 
@@ -255,13 +260,38 @@ public class OrderService {
         long currentPosRank = totalSalesList.stream()
                 // 현재 Pos 보다 판매액이 높은 수를 카운트
                 .filter(sales -> sales > currentPosSales)
-                // 현재 Pos 의 등수 (1부터 시작)
+        // 현재 Pos 의 등수 (1부터 시작)
                 .count() + 1;
 
         return new PosStatisticsResponse(averageSales, posCount, currentPosRank);
     }
 
-    public UUID toUUID(String input) {
-        return UUID.fromString(input);
+    public List<OrderDetailResponse> getOrderItemsByDuration(OrderDurationRequest request) {
+        log.info("[getOrderItemsByDuration] 기간별 주문 조회 시작. 시작일: {}, 종료일: {}", request.getStartDate(), request.getEndDate());
+
+        LocalDateTime startDateTime = LocalDate.parse(request.getStartDate(), DateTimeFormatter.ISO_DATE).atStartOfDay();
+        LocalDateTime endDateTime = LocalDate.parse(request.getEndDate(), DateTimeFormatter.ISO_DATE).atTime(LocalTime.MAX);
+
+        List<Order> orders = orderRepository.findAllByCreatedDateBetween(startDateTime, endDateTime);
+
+        if (orders.isEmpty()) {
+            log.info("[getOrderItemsByDuration] 해당 기간 동안의 주문이 없습니다.");
+            return Collections.emptyList();
+        }
+
+        List<OrderDetailResponse> orderDetails = orders.stream().map(order -> {
+            OrderDetailResponse detail = new OrderDetailResponse(order);
+
+            List<OrderItemDetail> itemDetails = order.getItems().stream()
+                    .map(OrderItemDetail::new)
+                    .collect(Collectors.toList());
+
+            detail.updateItems(itemDetails);
+            return detail;
+        }).collect(Collectors.toList());
+
+        log.info("[getOrderItemsByDuration] 기간별 주문 조회 완료. 조회된 주문 수: {}", orderDetails.size());
+
+        return orderDetails;
     }
 }

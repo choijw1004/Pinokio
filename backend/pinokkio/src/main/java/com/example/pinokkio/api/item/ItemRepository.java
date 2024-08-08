@@ -72,5 +72,17 @@ public interface ItemRepository extends JpaRepository<Item, UUID> {
             "WHERE i.pos.id = :posId")
     List<Item> findAllByPosId(@Param("posId") UUID posId);
 
+
+     /**
+      * 입력받은 카테고리 아이디에 해당하는 아이템 리스트를 반환한다.
+      * @param categoryId 카테고리 아이디
+      * @return 카테고리 아이디에 해당하는 아이템 리스트
+     */
+    @Query("SELECT i " +
+            "FROM Item i " +
+            "WHERE i.category.id = :categoryId")
+    List<Item> findAllByCategoryId(@Param("categoryId") UUID categoryId);
+
+
     Optional<Item> findItemByIdAndPosId(UUID id, UUID posId);
 }

@@ -5,12 +5,13 @@ import lombok.Getter;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 @Getter
 public class GroupOrderItemResponse {
-    private final String customerId;
+    private final UUID customerId;
     private final List<OrderItemResponse> orderItems;
-    public GroupOrderItemResponse(String customerId, List<OrderItemResponse> orderItemResponses) {
+    public GroupOrderItemResponse(UUID customerId, List<OrderItemResponse> orderItemResponses) {
         this.customerId = customerId;
         this.orderItems = orderItemResponses;
     }

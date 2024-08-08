@@ -35,7 +35,7 @@ public class Pos extends BaseEntity {
     private String password;
 
     @Column(nullable = true)
-    private String DummyCustomerUUID;
+    private UUID DummyCustomerUUID;
 
     @Builder
     public Pos(Code code, String email, String password) {
@@ -47,5 +47,5 @@ public class Pos extends BaseEntity {
     public void updatePassword(String password) {
         this.password = password;
     }
-    public void updateDummyCustomerUUID(String dummyCustomerUUID) {this.DummyCustomerUUID = dummyCustomerUUID;}
+    public void updateDummyCustomerUUID(UUID dummyCustomerUUID) {this.DummyCustomerUUID = dummyCustomerUUID;}
 }

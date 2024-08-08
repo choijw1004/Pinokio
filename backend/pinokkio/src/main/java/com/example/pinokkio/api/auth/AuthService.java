@@ -94,7 +94,7 @@ public class AuthService {
                 .faceEmbedding(null)
                 .build();
         Customer savedCustomer = customerRepository.save(customer);
-        savedPos.updateDummyCustomerUUID(savedCustomer.getId().toString());
+        savedPos.updateDummyCustomerUUID(savedCustomer.getId());
     }
 
     /**

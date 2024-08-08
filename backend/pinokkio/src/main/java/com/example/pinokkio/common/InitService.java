@@ -69,7 +69,7 @@ public class InitService implements ApplicationListener<ContextRefreshedEvent> {
                 .gender(Gender.MALE)
                 .faceEmbedding(null)
                 .build());
-        starbucks.updateDummyCustomerUUID(starbucksCustomer.getId().toString());
+        starbucks.updateDummyCustomerUUID(starbucksCustomer.getId());
 
 
         Pos tomntomsCoffee = posRepository.save(Pos.builder()
@@ -84,7 +84,7 @@ public class InitService implements ApplicationListener<ContextRefreshedEvent> {
                 .gender(Gender.MALE)
                 .faceEmbedding(null)
                 .build());
-        tomntomsCoffee.updateDummyCustomerUUID(tomntomsCustomer.getId().toString());
+        tomntomsCoffee.updateDummyCustomerUUID(tomntomsCustomer.getId());
 
 
         Pos hollys = posRepository.save(Pos.builder()
@@ -99,7 +99,7 @@ public class InitService implements ApplicationListener<ContextRefreshedEvent> {
                 .gender(Gender.MALE)
                 .faceEmbedding(null)
                 .build());
-        hollys.updateDummyCustomerUUID(hollysCustomer.getId().toString());
+        hollys.updateDummyCustomerUUID(hollysCustomer.getId());
 
 
         // Category Repository 데이터 추가
@@ -223,7 +223,7 @@ public class InitService implements ApplicationListener<ContextRefreshedEvent> {
         String domain = POS_NAME_TO_EMAIL_DOMAIN.get(pos.getCode().getName());
         for (int i = 1; i <= 4; i++) {
             String email = "teller" + i + "@" + domain + ".com";
-            tellerRepository.save(new Teller(pos.getCode(), email, passwordEncoder.encode(pos.getCode().getName()), 10000));
+            tellerRepository.save(new Teller(pos.getCode(), email, passwordEncoder.encode(pos.getCode().getName())));
         }
     }
 
