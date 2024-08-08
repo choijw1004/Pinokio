@@ -110,10 +110,14 @@ public class RoomService {
                 .orElseThrow(() -> new RoomNotFoundException("Room not found for teller: " + teller.getId()));
 
         validateRoomId(roomId, room);
-        EntityUtils.getEntityById(kioskRepository, kioskId, KioskNotFoundException::new);
+        validateKioskId(kioskId);
 
         webSocketService.sendRoomId(kioskId, room.getRoomId());
         log.info("Invitation accepted for room: {}, kiosk: {}, teller: {}", roomId, kioskId, teller.getId());
+    }
+
+    private void validateKioskId(UUID kioskId) {
+        EntityUtils.getEntityById(kioskRepository, kioskId, KioskNotFoundException::new);
     }
 
     private void validateRoomId(UUID roomId, Room room) {
