@@ -69,7 +69,7 @@ public class InitService implements ApplicationListener<ContextRefreshedEvent> {
                 .gender(Gender.MALE)
                 .faceEmbedding(null)
                 .build());
-        starbucks.updateDummyCustomerUUID(starbucksCustomer.getId().toString());
+        starbucks.updateDummyCustomerUUID(starbucksCustomer.getId());
 
 
         Pos tomntomsCoffee = posRepository.save(Pos.builder()
@@ -84,7 +84,7 @@ public class InitService implements ApplicationListener<ContextRefreshedEvent> {
                 .gender(Gender.MALE)
                 .faceEmbedding(null)
                 .build());
-        tomntomsCoffee.updateDummyCustomerUUID(tomntomsCustomer.getId().toString());
+        tomntomsCoffee.updateDummyCustomerUUID(tomntomsCustomer.getId());
 
 
         Pos hollys = posRepository.save(Pos.builder()
@@ -99,7 +99,7 @@ public class InitService implements ApplicationListener<ContextRefreshedEvent> {
                 .gender(Gender.MALE)
                 .faceEmbedding(null)
                 .build());
-        hollys.updateDummyCustomerUUID(hollysCustomer.getId().toString());
+        hollys.updateDummyCustomerUUID(hollysCustomer.getId());
 
 
         // Category Repository 데이터 추가

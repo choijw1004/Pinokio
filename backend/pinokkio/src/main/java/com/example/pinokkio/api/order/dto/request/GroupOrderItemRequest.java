@@ -7,12 +7,14 @@ import lombok.Setter;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 public class GroupOrderItemRequest {
-    private String customerId; //nullable
+    //nullable
+    private UUID customerId;
     private List<OrderItemRequest> orderItems = new ArrayList<>();
 }

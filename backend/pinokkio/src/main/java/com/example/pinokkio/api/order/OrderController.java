@@ -70,9 +70,9 @@ public class OrderController {
     @PreAuthorize("hasRole('ROLE_POS')")
     @GetMapping("/orders/customers/{customerId}/top-order")
     public ResponseEntity<?> getTopOrderItem(
-            @PathVariable String customerId) {
+            @PathVariable UUID customerId) {
         List<TopOrderedItemResponse> topItems = orderService.getTopOrderedItemByCustomerId(
-                        toUUID(customerId),
+                        customerId,
                         posService.getPosByEmail(jwtProvider.getCurrentUserEmail()).getId()
                 )
                 .map(Collections::singletonList)
@@ -81,14 +81,13 @@ public class OrderController {
         return ResponseEntity.ok(topItems);
     }
 
-
     @Operation(summary = "특정 고객의 최근 주문 아이템 조회", description = "특정 고객의 최근 주문 아이템 조회")
     @PreAuthorize("hasRole('ROLE_POS')")
     @GetMapping("/orders/customers/{customerId}/recent-items")
     public ResponseEntity<?> getRecentOrderItems(
-            @PathVariable String customerId) {
+            @PathVariable UUID customerId) {
         List<OrderItemResponse> orderItemResponses = orderService.getRecentOrderItemsByCustomerId(
-                        toUUID(customerId),
+                        customerId,
                         posService.getPosByEmail(jwtProvider.getCurrentUserEmail()).getId()
                 )
                 .stream()
@@ -109,8 +108,5 @@ public class OrderController {
         return ResponseEntity.noContent().build(); // No Content 반환
     }
 
-    public UUID toUUID(String input) {
-        return UUID.fromString(input);
-    }
 
 }
