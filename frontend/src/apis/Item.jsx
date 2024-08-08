@@ -67,9 +67,9 @@ export const getItemsByKeyword = (posId, keyword) => {
     });
 };
 
-export const getItemsByCategoryId = async (posId, categoryId) => {
+export const getItemsByCategoryId = async (categoryId) => {
   try {
-    const response = await axios.get(`/api/pos/${posId}/items/categories/${categoryId}`);
+    const response = await axios.get(`/api/pos/items/categories/${categoryId}`);
     return response.data;
   } catch (error) {
     console.error('get menus by category failed:', error);
