@@ -6,7 +6,7 @@ import CategoryList from '../../components/pos/CategoryList';
 import CategoryModal from '../../components/pos/CategoryModal';
 import Button from '../../components/common/Button';
 import Toast from '../../components/common/Toast';
-import { getItems, itemScreenToggle, itemSoldOutToggle } from '../../apis/Item'; // Import the API functions
+import { getItems, itemScreenToggle, itemSoldOutToggle, getItemsByKeyword } from '../../apis/Item'; // Import the API functions
 import { getCategories } from '../../apis/Category'; // Import the API function
 import { useSelector } from 'react-redux'; // Assuming you use Redux to get posId
 
@@ -32,6 +32,7 @@ const ProductManagementPage = () => {
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [toastMessage, setToastMessage] = useState('');
   const [selectedCategoryFilter, setSelectedCategoryFilter] = useState('전체');
+  const [searchKeyword, setSearchKeyword] = useState(''); // Search keyword state
 
   const userData = useSelector((store) => store.user);
 
@@ -39,12 +40,8 @@ const ProductManagementPage = () => {
     const fetchItems = async () => {
       try {
         const data = await getItems(userData.typeInfo.posId);
-        // console.log(data.responseList);
         setProducts(data.responseList);
-        console.log('pos아이디는!!');
-        console.log(userData.typeInfo.posId);
         const categoryList = await getCategories();
-        console.log(categoryList);
         setCategories(categoryList.responseList);
       } catch (error) {
         setToastMessage('상품 및 카테고리 데이터를 가져오는 데 실패했습니다.');
@@ -104,7 +101,7 @@ const ProductManagementPage = () => {
   const handleEditCategory = (category) => {
     setSelectedCategory(category);
     console.log(`category : ${category}`);
-    // setIsCategoryModalOpen(true);
+    setIsCategoryModalOpen(true);
   };
 
   const handleDeleteCategory = (categoryId) => {
@@ -122,6 +119,17 @@ const ProductManagementPage = () => {
       setToastMessage(`${category.name} 카테고리 추가 완료!`);
     }
     setIsCategoryModalOpen(false);
+  };
+
+  const handleSearch = async (e) => {
+    e.preventDefault();
+    try {
+      const result = await getItemsByKeyword(searchKeyword);
+      console.log(result);
+      setProducts(result.responseList);
+    } catch (error) {
+      setToastMessage('상품 검색에 실패했습니다.');
+    }
   };
 
   const filteredProducts =
@@ -154,6 +162,15 @@ const ProductManagementPage = () => {
               </option>
             ))}
           </select>
+          <form onSubmit={handleSearch} style={{ display: 'inline' }}>
+            <input
+              type="text"
+              value={searchKeyword}
+              onChange={(e) => setSearchKeyword(e.target.value)}
+              placeholder="상품 검색"
+            />
+            <Button type="submit" text="검색" />
+          </form>
           <ProductList
             products={filteredProducts}
             onEdit={handleEditProduct}

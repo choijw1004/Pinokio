@@ -44,27 +44,13 @@ export const getItems = async () => {
   }
 };
 
-export const getItemsByKeyword = (posId, keyword) => {
-  axios
-    .get('/api/pos/:posId/items/search', {
-      params: {
-        posId: posId,
-        searchItemRequest: {
-          keyword: keyword,
-        },
-      },
-    })
-    .then((response) => {
-      // response
-
-      return response;
-    })
-    .catch((error) => {
-      // 오류발생시 실행
-    })
-    .then(() => {
-      // 항상 실행
-    });
+export const getItemsByKeyword = async (keyWord) => {
+  try {
+    const response = await axios.get('/api/pos/items/search', { keyWord: keyWord });
+    return response.data;
+  } catch (error) {
+    console.error('Cannot get items by keyword');
+  }
 };
 
 export const getItemsByCategoryId = async (categoryId) => {
