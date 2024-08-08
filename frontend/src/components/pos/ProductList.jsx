@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
 import ToggleButton from '../common/Toggle';
-import { deleteItem, getItemsByKeyword } from '../../apis/Item'; // Import the deleteItem function
+import { deleteItem } from '../../apis/Item'; // Import the deleteItem function
 
 const ProductTable = styled.table`
   width: 100%;
