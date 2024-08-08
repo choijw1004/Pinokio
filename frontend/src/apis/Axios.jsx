@@ -47,7 +47,7 @@ axios.interceptors.request.use(
     if (accessToken && isTokenExpired(accessToken)) {
       try {
         const refreshToken = getRefreshTokenFromCookies();
-        console.log(`리프레시 토큰 받는 중 : ${refreshToken}`);
+        // console.log(`리프레시 토큰 받는 중 : ${refreshToken}`);
         if (!refreshToken) {
           throw new Error('No refresh token available');
         }
@@ -58,7 +58,7 @@ axios.interceptors.request.use(
           },
         });
         accessToken = response.data.accessToken;
-        console.log(`액세스 토큰 받아옴 ${accessToken}`);
+        // console.log(`액세스 토큰 받아옴 ${accessToken}`);
 
         // 새로운 Access Token을 store에 저장
         store.dispatch(

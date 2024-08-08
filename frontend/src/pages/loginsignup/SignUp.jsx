@@ -1,9 +1,14 @@
 import React, { useState } from 'react';
 import Logo from '../../components/common/Logo';
 import styled from 'styled-components';
-import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import {
+  posDuplicateEmail,
+  tellerDuplicateEmail,
+  postRegisterAdvisor,
+  postRegisterPos,
+} from '../../apis/Auth';
+import { sendEmail, checkAuth } from '../../apis/Mail';
 
 const SignUpWrapper = styled.div`
   display: flex;
@@ -38,6 +43,7 @@ const SignUpTitle = styled.div`
   font-weight: Bold;
   margin: 10px 0 20px 0;
 `;
+
 const Input = styled.input`
   width: 100%;
   padding: 10px;
@@ -52,7 +58,37 @@ const Input = styled.input`
   }
 `;
 
-const LabelContainer = styled.label`
+const EmailLabelContainer = styled.div`
+  position: relative;
+  width: 100%;
+`;
+
+const EmailSendBtn = styled.button`
+  position: absolute;
+  top: 50%;
+  right: 10px;
+  transform: translateY(-50%);
+  width: 4rem;
+  height: 1.7rem;
+  font-size: 10px;
+`;
+
+const VerifyLabelContainer = styled.div`
+  position: relative;
+  width: 100%;
+`;
+
+const VerifyBtn = styled.button`
+  position: absolute;
+  top: 42%;
+  right: 10px;
+  transform: translateY(-50%);
+  width: 4rem;
+  height: 1.7rem;
+  font-size: 10px;
+`;
+
+const LabelContainer = styled.div`
   width: 100%;
 `;
 
@@ -101,54 +137,89 @@ function SignUp() {
   const [isUsableId, setIsUsableId] = useState(false);
   const [password, setPassword] = useState('');
   const [passwordChecking, setPasswordChecking] = useState('');
-  const [email, setEmail] = useState('');
-  const [selected, setSelected] = useState('');
+  const [position, setPosition] = useState('');
+  const [code, setCode] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
+  const [emailSent, setEmailSent] = useState(false);
+  const [verificationCode, setVerificationCode] = useState('');
+  const [verificationMessage, setVerificationMessage] = useState('');
 
   const navigate = useNavigate();
-  const dispatch = useDispatch();
-  const user = useSelector((state) => state.user.user);
 
-  const checkIdDuplicated = (e) => {
-    setId(e.target.value);
+  const checkIdDuplicated = async (e) => {
+    const email = e.target.value;
+    setId(email);
     setIsUsableId(false);
-    // 아이디 바뀔 때마다 가져옴
-    axios
-      .post('url', {
-        id: id,
-      })
-      .then((response) => {
-        // response
-        if (response.isUsable) {
+    setErrorMessage('');
+
+    if (position) {
+      try {
+        const response =
+          position === 'pos' ? await posDuplicateEmail(email) : await tellerDuplicateEmail(email);
+        if (response.duplicate) {
+          setErrorMessage('사용할 수 없는 이메일입니다.');
+        } else {
           setIsUsableId(true);
         }
-      })
-      .catch((error) => {
-        // 오류발생시 실행
-      })
-      .then(() => {
-        // 항상 실행
-      });
+      } catch (error) {
+        setErrorMessage('이메일 중복 검사 중 오류가 발생했습니다.');
+      }
+    } else {
+      setErrorMessage('직책을 먼저 선택해주세요.');
+    }
   };
 
-  const handleSignUp = () => {
-    axios
-      .post('url', {
-        id: id,
-        password: password,
-      })
-      .then((response) => {
-        // response
-        if (response.isUsable) {
-          setIsUsableId(true);
-        }
-      })
-      .catch((error) => {
-        // 오류발생시 실행
-      })
-      .then(() => {
-        // 항상 실행
-      });
-    navigate('/');
+  const handleEmailSend = async () => {
+    if (!id) {
+      alert('이메일을 입력해주세요.');
+      return;
+    }
+    try {
+      await sendEmail(id);
+      setEmailSent(true);
+      setVerificationMessage('인증 코드가 이메일로 전송되었습니다.');
+    } catch (error) {
+      setVerificationMessage('이메일 전송에 실패했습니다. 다시 시도해주세요.');
+    }
+  };
+
+  const handleVerifyCode = async () => {
+    try {
+      const response = await checkAuth(verificationCode);
+      if (response.success) {
+        setVerificationMessage('이메일 인증이 완료되었습니다.');
+      } else {
+        setVerificationMessage('인증 코드가 올바르지 않습니다.');
+      }
+    } catch (error) {
+      setVerificationMessage('인증 코드 확인 중 오류가 발생했습니다.');
+    }
+  };
+
+  const handleSignUp = async (e) => {
+    e.preventDefault();
+    if (!isUsableId) {
+      alert('이메일 중복 검사를 완료해주세요.');
+      return;
+    }
+    if (password !== passwordChecking) {
+      alert('비밀번호가 일치하지 않습니다.');
+      return;
+    }
+    if (password.length < 8) {
+      alert('비밀번호를 8자리 이상으로 설정해주세요.');
+      return;
+    }
+    try {
+      if (position === 'advisor') {
+        await postRegisterAdvisor(code, id, password, passwordChecking);
+      } else if (position === 'pos') {
+        await postRegisterPos(code, id, password, passwordChecking);
+      }
+      navigate('/');
+    } catch (error) {
+      alert('회원가입 중 오류가 발생했습니다. 다시 시도해주세요.');
+    }
   };
 
   return (
@@ -158,19 +229,54 @@ function SignUp() {
         <SignUpTitle>회원가입</SignUpTitle>
 
         <LabelContainer>
-          <Input
-            id="id"
-            type="text"
-            className="has-label"
-            placeholder="아이디"
-            onChange={(e) => checkIdDuplicated(e)}
-          />
-          {isUsableId ? (
-            <AddedMessage isUsableId={isUsableId}>사용할 수 있는 아이디입니다.</AddedMessage>
-          ) : (
-            <AddedMessage isUsableId={isUsableId}>사용할 수 없는 아이디입니다.</AddedMessage>
-          )}
+          <SelectInput
+            name="position"
+            id="position"
+            onChange={(e) => {
+              setPosition(e.target.value);
+              setErrorMessage('');
+              setIsUsableId(false);
+            }}
+          >
+            <option value="" selected disabled hidden>
+              선택해주세요
+            </option>
+            <option value="pos">포스기</option>
+            <option value="advisor">상담원</option>
+          </SelectInput>
         </LabelContainer>
+
+        <EmailLabelContainer>
+          <Input
+            type="text"
+            className="Email"
+            placeholder="이메일"
+            onChange={(e) => checkIdDuplicated(e)}
+            disabled={!position}
+          />
+          {errorMessage && <AddedMessage>{errorMessage}</AddedMessage>}
+          {isUsableId && !errorMessage && (
+            <AddedMessage isUsableId={isUsableId}>사용할 수 있는 이메일입니다.</AddedMessage>
+          )}
+          <EmailSendBtn type="button" onClick={handleEmailSend} disabled={!position}>
+            인증하기
+          </EmailSendBtn>
+        </EmailLabelContainer>
+
+        {emailSent && (
+          <VerifyLabelContainer>
+            <Input
+              type="text"
+              className="VerificationCode"
+              placeholder="인증 코드를 입력해주세요"
+              onChange={(e) => setVerificationCode(e.target.value)}
+            />
+            <VerifyBtn type="button" onClick={handleVerifyCode}>
+              인증 확인
+            </VerifyBtn>
+            {verificationMessage && <AddedMessage>{verificationMessage}</AddedMessage>}
+          </VerifyLabelContainer>
+        )}
 
         <Input
           id="password"
@@ -178,19 +284,22 @@ function SignUp() {
           className="Password"
           placeholder="패스워드"
           onChange={(e) => setPassword(e.target.value)}
+          disabled={!position}
         />
         <LabelContainer>
           <Input
-            name
             id="password-checking"
             type="password"
             className="has-label"
             placeholder="패스워드 확인"
             onChange={(e) => setPasswordChecking(e.target.value)}
+            disabled={!position}
           />
           {password.length >= 8 ? (
             password === passwordChecking ? (
-              <AddedMessage isCorrect={true}>비밀번호가 일치합니다.</AddedMessage>
+              <AddedMessage isCorrect={true} style={{ color: 'green' }}>
+                비밀번호가 일치합니다.
+              </AddedMessage>
             ) : (
               <AddedMessage isCorrect={false}>비밀번호가 일치하지 않습니다.</AddedMessage>
             )
@@ -198,33 +307,22 @@ function SignUp() {
             <AddedMessage isCorrect={false}>비밀번호를 8자리 이상으로 설정해주세요.</AddedMessage>
           )}
         </LabelContainer>
-        <Input type="text" className="Email" placeholder="이메일" />
-        <SelectInput name="position" id="position">
-          <option value="" selected disabled hidden>
-            선택해주세요
-          </option>
-          <option value="pos">포스기</option>
-          <option value="advisor">상담원</option>
-        </SelectInput>
-        <StyledButton
-          type="submit"
-          //   disabled={
-          //     () => {
-          //     return (
-          //       isUsableId &&
-          //       password.length >= 8 &&
-          //       password === passwordChecking &&
-          //       email &&
-          //       selected
-          //     );
-          //   }
-          // }
-        >
-          회원가입
-        </StyledButton>
+
+        <LabelContainer>
+          <Input
+            type="text"
+            className="code"
+            placeholder={
+              position === 'pos' ? '매장 코드를 입력해주세요.' : '포스 코드를 입력해주세요.'
+            }
+            onChange={(e) => setCode(e.target.value)}
+            disabled={!position}
+          />
+        </LabelContainer>
+
+        <StyledButton type="submit">회원가입</StyledButton>
       </SignUpForm>
     </SignUpWrapper>
   );
 }
-
 export default SignUp;

@@ -114,6 +114,17 @@ function Login() {
   const handleLogin = async (e) => {
     e.preventDefault();
     console.log('id : ', id);
+
+    if (!id) {
+      alert('아이디를 입력해주세요.');
+      return;
+    }
+
+    if (!password) {
+      alert('비밀번호를 입력해주세요.');
+      return;
+    }
+
     try {
       let res;
 
@@ -183,6 +194,7 @@ function Login() {
       }
     } catch (error) {
       console.error('로그인 실패:', error);
+      alert('로그인에 실패했습니다.');
     }
   };
 

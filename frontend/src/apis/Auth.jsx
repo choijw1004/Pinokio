@@ -6,6 +6,7 @@ import axios from './Axios';
 2. Auth의 API는 parameter가 없으므로 그냥 url을 이어서 쓴다.
 */
 
+// 상담원 회원가입
 export const postRegisterAdvisor = async (code, username, password, confirmPassword) => {
   try {
     const response = await axios.post('/api/register/teller', {
@@ -21,6 +22,7 @@ export const postRegisterAdvisor = async (code, username, password, confirmPassw
   }
 };
 
+// 포스 회원가입
 export const postRegisterPos = async (code, username, password, confirmPassword) => {
   try {
     const response = await axios.post('/api/register/pos', {
@@ -36,6 +38,7 @@ export const postRegisterPos = async (code, username, password, confirmPassword)
   }
 };
 
+// 키오스크 회원가입
 export const postRegisterKiosk = async (posId) => {
   try {
     const response = await axios.post('/api/register/kiosk', {
@@ -48,6 +51,7 @@ export const postRegisterKiosk = async (posId) => {
   }
 };
 
+// 상담원 로그인
 export const postLoginAdvisor = async (username, password) => {
   try {
     const response = await axios.post('/api/login/teller', {
@@ -61,6 +65,7 @@ export const postLoginAdvisor = async (username, password) => {
   }
 };
 
+// 포스 로그인
 export const postLoginPos = async (username, password) => {
   try {
     console.log('Request payload:', { username, password });
@@ -77,6 +82,7 @@ export const postLoginPos = async (username, password) => {
   }
 };
 
+// 키오스크 로그인
 export const postLoginKiosk = async (username, password) => {
   try {
     const response = await axios.post('/api/login/kiosk', {
@@ -90,6 +96,7 @@ export const postLoginKiosk = async (username, password) => {
   }
 };
 
+// 키오스크 정보 조회
 export const getKioskInfo = async () => {
   try {
     const response = await axios.get('/api/kiosk/my-info');
@@ -100,12 +107,37 @@ export const getKioskInfo = async () => {
   }
 };
 
+// 포스 정보 조회
 export const getPosInfo = async () => {
   try {
     const response = await axios.get('/api/pos/my-info');
     return response.data;
   } catch (error) {
     console.error('get pos info failed:', error);
+    throw error;
+  }
+};
+
+// 상담원 중복 이메일 조회
+export const tellerDuplicateEmail = async (email) => {
+  try {
+    const response = await axios.get(`/api/teller/duplicate/${email}`);
+    // console.log(response.data);
+    return response.data;
+  } catch (error) {
+    console.error('상담원 중복 이메일 조회 에러 :', error);
+    throw error;
+  }
+};
+
+// 포스 중복 이메일 조회
+export const posDuplicateEmail = async (email) => {
+  try {
+    const response = await axios.get(`/api/pos/duplicate/${email}`);
+    // console.log(response.data);
+    return response.data;
+  } catch (error) {
+    console.error('상담원 중복 이메일 조회 에러 :', error);
     throw error;
   }
 };

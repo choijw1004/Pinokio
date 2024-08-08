@@ -99,13 +99,22 @@ function ElderMenuPage() {
 
   const [modal, setModal] = useState(false);
 
+  const isFirstRender = useRef(true);
+
   useEffect(() => {
-    console.log('first rendering');
-    console.log(userData.typeInfo.kioskId);
-    getCategory();
-    // requestMeeting(userData.typeInfo.kioskId); //OpenVidu 요청
-    // 처음 렌더링 했을 때 순서 getCategory ->  useEffect(categories) -> useEffect(selectedCategory)
+    if (isFirstRender.current) {
+      console.log('first rendering');
+      console.log(userData.typeInfo.kioskId);
+      requestRoomEnter();
+      getCategory();
+      isFirstRender.current = false;
+    }
   }, []);
+
+  const requestRoomEnter = async () => {
+    const response = await requestMeeting();
+    console.log(response);
+  };
 
   const getCategory = async () => {
     /* axios를 이용하여 category를 가져온다. */

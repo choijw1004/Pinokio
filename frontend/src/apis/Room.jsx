@@ -10,7 +10,7 @@ import axios from './Axios'; // 인스턴스와 구분하기 위해 대문자 �
 
 export const makeMeetingRoom = async (tellerId) => {
   try {
-    const response = await axios.get('/api/meeting/teller/room');
+    const response = await axios.post(`/api/meeting/teller/${tellerId}`);
     return response.data;
   } catch (error) {
     console.error('makeMeetingRoom error', error);
@@ -18,21 +18,29 @@ export const makeMeetingRoom = async (tellerId) => {
   }
 };
 
-// export const getMeetingRequest = async (tellerId) => {
-//   try {
-//     const response = await axios.get(`/api/meeting/teller/${tellerId}`);
-//     return response.data;
-//   } catch (error) {
-//     console.error('getMeetingRequest error', error);
-//     throw error;
-//   }
-// };
-
-export const requestMeeting = async (kioskId) => {
+export const acceptMeetingRequest = async (tellerId) => {
   try {
-    const response = await axios.post(`/api/meeting/kiosk/${kioskId}/request-enter`, {
-      params: { kioskId: kioskId },
-    });
+    const response = await axios.post(`/api/meeting/teller/${tellerId}/accept`);
+    return response.data;
+  } catch (error) {
+    console.error('makeMeetingRoom error', error);
+    throw error;
+  }
+};
+
+export const rejectMeetingRequest = async () => {
+  try {
+    const response = await axios.post(`/api/meeting/kiosk/reject`);
+    return response.data;
+  } catch (error) {
+    console.error('makeMeetingRoom error', error);
+    throw error;
+  }
+};
+
+export const requestMeeting = async () => {
+  try {
+    const response = await axios.post(`/api/meeting/kiosk/request-enter`);
     return response.data;
   } catch (error) {
     console.error('requestMeeting error', error);
