@@ -323,15 +323,27 @@ public class AuthService {
      * 입력받은 포스의 키오스크 아이디를 랜덤으로 생성한다.
      *
      * @param pos 키오스크의 출처 포스
-     * @return 랜덤 생성된 키오스크 아이디
+     * @return 랜덤 생성된 키오스크 이메일
      */
     public String randomEmail(Pos pos) {
-        StringBuilder sb = new StringBuilder(pos.getCode().getName());
-        for (int i = 0; i < 4; i++) {
-            int index = RANDOM.nextInt(DIGITS.length());
-            sb.append(DIGITS.charAt(index));
-        }
-        return sb.toString();
+        String baseDomain = pos.getEmail().replaceAll("@.*$", "");
+        String fullDomain = pos.getEmail().substring(pos.getEmail().indexOf("@"));
+
+        StringBuilder sb = new StringBuilder();
+        String newEmail;
+
+        do {
+            sb.setLength(0); // StringBuilder 초기화
+            sb.append(baseDomain);
+            for (int i = 0; i < 4; i++) {
+                int index = RANDOM.nextInt(DIGITS.length());
+                sb.append(DIGITS.charAt(index));
+            }
+            sb.append(fullDomain);
+            newEmail = sb.toString();
+        } while (kioskRepository.existsByEmail(newEmail));
+
+        return newEmail;
     }
 
     /**
