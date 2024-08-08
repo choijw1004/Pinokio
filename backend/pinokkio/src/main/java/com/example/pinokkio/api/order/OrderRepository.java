@@ -17,11 +17,12 @@ public interface OrderRepository extends JpaRepository<Order, UUID> {
     List<Order> findByCustomerIdOrderByCreatedDateDesc(UUID customerId);
 
     /**
-     * 주어진 날짜 범위 내의 모든 Order 리스트를 반환합니다.
+     * 해당 포스의 주어진 날짜 범위 내의 모든 Order 리스트를 반환합니다.
      *
+     * @param posId 포스 Id
      * @param startDate 시작 날짜
      * @param endDate   종료 날짜
      * @return 지정된 날짜 범위의 Order 리스트
      */
-    List<Order> findAllByCreatedDateBetween(LocalDateTime startDate, LocalDateTime endDate);
+    List<Order> findAllByPosIdAndCreatedDateBetween(UUID posId, LocalDateTime startDate, LocalDateTime endDate);
 }

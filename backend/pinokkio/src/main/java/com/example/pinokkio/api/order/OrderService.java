@@ -15,6 +15,7 @@ import com.example.pinokkio.api.order.orderitem.OrderItemRepository;
 import com.example.pinokkio.api.pos.Pos;
 import com.example.pinokkio.api.pos.PosRepository;
 import com.example.pinokkio.api.pos.dto.response.PosStatisticsResponse;
+import com.example.pinokkio.api.user.UserService;
 import com.example.pinokkio.config.RedisUtil;
 import com.example.pinokkio.exception.domain.customer.CustomerNotFoundException;
 import com.example.pinokkio.exception.domain.customer.NotCustomerOfPosException;
@@ -47,6 +48,7 @@ public class OrderService {
     private final OrderItemRepository orderItemRepository;
     private final ItemRepository itemRepository;
     private final RedisUtil redisUtil;
+    private final UserService userService;
 
     /**
      * 주문 요청정보를 기반으로 주문을 생성한다.
@@ -269,10 +271,12 @@ public class OrderService {
     public List<OrderDetailResponse> getOrderItemsByDuration(OrderDurationRequest request) {
         log.info("[getOrderItemsByDuration] 기간별 주문 조회 시작. 시작일: {}, 종료일: {}", request.getStartDate(), request.getEndDate());
 
+        // 현재 Pos 찾기
+        Pos currentPos = userService.getCurrentPos();
         LocalDateTime startDateTime = LocalDate.parse(request.getStartDate(), DateTimeFormatter.ISO_DATE).atStartOfDay();
         LocalDateTime endDateTime = LocalDate.parse(request.getEndDate(), DateTimeFormatter.ISO_DATE).atTime(LocalTime.MAX);
 
-        List<Order> orders = orderRepository.findAllByCreatedDateBetween(startDateTime, endDateTime);
+        List<Order> orders = orderRepository.findAllByPosIdAndCreatedDateBetween(currentPos.getId(),startDateTime, endDateTime);
 
         if (orders.isEmpty()) {
             log.info("[getOrderItemsByDuration] 해당 기간 동안의 주문이 없습니다.");

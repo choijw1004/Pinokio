@@ -26,7 +26,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.*;
 
 @Service
@@ -54,8 +53,8 @@ public class InitService implements ApplicationListener<ContextRefreshedEvent> {
 
     @Override
     public void onApplicationEvent(ContextRefreshedEvent event) {
-//        makeInitData();
-//        createDummyOrders();
+        makeInitData();
+        createDummyOrders();
     }
 
     private void makeInitData() {
@@ -322,56 +321,49 @@ public class InitService implements ApplicationListener<ContextRefreshedEvent> {
 
         List<Pos> allPos = posRepository.findAll();
         List<Customer> allCustomers = customerRepository.findAll();
-        List<Item> allItems = itemRepository.findAll();
 
-        for (LocalDate date = startDate; !date.isAfter(endDate); date = date.plusDays(1)) {
-            int ordersPerDay = 10 + random.nextInt(11); // 10 to 20 orders per day
-            for (int i = 0; i < ordersPerDay; i++) {
-                Pos pos = allPos.get(random.nextInt(allPos.size()));
-                Customer customer = allCustomers.get(random.nextInt(allCustomers.size()));
+        int ordersPerDay = 10 + random.nextInt(11); // 10 to 20 orders per day
+        for (int i = 0; i < ordersPerDay; i++) {
+            Pos pos = allPos.get(random.nextInt(allPos.size()));
+            Customer customer = allCustomers.get(random.nextInt(allCustomers.size()));
 
-                List<OrderItem> orderItems = createRandomOrderItems(pos, customer.getId(), allItems);
-                long totalPrice = orderItems.stream()
-                        .mapToLong(item -> item.getItem().getPrice() * item.getQuantity())
-                        .sum();
+            // 특정 POS에 해당하는 아이템 리스트를 가져옴
+            List<Item> posItems = itemRepository.findAllByPosId(pos.getId());
+            List<OrderItem> orderItems = createRandomOrderItems(pos, customer.getId(), posItems);
+            long totalPrice = orderItems.stream()
+                    .mapToLong(item -> (long) item.getItem().getPrice() * item.getQuantity())
+                    .sum();
 
-                Order order = Order.builder()
-                        .pos(pos)
-                        .customer(customer)
-                        .items(orderItems)
-                        .totalPrice(totalPrice)
-                        .build();
+            Order order = Order.builder()
+                    .pos(pos)
+                    .customer(customer)
+                    .items(orderItems)
+                    .totalPrice(totalPrice)
+                    .build();
 
-                // Set random time for the order
-                LocalDateTime orderDateTime = date.atTime(8 + random.nextInt(14), random.nextInt(60));
-//                order.setCreatedDate(orderDateTime);
+            // Set random time for the order
+//                LocalDateTime orderDateTime = date.atTime(8 + random.nextInt(14), random.nextInt(60));
+//            order.setCreatedDate(orderDateTime);
 
-                orderRepository.save(order);
+            orderRepository.save(order);
 
-                // Update order for each OrderItem
-                for (OrderItem item : orderItems) {
-                    item.updateOrder(order);
-                }
+            // Update order for each OrderItem
+            for (OrderItem item : orderItems) {
+                item.updateOrder(order);
             }
         }
     }
 
-    private List<OrderItem> createRandomOrderItems(Pos pos, UUID customerId, List<Item> allItems) {
+    private List<OrderItem> createRandomOrderItems(Pos pos, UUID customerId, List<Item> posItems) {
         int itemCount = 1 + random.nextInt(5); // 1 to 5 items per order
         List<OrderItem> orderItems = new ArrayList<>();
 
         for (int i = 0; i < itemCount; i++) {
-            Item item = allItems.stream()
-                    .filter(it -> it.getPos().equals(pos))
-                    .skip(random.nextInt((int) allItems.stream().filter(it -> it.getPos().equals(pos)).count()))
-                    .findFirst()
-                    .orElseThrow(() -> new RuntimeException("No items found for POS"));
-
+            Item item = posItems.get(random.nextInt(posItems.size()));
             int quantity = 1 + random.nextInt(3); // 1 to 3 quantity for each item
             orderItems.add(new OrderItem(null, item, customerId, quantity));
         }
 
         return orderItems;
     }
-
 }
