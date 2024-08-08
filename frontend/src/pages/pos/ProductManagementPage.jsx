@@ -52,9 +52,8 @@ const ProductManagementPage = () => {
     };
 
     fetchItems();
-  }, [userData.typeInfo.posId, isProductModalOpen, isCategoryModalOpen]);
+  }, [userData.typeInfo.posId, isProductModalOpen, isCategoryModalOpen, selectedCategory]);
 
-  useEffect(() => {});
   const handleAddProduct = () => {
     setSelectedProduct(null);
     setIsProductModalOpen(true);
@@ -104,7 +103,8 @@ const ProductManagementPage = () => {
 
   const handleEditCategory = (category) => {
     setSelectedCategory(category);
-    setIsCategoryModalOpen(true);
+    console.log(`category : ${category}`);
+    // setIsCategoryModalOpen(true);
   };
 
   const handleDeleteCategory = (categoryId) => {

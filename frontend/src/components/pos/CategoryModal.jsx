@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { createCategory, modifyCategory } from '../../apis/Category';
+import { createCategory } from '../../apis/Category';
 import styled from 'styled-components';
 
 const Modal = styled.div`
