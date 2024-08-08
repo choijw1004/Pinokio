@@ -40,7 +40,7 @@ public class KioskHardwareService extends KioskServiceGrpc.KioskServiceImplBase 
     // 타임아웃 시간을 밀리초 단위로 설정합니다.
     private static final long TIMEOUT_DURATION = 5000;
     // 키오스크 컨트롤러의 주소를 설정합니다.
-    private static final String KIOSK_CONTROLLER_ADDRESS = "172.30.1.98";
+    private static final String KIOSK_CONTROLLER_ADDRESS = "70.12.114.81";
     // 키오스크 컨트롤러의 포트를 설정합니다.
     private static final int KIOSK_CONTROLLER_PORT = 50052;
     // gRPC 서버의 포트를 설정합니다.
@@ -105,7 +105,6 @@ public class KioskHardwareService extends KioskServiceGrpc.KioskServiceImplBase 
     }
 
     private void handleUserDetected(String kioskId) {
-        log.info("handleUserDetected 진입 - kioskId: {}", kioskId);
         log.info("User detected at kiosk {}. Initiating brightness adjustment and image capture.", kioskId);
 
         stopDistanceMeasurement(kioskId)
@@ -117,39 +116,24 @@ public class KioskHardwareService extends KioskServiceGrpc.KioskServiceImplBase 
                 });
     }
 
-    public CompletableFuture<Object> captureAndAnalyzeImages(String kioskId, int count) {
-        return CompletableFuture.supplyAsync(() -> {
-            log.info("captureAndAnalyzeImages 진입");
+    public CompletableFuture<Void> stopDistanceMeasurement(String kioskId) {
+        return CompletableFuture.runAsync(() -> {
             ManagedChannel channel = ManagedChannelBuilder.forAddress(KIOSK_CONTROLLER_ADDRESS, KIOSK_CONTROLLER_PORT)
                     .usePlaintext()
                     .build();
             KioskServiceGrpc.KioskServiceBlockingStub stub = KioskServiceGrpc.newBlockingStub(channel);
 
-            CaptureImagesRequest request = CaptureImagesRequest.newBuilder()
-                    .setCount(count)
+            StopDistanceMeasurementRequest request = StopDistanceMeasurementRequest.newBuilder()
+                    .setKioskId(kioskId)
                     .build();
 
             try {
-                CaptureImagesResponse response = stub.captureImages(request);
-                List<ByteString> capturedImages = response.getImagesList();
-                if (!capturedImages.isEmpty()) {
-                    sseService.sendWaitingEvent(true);
-                    List<String> base64Images = capturedImages.stream()
-                            .map(ByteString::toStringUtf8)
-                            .collect(Collectors.toList());
-                    faceAnalysisService.analyzeImages(base64Images);
-                    return null;
-                } else {
-                    log.error("Failed to capture images from kiosk: {}", kioskId);
-                    sseService.sendWaitingEvent(false);
-                    throw new RuntimeException("Failed to capture images");
-                }
-            } catch (Exception e) {
-                log.error("Error during image capture or analysis for kiosk: {}", kioskId, e);
-                sseService.sendWaitingEvent(false);
-                resetKiosk(kioskId).join(); // kioskReset 호출
-                return null;
+                stub.stopDistanceMeasurement(request);
+                log.info("Stopped distance measurement for kiosk: {}", kioskId);
+            } catch (StatusRuntimeException e) {
+                log.error("Error stopping distance measurement for kiosk: {}", kioskId, e);
             } finally {
+                log.info("Shutdown!");
                 channel.shutdown();
             }
         });
@@ -180,7 +164,6 @@ public class KioskHardwareService extends KioskServiceGrpc.KioskServiceImplBase 
     // 이미지를 캡처하고 분석하는 메서드입니다.
     public CompletableFuture<Object> captureAndAnalyzeImages(String kioskId, int count) {
         return CompletableFuture.supplyAsync(() -> {
-            log.info("captureAndAnalyzeImages 진입");
             ManagedChannel channel = ManagedChannelBuilder.forAddress(KIOSK_CONTROLLER_ADDRESS, KIOSK_CONTROLLER_PORT)
                     .usePlaintext()
                     .build();
