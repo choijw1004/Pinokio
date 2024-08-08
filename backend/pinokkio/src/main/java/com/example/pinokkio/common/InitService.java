@@ -223,7 +223,7 @@ public class InitService implements ApplicationListener<ContextRefreshedEvent> {
         String domain = POS_NAME_TO_EMAIL_DOMAIN.get(pos.getCode().getName());
         for (int i = 1; i <= 4; i++) {
             String email = "teller" + i + "@" + domain + ".com";
-            tellerRepository.save(new Teller(pos.getCode(), email, passwordEncoder.encode(pos.getCode().getName()), 10000));
+            tellerRepository.save(new Teller(pos.getCode(), email, passwordEncoder.encode(pos.getCode().getName())));
         }
     }
 

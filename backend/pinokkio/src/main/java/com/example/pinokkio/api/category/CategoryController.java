@@ -46,6 +46,7 @@ public class CategoryController {
         return new ResponseEntity<>(new GroupCategoryResponse(categoryList), HttpStatus.OK);
     }
 
+
     @Operation(summary = "카테고리 생성", description = "특정 포스의 카테고리 생성")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "카테고리 생성 성공",
@@ -65,6 +66,7 @@ public class CategoryController {
         return new ResponseEntity<>(new CategoryResponse(category), HttpStatus.CREATED);
     }
 
+
     @Operation(summary = "카테고리 삭제", description = "특정 포스의 카테고리 삭제")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "204", description = "카테고리 삭제 성공"),
@@ -78,10 +80,11 @@ public class CategoryController {
     @PreAuthorize("hasRole('ROLE_POS')")
     @DeleteMapping({"pos/categories/{categoryId}"})
     public ResponseEntity<?> deleteCategory(
-            @PathVariable String categoryId) {
-        categoryService.deleteCategory(toUUID(categoryId));
+            @PathVariable UUID categoryId) {
+        categoryService.deleteCategory(categoryId);
         return ResponseEntity.noContent().build();
     }
+
 
     @Operation(summary = "카테고리 수정", description = "특정 포스의 카테고리 수정")
     @ApiResponses(value = {
@@ -96,16 +99,10 @@ public class CategoryController {
     @PreAuthorize("hasRole('ROLE_POS')")
     @PutMapping({"pos/categories/{categoryId}"})
     public ResponseEntity<?> updateCategory(
-            @PathVariable String categoryId,
+            @PathVariable UUID categoryId,
             @RequestBody CategoryRequest categoryRequest) {
-        categoryService.updateCategory(toUUID(categoryId), categoryRequest);
+        categoryService.updateCategory(categoryId, categoryRequest);
         return ResponseEntity.noContent().build();
     }
 
-    /**
-     * String to UUID
-     */
-    public UUID toUUID(String input) {
-        return UUID.fromString(input);
-    }
 }

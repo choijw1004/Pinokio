@@ -19,4 +19,7 @@ public interface KioskRepository extends JpaRepository<Kiosk, UUID> {
      * @return 가입 여부 정보
      */
     boolean existsByEmail(String email);
+
+
+
 }
