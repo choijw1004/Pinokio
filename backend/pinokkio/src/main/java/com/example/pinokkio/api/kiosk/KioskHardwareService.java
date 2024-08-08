@@ -108,6 +108,7 @@ public class KioskHardwareService extends KioskServiceGrpc.KioskServiceImplBase 
         log.info("User detected at kiosk {}. Initiating brightness adjustment and image capture.", kioskId);
 
         stopDistanceMeasurement(kioskId)
+                log.info("stopDistanceMeasurement 진입");
                 .thenCompose(v -> adjustBrightness(kioskId, MAX_BRIGHTNESS))
                 .thenCompose(v -> captureAndAnalyzeImages(kioskId, 2))
                 .exceptionally(e -> {
@@ -164,6 +165,7 @@ public class KioskHardwareService extends KioskServiceGrpc.KioskServiceImplBase 
     // 이미지를 캡처하고 분석하는 메서드입니다.
     public CompletableFuture<Object> captureAndAnalyzeImages(String kioskId, int count) {
         return CompletableFuture.supplyAsync(() -> {
+            log.info("captureAndAnalyzeImages 진입");
             ManagedChannel channel = ManagedChannelBuilder.forAddress(KIOSK_CONTROLLER_ADDRESS, KIOSK_CONTROLLER_PORT)
                     .usePlaintext()
                     .build();
