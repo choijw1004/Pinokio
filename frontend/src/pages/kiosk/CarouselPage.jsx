@@ -113,7 +113,7 @@ function CarouselPage() {
       console.log(kioskId);
       startKiosk(kioskId);
       const connectEventSource = () => {
-        const url = 'http://localhost:8080/api/customer/face-recognition-events';
+        const url = 'https://localhost:8080/api/customer/face-recognition-events';
         console.log('Connecting to:', url);
 
         const eventSource = new EventSource(url);
