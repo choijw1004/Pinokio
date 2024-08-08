@@ -5,6 +5,7 @@ import com.example.pinokkio.api.kiosk.KioskRepository;
 import com.example.pinokkio.api.pos.dto.request.KioskInfoResponse;
 import com.example.pinokkio.api.pos.dto.response.PosResponse;
 import com.example.pinokkio.api.user.UserService;
+import com.example.pinokkio.exception.domain.kiosk.KioskNotFoundException;
 import com.example.pinokkio.exception.domain.pos.PosEmailNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -125,5 +126,22 @@ public class PosService {
      */
     public String passwordEncode(String password) {
         return passwordEncoder.encode(password);
+    }
+
+    /**
+     * 키오스크 삭제
+     *
+     * @param kioskId 키오스크 ID
+     */
+    @Transactional
+    public void deleteKiosk(UUID kioskId) {
+        log.info("[deleteKiosk] 키오스크 삭제 요청: 키오스크 ID = {}", kioskId);
+
+        Pos currentPos = userService.getCurrentPos();
+        Kiosk kiosk = kioskRepository
+                .findByIdAndPosId(kioskId, currentPos.getId())
+                .orElseThrow(() -> new KioskNotFoundException(kioskId));
+        kioskRepository.delete(kiosk);
+        log.info("[deleteKiosk] 키오스크 삭제 완료. ID = {}", kioskId);
     }
 }

@@ -1,6 +1,7 @@
 package com.example.pinokkio.api.pos;
 
 import com.example.pinokkio.api.auth.dto.response.EmailDuplicationResponse;
+import com.example.pinokkio.api.kiosk.Kiosk;
 import com.example.pinokkio.api.order.OrderService;
 import com.example.pinokkio.api.pos.dto.request.KioskInfoResponse;
 import com.example.pinokkio.api.pos.dto.response.PosResponse;
@@ -79,4 +80,18 @@ public class PosController {
         posService.registerKiosk();
         return new ResponseEntity<>(HttpStatus.CREATED);
     }
+
+    /**
+     * 키오스크 삭제
+     * @return ResponseEntity
+     */
+    @Operation(summary = "키오스크 삭제", description = "POS 사용자가 키오스크를 삭제")
+    @PreAuthorize("hasRole('ROLE_POS')")
+    @DeleteMapping("/kiosks")
+    public ResponseEntity<?> deleteKiosk(@RequestParam UUID kioskId) {
+        posService.deleteKiosk(kioskId);
+        return ResponseEntity.noContent().build();
+
+    }
+
 }

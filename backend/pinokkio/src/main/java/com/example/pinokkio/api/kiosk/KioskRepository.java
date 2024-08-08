@@ -22,4 +22,6 @@ public interface KioskRepository extends JpaRepository<Kiosk, UUID> {
     boolean existsByEmail(String email);
 
     List<Kiosk> findAllByPosId(UUID posId);
+
+    Optional<Kiosk> findByIdAndPosId(UUID id, UUID posId);
 }
