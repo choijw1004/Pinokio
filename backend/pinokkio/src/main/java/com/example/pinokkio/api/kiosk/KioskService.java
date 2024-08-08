@@ -17,7 +17,7 @@ import java.util.UUID;
 public class KioskService {
 
     private final KioskRepository kioskRepository;
-
+    private String kioskControllerAddress;
     /**
      * 입력받은 이메일에 해당하는 키오스크의 핵심 필드를 반환한다.
      *
@@ -57,6 +57,14 @@ public class KioskService {
             log.error("Invalid kiosk ID format: {}", kioskId, e);
             return LoginResponse.newBuilder().setMessage("Invalid kiosk ID").build();
         }
+    }
+    /**
+     * gRPC 클라이언트 서버 IP를 알아냅니다.
+     *
+     * @param clientIp 키오스크 접속 IP
+     **/
+    public void setKioskControllerAddress(String clientIp) {
+        this.kioskControllerAddress = clientIp; // 변수 초기화
     }
 
 }
