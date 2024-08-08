@@ -39,14 +39,6 @@ public class ItemController {
     private final ImageService imageService;
 
     @Operation(summary = "아이템 등록", description = "새로운 아이템을 등록")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "201", description = "CREATED",
-                    content = @Content(schema = @Schema(implementation = ItemResponse.class))),
-            @ApiResponse(responseCode = "400", description = "NOT FOUND",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
-            @ApiResponse(responseCode = "401", description = "UNAUTHORIZED",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
-    })
     @PreAuthorize("hasRole('ROLE_POS')")
     @PostMapping(value = "/pos/items", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ItemResponse> registerItem(
@@ -54,21 +46,12 @@ public class ItemController {
             @RequestPart(value = "file", required = false) MultipartFile file,
             @Parameter(description = "아이템 정보", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE))
             @RequestPart("itemRequest") @Valid ItemRequest itemRequest) {
-
         String imageURL = imageService.uploadImage(file);
         Item item = itemService.createItem(itemRequest, imageURL);
         return new ResponseEntity<>(new ItemResponse(item), HttpStatus.CREATED);
     }
 
     @Operation(summary = "아이템 목록 조회", description = "특정 포스의 모든 아이템을 조회")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "OK",
-                    content = @Content(schema = @Schema(implementation = GroupItemResponse.class))),
-            @ApiResponse(responseCode = "401", description = "UNAUTHORIZED",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
-            @ApiResponse(responseCode = "404", description = "NOT FOUND",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
-    })
     @PreAuthorize("hasAnyRole('ROLE_POS', 'ROLE_KIOSK')")
     @GetMapping("/pos/items")
     public ResponseEntity<GroupItemResponse> getAllItems() {
@@ -77,52 +60,26 @@ public class ItemController {
     }
 
     @Operation(summary = "아이템 조회", description = "특정 아이템을 조회")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "OK",
-                    content = @Content(schema = @Schema(implementation = ItemResponse.class))),
-            @ApiResponse(responseCode = "401", description = "UNAUTHORIZED",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
-            @ApiResponse(responseCode = "404", description = "NOT FOUND",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
-    })
     @PreAuthorize("hasAnyRole('ROLE_POS', 'ROLE_KIOSK')")
     @GetMapping("/pos/items/{itemId}")
     public ResponseEntity<ItemResponse> getItem(
             @Parameter(description = "아이템 ID", example = "123e4567-e89b-12d3-a456-426614174000")
-            @PathVariable String itemId) {
-        Item item = itemService.getItem(toUUID(itemId));
+            @PathVariable UUID itemId) {
+        Item item = itemService.getItem(itemId);
         return ResponseEntity.ok(new ItemResponse(item));
     }
 
     @Operation(summary = "카테고리별 아이템 목록 조회", description = "특정 카테고리의 아이템 목록을 조회")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "OK",
-                    content = @Content(schema = @Schema(implementation = GroupItemResponse.class))),
-            @ApiResponse(responseCode = "401", description = "UNAUTHORIZED",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
-            @ApiResponse(responseCode = "404", description = "NOT FOUND",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
-    })
     @PreAuthorize("hasAnyRole('ROLE_POS', 'ROLE_KIOSK')")
     @GetMapping("/pos/items/categories/{categoryId}")
     public ResponseEntity<GroupItemResponse> getItemsByCategory(
             @Parameter(description = "카테고리 ID", example = "123e4567-e89b-12d3-a456-426614174000")
-            @PathVariable String categoryId) {
-        List<Item> items = itemService.getGroupItemsByCategory(toUUID(categoryId));
+            @PathVariable UUID categoryId) {
+        List<Item> items = itemService.getGroupItemsByCategory(categoryId);
         return ResponseEntity.ok(new GroupItemResponse(items));
     }
 
     @Operation(summary = "키워드로 아이템 검색", description = "특정 포스의 키워드 접두사 기반 아이템 검색")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "OK",
-                    content = @Content(schema = @Schema(implementation = GroupItemResponse.class))),
-            @ApiResponse(responseCode = "400", description = "BAD REQUEST",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
-            @ApiResponse(responseCode = "401", description = "UNAUTHORIZED",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
-            @ApiResponse(responseCode = "404", description = "NOT FOUND",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
-    })
     @PreAuthorize("hasAnyRole('ROLE_POS', 'ROLE_KIOSK')")
     @GetMapping("/pos/items/search")
     public ResponseEntity<GroupItemResponse> getItemsByKeyword(@ModelAttribute SearchItemRequest searchItemRequest) {
@@ -131,46 +88,25 @@ public class ItemController {
     }
 
     @Operation(summary = "아이템 수정", description = "아이템 정보를 수정")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "204", description = "NO CONTENT"),
-            @ApiResponse(responseCode = "400", description = "BAD REQUEST",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
-            @ApiResponse(responseCode = "401", description = "UNAUTHORIZED",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
-            @ApiResponse(responseCode = "404", description = "NOT FOUND",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
-    })
     @PreAuthorize("hasRole('ROLE_POS')")
     @PutMapping(value = "/pos/items/{itemId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> updateItem(
             @Parameter(description = "아이템 ID", example = "123e4567-e89b-12d3-a456-426614174000")
-            @PathVariable String itemId,
-            @RequestPart(value = "file", required = false) MultipartFile file,  // MultipartFile을 따로 받음
-            @RequestPart("updateItemRequest") @Validated UpdateItemRequest updateItemRequest) {  // DTO를 받음
-
-        log.info("price={}", updateItemRequest.getPrice());
-        log.info("amount={}", updateItemRequest.getAmount());
-        log.info("file={}", file);
-
-        itemService.updateItem(toUUID(itemId), updateItemRequest, file);
+            @PathVariable UUID itemId,
+            @RequestPart(value = "file", required = false) MultipartFile file,
+            @RequestPart("updateItemRequest") @Validated UpdateItemRequest updateItemRequest) {
+        itemService.updateItem(itemId, updateItemRequest, file);
         return ResponseEntity.noContent().build();
     }
 
 
     @Operation(summary = "아이템 삭제", description = "특정 아이템을 삭제")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "204", description = "NO CONTENT"),
-            @ApiResponse(responseCode = "401", description = "UNAUTHORIZED",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
-            @ApiResponse(responseCode = "404", description = "NOT FOUND",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
-    })
     @PreAuthorize("hasRole('ROLE_POS')")
     @DeleteMapping("/pos/items/{itemId}")
     public ResponseEntity<?> deleteItem(
             @Parameter(description = "아이템 ID", example = "123e4567-e89b-12d3-a456-426614174000")
-            @PathVariable String itemId) {
-        itemService.deleteItem(toUUID(itemId));
+            @PathVariable UUID itemId) {
+        itemService.deleteItem(itemId);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
@@ -179,8 +115,8 @@ public class ItemController {
     @PutMapping("/pos/items/{itemId}/toggle/screen")
     public ResponseEntity<?> toggleScreen(
             @Parameter(description = "아이템 ID", example = "123e4567-e89b-12d3-a456-426614174000")
-            @PathVariable String itemId) {
-        itemService.toggleScreenStatus(toUUID(itemId));
+            @PathVariable UUID itemId) {
+        itemService.toggleScreenStatus(itemId);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
@@ -189,15 +125,10 @@ public class ItemController {
     @PutMapping("/pos/items/{itemId}/toggle/sold-out")
     public ResponseEntity<?> toggleSoldOut(
             @Parameter(description = "아이템 ID", example = "123e4567-e89b-12d3-a456-426614174000")
-            @PathVariable String itemId) {
-        itemService.toggleSoldOutStatus(toUUID(itemId));
+            @PathVariable UUID itemId) {
+        itemService.toggleSoldOutStatus(itemId);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
-    /**
-     * String to UUID
-     */
-    public UUID toUUID(String input) {
-        return UUID.fromString(input);
-    }
+
 }

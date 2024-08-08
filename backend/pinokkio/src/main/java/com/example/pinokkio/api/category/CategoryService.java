@@ -72,7 +72,7 @@ public class CategoryService {
     public void updateCategory(UUID categoryId, CategoryRequest categoryRequest) {
         UUID posId = userService.getCurrentPosId();
         Category category = categoryRepository.findByCategoryIdAndPosId(categoryId, posId)
-                .orElseThrow(() -> new CategoryNotFoundException(categoryId.toString()));
+                .orElseThrow(() -> new CategoryNotFoundException(categoryId));
         category.updateName(categoryRequest.getName());
         log.info("카테고리 업데이트 성공: 카테고리 ID = {}", categoryId);
     }

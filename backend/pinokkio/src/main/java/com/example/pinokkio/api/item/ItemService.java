@@ -78,7 +78,7 @@ public class ItemService {
     public Item createItem(ItemRequest itemRequest, String imageURL) {
         Pos pos = userService.getCurrentPos();
 
-        Category findCategory = categoryRepository.findById(UUID.fromString(itemRequest.getCategoryId()))
+        Category findCategory = categoryRepository.findById(itemRequest.getCategoryId())
                 .orElseThrow(() -> new CategoryNotFoundException(itemRequest.getCategoryId()));
 
         Item item = Item.builder()
@@ -103,16 +103,6 @@ public class ItemService {
 
         updateItemDetails(item, updateRequest, category);
         updateItemImage(item, file);
-    }
-
-    private Item getAndValidateItem(UUID itemId, UUID posId) {
-        return itemRepository.findItemByIdAndPosId(itemId, posId)
-                .orElseThrow(() -> new ItemNotFoundException(itemId));
-    }
-
-    private Category getCategory(UUID posId, String categoryId) {
-        return categoryRepository.findByCategoryIdAndPosId(UUID.fromString(categoryId), posId)
-                .orElseThrow(() -> new CategoryNotFoundException(categoryId));
     }
 
     private void updateItemDetails(Item item, UpdateItemRequest updateRequest, Category category) {
@@ -204,5 +194,15 @@ public class ItemService {
         if (!itemRepository.existsByItemIdAndPosId(itemId, posId)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "아이템이 해당 포스에 존재하지 않습니다.");
         }
+    }
+
+    private Item getAndValidateItem(UUID itemId, UUID posId) {
+        return itemRepository.findItemByIdAndPosId(itemId, posId)
+                .orElseThrow(() -> new ItemNotFoundException(itemId));
+    }
+
+    private Category getCategory(UUID posId, UUID categoryId) {
+        return categoryRepository.findByCategoryIdAndPosId(categoryId, posId)
+                .orElseThrow(() -> new CategoryNotFoundException(categoryId));
     }
 }
