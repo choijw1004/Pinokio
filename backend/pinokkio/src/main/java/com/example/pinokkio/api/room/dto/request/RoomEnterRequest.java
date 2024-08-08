@@ -6,6 +6,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.UUID;
+
 @Getter
 @Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED, force = true)
@@ -13,8 +15,8 @@ import lombok.Setter;
 public class RoomEnterRequest {
 
     @Schema(description = "상담실 ID", example = "123e4567-e89b-12d3-a456-426614174000")
-    private String roomId;
+    private UUID roomId;
 
     @Schema(description = "키오스크 ID", example = "123e4567-e89b-12d3-a456-426614174000")
-    private String kioskId;
+    private UUID kioskId;
 }

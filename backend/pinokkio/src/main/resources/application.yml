@@ -52,10 +52,9 @@ s3:
   host:
     name: https://${BUCKET}.s3.${REGION}.amazonaws.com/
 
-livekit:
-  api:
-    key: ${LIVEKIT_API_KEY}
-    secret: ${LIVEKIT_API_SECRET}
+openvidu:
+  url: http://localhost:4443/
+  secret: MY_SECRET
 
 encryption:
   key:

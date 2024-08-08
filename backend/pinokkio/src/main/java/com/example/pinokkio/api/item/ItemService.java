@@ -162,7 +162,7 @@ public class ItemService {
     @Transactional
     public void deleteItem(UUID itemId) {
         UUID posId = userService.getCurrentPosId();
-        EntityUtils.getEntityById(itemRepository, itemId.toString(), ItemNotFoundException::new);
+        EntityUtils.getEntityById(itemRepository, itemId, ItemNotFoundException::new);
         validateItem(itemId, posId);
         itemRepository.deleteByItemIdAndPosId(itemId, posId);
     }
@@ -170,7 +170,7 @@ public class ItemService {
     @Transactional
     public void toggleScreenStatus(UUID itemId) {
         UUID posId = userService.getCurrentPosId();
-        Item item = EntityUtils.getEntityById(itemRepository, itemId.toString(), ItemNotFoundException::new);
+        Item item = EntityUtils.getEntityById(itemRepository, itemId, ItemNotFoundException::new);
         validateItem(itemId, posId);
         item.toggleIsScreen();
     }
@@ -178,7 +178,7 @@ public class ItemService {
     @Transactional
     public void toggleSoldOutStatus(UUID itemId) {
         UUID posId = userService.getCurrentPosId();
-        Item item = EntityUtils.getEntityById(itemRepository, itemId.toString(), ItemNotFoundException::new);
+        Item item = EntityUtils.getEntityById(itemRepository, itemId, ItemNotFoundException::new);
         validateItem(itemId, posId);
         item.toggleIsSoldOut();
     }

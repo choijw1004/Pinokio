@@ -2,8 +2,8 @@ package com.example.pinokkio.api.room;
 
 import com.example.pinokkio.api.room.dto.request.RoomEnterRequest;
 import com.example.pinokkio.api.room.dto.response.RoomResponse;
-import com.example.pinokkio.exception.domain.room.RoomAccessRestrictedException;
-import io.livekit.server.AccessToken;
+import io.openvidu.java.client.OpenViduHttpException;
+import io.openvidu.java.client.OpenViduJavaClientException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -17,8 +17,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.UUID;
 
 @RestController
 @RequiredArgsConstructor
@@ -83,7 +81,7 @@ public class RoomController {
     @PreAuthorize("hasRole('ROLE_KIOSK')")
     @PostMapping("/kiosk/request-enter")
     public ResponseEntity<RoomResponse> requestEnterRoom() {
-        roomService.messageAllRooms();
+        roomService.sendRequestToAllActiveTellers();
         return ResponseEntity.noContent().build();
     }
 
@@ -95,9 +93,9 @@ public class RoomController {
     @PreAuthorize("hasRole('ROLE_KIOSK')")
     @PutMapping("/kiosk/enter")
     public ResponseEntity<RoomResponse> enterRoom(
-            @Validated @RequestBody RoomEnterRequest enterRequest) {
-        AccessToken roomToken = roomService.enterRoom(enterRequest.getRoomId(), enterRequest.getKioskId());
-        return ResponseEntity.ok(new RoomResponse(roomToken.toJwt(), enterRequest.getRoomId()));
+            @Validated @RequestBody RoomEnterRequest enterRequest) throws OpenViduJavaClientException, OpenViduHttpException {
+        String roomToken = roomService.enterRoom(enterRequest.getRoomId(), enterRequest.getKioskId());
+        return ResponseEntity.ok(new RoomResponse(enterRequest.getRoomId().toString(), roomToken));
     }
 
     @Operation(summary = "상담 퇴장", description = "Kiosk가 화상 상담에서 퇴장")
@@ -110,18 +108,6 @@ public class RoomController {
             @Parameter(description = "Room ID", example = "123e4567-e89b-12d3-a456-426614174000")
             @PathVariable String roomId) {
         roomService.leaveRoom(roomId);
-        return ResponseEntity.noContent().build();
-    }
-
-    @Operation(summary = "Webhook 수신", description = "LiveKit에서 전송된 Webhook 이벤트를 처리")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "204", description = "NO CONTENT")
-    })
-    @PostMapping("/livekit/webhook")
-    public ResponseEntity<RoomResponse> receiveWebhook(
-            @RequestHeader("Authorization") String authHeader,
-            @RequestBody String body) {
-        roomService.handleWebhook(authHeader, body);
         return ResponseEntity.noContent().build();
     }
 }

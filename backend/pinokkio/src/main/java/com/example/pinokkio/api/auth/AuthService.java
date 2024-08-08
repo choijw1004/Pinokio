@@ -124,9 +124,9 @@ public class AuthService {
      */
     @Transactional
     public void registerKiosk(SignUpKioskRequest signUpKioskRequest) {
-        String posId = signUpKioskRequest.getPosId();
+        UUID posId = signUpKioskRequest.getPosId();
         Pos findPos = posRepository
-                .findById(UUID.fromString(posId))
+                .findById(posId)
                 .orElseThrow(() -> new PosNotFoundException(posId));
 
         String randomEmail = randomEmail(findPos);
@@ -293,11 +293,10 @@ public class AuthService {
      *
      * @param code 코드
      */
-    public Code checkValidateCode(String code) {
-        UUID codeId = UUID.fromString(code);
+    public Code checkValidateCode(UUID code) {
         return codeRepository
-                .findById(codeId)
-                .orElseThrow(() -> new CodeNotFoundException(codeId.toString()));
+                .findById(code)
+                .orElseThrow(() -> new CodeNotFoundException(code.toString()));
     }
 
     /**

@@ -1,7 +1,12 @@
 package com.example.pinokkio.api.auth.dto.request;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.*;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+import java.util.UUID;
 
 @Getter
 @Setter
@@ -9,7 +14,7 @@ import lombok.*;
 @Schema(description = "POS 회원가입 요청 DTO")
 public class SignUpPosRequest {
     @Schema(description = "매장 코드", example = "UUID 타입", required = true)
-    private String code;
+    private UUID code;
 
     @Schema(description = "사용자 이메일", example = "user@ssafy.com", required = true)
     private String username;
