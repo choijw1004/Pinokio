@@ -8,6 +8,8 @@ import lombok.Getter;
 import lombok.Setter;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.UUID;
+
 @Setter
 @Getter
 @AllArgsConstructor
@@ -16,7 +18,7 @@ public class ItemRequest {
 
     @NotEmpty(message = "categoryId는 필수 값입니다.")
     @Schema(description = "카테고리 ID", example = "123e4567-e89b-12d3-a456-426614174000")
-    private String categoryId;
+    private UUID categoryId;
 
     @Positive(message = "price는 양수여야 합니다.")
     @Schema(description = "아이템 가격", example = "10000")

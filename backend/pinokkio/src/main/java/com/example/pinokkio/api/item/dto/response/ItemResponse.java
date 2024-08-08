@@ -4,18 +4,20 @@ import com.example.pinokkio.api.item.Item;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 
+import java.util.UUID;
+
 @Getter
 @Schema(description = "아이템 응답 데이터")
 public class ItemResponse {
 
     @Schema(description = "포스 ID", example = "123e4567-e89b-12d3-a456-426614174000")
-    private final String posId;
+    private final UUID posId;
 
     @Schema(description = "카테고리 ID", example = "123e4567-e89b-12d3-a456-426614174000")
-    private final String categoryId;
+    private final UUID categoryId;
 
     @Schema(description = "상품 ID", example = "123e4567-e89b-12d3-a456-426614174000")
-    private final String itemId;
+    private final UUID itemId;
 
     @Schema(description = "아이템 가격", example = "10000")
     private final int price;
@@ -39,9 +41,9 @@ public class ItemResponse {
     private final String isSoldOut;
 
     public ItemResponse(Item item) {
-        this.posId = item.getPos().getId().toString();
-        this.categoryId = item.getCategory().getId().toString();
-        this.itemId = item.getId().toString();
+        this.posId = item.getPos().getId();
+        this.categoryId = item.getCategory().getId();
+        this.itemId = item.getId();
         this.price = item.getPrice();
         this.amount = item.getAmount();
         this.name = item.getName();

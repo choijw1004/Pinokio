@@ -9,11 +9,19 @@ import java.util.UUID;
 public interface OrderRepository extends JpaRepository<Order, UUID> {
 
     /**
-     * 특정 고객이 최근 주문한 순서로 Order 리스트를 반환한다.
+     * 특정 고객이 최근에 주문한 순서로 Order 리스트를 반환합니다.
+     *
      * @param customerId 고객 식별자
-     * @return 특정 고객이 최근 주문한 Order 리스트
+     * @return 최근 주문한 Order 리스트
      */
     List<Order> findByCustomerIdOrderByCreatedDateDesc(UUID customerId);
 
+    /**
+     * 주어진 날짜 범위 내의 모든 Order 리스트를 반환합니다.
+     *
+     * @param startDate 시작 날짜
+     * @param endDate   종료 날짜
+     * @return 지정된 날짜 범위의 Order 리스트
+     */
     List<Order> findAllByCreatedDateBetween(LocalDateTime startDate, LocalDateTime endDate);
 }

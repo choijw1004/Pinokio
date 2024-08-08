@@ -61,8 +61,8 @@ public class OrderService {
                 .orElseThrow(() -> new PosNotFoundException(posId));
 
         UUID customerId = dtoList.getCustomerId() == null
-                ? toUUID(pos.getDummyCustomerUUID())
-                : toUUID(dtoList.getCustomerId());
+                ? pos.getDummyCustomerUUID()
+                : dtoList.getCustomerId();
 
         validateCustomer(customerId, posId);
 
@@ -74,8 +74,8 @@ public class OrderService {
         List<OrderItem> orderItems = new ArrayList<>();
         for (OrderItemRequest request : dtoList.getOrderItems()) {
             Item item = itemRepository
-                    .findById(toUUID(request.getItemId()))
-                    .orElseThrow(() -> new ItemNotFoundException(toUUID(request.getItemId())));
+                    .findById(request.getItemId())
+                    .orElseThrow(() -> new ItemNotFoundException(request.getItemId()));
 
             // Item 수량 체크
             if (item.getAmount() < request.getQuantity()) {
@@ -124,7 +124,7 @@ public class OrderService {
             Item item = (Item) topItem[0];
             int totalQuantity = ((Number) topItem[1]).intValue();
             return Optional.of(new TopOrderedItemResponse(
-                    item.getId().toString(),
+                    item.getId(),
                     item.getName(),
                     totalQuantity)
             );
@@ -145,7 +145,7 @@ public class OrderService {
         Customer customer = customerRepository
                 .findById(customerId)
                 .orElseThrow(() -> new CustomerNotFoundException(customerId));
-        if (!customer.getId().equals(toUUID(pos.getDummyCustomerUUID())))
+        if (!customer.getId().equals(pos.getDummyCustomerUUID()))
             throw new NotCustomerOfPosException(customerId);
     }
 
@@ -264,10 +264,6 @@ public class OrderService {
                 .count() + 1;
 
         return new PosStatisticsResponse(averageSales, posCount, currentPosRank);
-    }
-
-    public UUID toUUID(String input) {
-        return UUID.fromString(input);
     }
 
     public List<OrderDetailResponse> getOrderItemsByDuration(OrderDurationRequest request) {

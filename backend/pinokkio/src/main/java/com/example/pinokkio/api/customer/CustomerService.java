@@ -2,10 +2,12 @@ package com.example.pinokkio.api.customer;
 
 import com.example.pinokkio.api.customer.dto.response.AnalysisResult;
 import com.example.pinokkio.api.customer.sse.SSEService;
+import com.example.pinokkio.api.kiosk.Kiosk;
 import com.example.pinokkio.api.kiosk.KioskService;
 import com.example.pinokkio.api.kiosk.dto.response.KioskResponse;
 import com.example.pinokkio.api.pos.Pos;
 import com.example.pinokkio.api.pos.PosRepository;
+import com.example.pinokkio.api.user.UserService;
 import com.example.pinokkio.common.type.Gender;
 import com.example.pinokkio.config.jwt.JwtProvider;
 import com.example.pinokkio.exception.domain.customer.CustomerNotFoundException;
@@ -40,6 +42,7 @@ public class CustomerService {
     private final ObjectMapper objectMapper;
     private final JwtProvider jwtProvider;
     private final KioskService kioskService;
+    private final UserService userService;
 
     @Value("${encryption.key}")
     private String encryptionKey;
@@ -77,11 +80,9 @@ public class CustomerService {
 
     // 헤더에 토큰이 있어야 확인 가능
     private Pos getCurrenetPos() {
-        String kioskEmail = jwtProvider.getCurrentUserEmail();
-        log.info("[getCurrentPos] current Kiosk Email: {}", kioskEmail);
-        KioskResponse kioskInfo = kioskService.getMyKioskInfo(kioskEmail);
+        Kiosk kiosk = userService.getCurrentKiosk();
+        KioskResponse kioskInfo = kioskService.getKioskInfo(kiosk);
         UUID posId = UUID.fromString(kioskInfo.getPosId());
-
         return posRepository.findById(posId)
                 .orElseThrow(() -> new PosNotFoundException(posId));
     }
