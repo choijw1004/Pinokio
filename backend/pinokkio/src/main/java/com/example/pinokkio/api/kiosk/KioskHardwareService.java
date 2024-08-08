@@ -40,7 +40,7 @@ public class KioskHardwareService extends KioskServiceGrpc.KioskServiceImplBase 
     // 타임아웃 시간을 밀리초 단위로 설정합니다.
     private static final long TIMEOUT_DURATION = 5000;
     // 키오스크 컨트롤러의 주소를 설정합니다.
-    private String KIOSK_CONTROLLER_ADDRESS;
+    private String kioskControllerAddress;
     // 키오스크 컨트롤러의 포트를 설정합니다.
     private static final int KIOSK_CONTROLLER_PORT = 50052;
     // gRPC 서버의 포트를 설정합니다.
