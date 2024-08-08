@@ -113,7 +113,7 @@ function CarouselPage() {
       console.log(kioskId);
       startKiosk(kioskId);
       const connectEventSource = () => {
-        const url = 'https://172.26.176.1/api/customer/face-recognition-events';
+        const url = 'pinokkio-backend/api/customer/face-recognition-events';
         console.log('Connecting to:', url);
 
         const eventSource = new EventSource(url);
