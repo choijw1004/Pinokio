@@ -8,6 +8,9 @@ import com.example.pinokkio.api.item.Item;
 import com.example.pinokkio.api.item.ItemRepository;
 import com.example.pinokkio.api.kiosk.Kiosk;
 import com.example.pinokkio.api.kiosk.KioskRepository;
+import com.example.pinokkio.api.order.Order;
+import com.example.pinokkio.api.order.OrderRepository;
+import com.example.pinokkio.api.order.orderitem.OrderItem;
 import com.example.pinokkio.api.pos.Pos;
 import com.example.pinokkio.api.pos.PosRepository;
 import com.example.pinokkio.api.pos.code.Code;
@@ -22,7 +25,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Map;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.*;
 
 @Service
 @Transactional
@@ -30,6 +35,7 @@ import java.util.Map;
 public class InitService implements ApplicationListener<ContextRefreshedEvent> {
 
     private final PasswordEncoder passwordEncoder;
+    private final Random random = new Random();
 
     private static final Map<String, String> POS_NAME_TO_EMAIL_DOMAIN = Map.of(
             "스타벅스", "starbucks",
@@ -44,10 +50,12 @@ public class InitService implements ApplicationListener<ContextRefreshedEvent> {
     private final CustomerRepository customerRepository;
     private final TellerRepository tellerRepository;
     private final ItemRepository itemRepository;
+    private final OrderRepository orderRepository;
 
     @Override
     public void onApplicationEvent(ContextRefreshedEvent event) {
-//        makeInitData();
+        makeInitData();
+        createDummyOrders();
     }
 
     private void makeInitData() {
@@ -60,7 +68,7 @@ public class InitService implements ApplicationListener<ContextRefreshedEvent> {
         Pos starbucks = posRepository.save(Pos.builder()
                 .code(starbucksCode)
                 .email("starbucks@example.com")
-                .password(passwordEncoder.encode("스타벅스"))
+                .password(passwordEncoder.encode("1234"))
                 .build());
         Customer starbucksCustomer = customerRepository.save(Customer.builder()
                 .phoneNumber("00000000")
@@ -75,7 +83,7 @@ public class InitService implements ApplicationListener<ContextRefreshedEvent> {
         Pos tomntomsCoffee = posRepository.save(Pos.builder()
                 .code(tomntomsCoffeeCode)
                 .email("tomntoms@example.com")
-                .password(passwordEncoder.encode("탐앤탐스"))
+                .password(passwordEncoder.encode("1234"))
                 .build());
         Customer tomntomsCustomer = customerRepository.save(Customer.builder()
                 .phoneNumber("00000000")
@@ -90,7 +98,7 @@ public class InitService implements ApplicationListener<ContextRefreshedEvent> {
         Pos hollys = posRepository.save(Pos.builder()
                 .code(hollysCode)
                 .email("hollys@example.com")
-                .password(passwordEncoder.encode("할리스"))
+                .password(passwordEncoder.encode("1234"))
                 .build());
         Customer hollysCustomer = customerRepository.save(Customer.builder()
                 .phoneNumber("00000000")
@@ -215,7 +223,7 @@ public class InitService implements ApplicationListener<ContextRefreshedEvent> {
         String domain = POS_NAME_TO_EMAIL_DOMAIN.get(pos.getCode().getName());
         for (int i = 1; i <= 3; i++) {
             String email = "kiosk" + i + "@" + domain + ".com";
-            kioskRepository.save(new Kiosk(pos, email, passwordEncoder.encode(pos.getCode().getName())));
+            kioskRepository.save(new Kiosk(pos, email, passwordEncoder.encode("1234")));
         }
     }
 
@@ -223,7 +231,7 @@ public class InitService implements ApplicationListener<ContextRefreshedEvent> {
         String domain = POS_NAME_TO_EMAIL_DOMAIN.get(pos.getCode().getName());
         for (int i = 1; i <= 4; i++) {
             String email = "teller" + i + "@" + domain + ".com";
-            tellerRepository.save(new Teller(pos.getCode(), email, passwordEncoder.encode(pos.getCode().getName())));
+            tellerRepository.save(new Teller(pos.getCode(), email, passwordEncoder.encode("1234")));
         }
     }
 
@@ -307,4 +315,63 @@ public class InitService implements ApplicationListener<ContextRefreshedEvent> {
             }
         }
     }
+
+    private void createDummyOrders() {
+        LocalDate startDate = LocalDate.of(2024, 1, 1);
+        LocalDate endDate = LocalDate.now();
+
+        List<Pos> allPos = posRepository.findAll();
+        List<Customer> allCustomers = customerRepository.findAll();
+        List<Item> allItems = itemRepository.findAll();
+
+        for (LocalDate date = startDate; !date.isAfter(endDate); date = date.plusDays(1)) {
+            int ordersPerDay = 10 + random.nextInt(11); // 10 to 20 orders per day
+            for (int i = 0; i < ordersPerDay; i++) {
+                Pos pos = allPos.get(random.nextInt(allPos.size()));
+                Customer customer = allCustomers.get(random.nextInt(allCustomers.size()));
+
+                List<OrderItem> orderItems = createRandomOrderItems(pos, customer.getId(), allItems);
+                long totalPrice = orderItems.stream()
+                        .mapToLong(item -> item.getItem().getPrice() * item.getQuantity())
+                        .sum();
+
+                Order order = Order.builder()
+                        .pos(pos)
+                        .customer(customer)
+                        .items(orderItems)
+                        .totalPrice(totalPrice)
+                        .build();
+
+                // Set random time for the order
+                LocalDateTime orderDateTime = date.atTime(8 + random.nextInt(14), random.nextInt(60));
+//                order.setCreatedDate(orderDateTime);
+
+                orderRepository.save(order);
+
+                // Update order for each OrderItem
+                for (OrderItem item : orderItems) {
+                    item.updateOrder(order);
+                }
+            }
+        }
+    }
+
+    private List<OrderItem> createRandomOrderItems(Pos pos, UUID customerId, List<Item> allItems) {
+        int itemCount = 1 + random.nextInt(5); // 1 to 5 items per order
+        List<OrderItem> orderItems = new ArrayList<>();
+
+        for (int i = 0; i < itemCount; i++) {
+            Item item = allItems.stream()
+                    .filter(it -> it.getPos().equals(pos))
+                    .skip(random.nextInt((int) allItems.stream().filter(it -> it.getPos().equals(pos)).count()))
+                    .findFirst()
+                    .orElseThrow(() -> new RuntimeException("No items found for POS"));
+
+            int quantity = 1 + random.nextInt(3); // 1 to 3 quantity for each item
+            orderItems.add(new OrderItem(null, item, customerId, quantity));
+        }
+
+        return orderItems;
+    }
+
 }
