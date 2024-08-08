@@ -53,6 +53,20 @@ const Input = styled.input`
   }
 `;
 
+const SelectBox = styled.select`
+  width: 100%;
+  padding: 10px;
+  margin: 10px 0;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 16px;
+  box-sizing: border-box;
+  color: #333;
+  &:focus {
+    outline: 1px solid #7392ff;
+  }
+`;
+
 const StyledButton = styled.button`
   width: 100%;
   padding: 10px;
@@ -214,14 +228,14 @@ function Login() {
           placeholder="패스워드"
           onChange={(e) => setPassword(e.target.value)}
         />
-        <select value={usertype} onChange={handleUserType}>
+        <SelectBox value={usertype} onChange={handleUserType}>
           <option value="" disabled>
             선택하세요
           </option>
           <option value="kiosk">키오스크</option>
           <option value="pos">포스</option>
           <option value="advisor">상담원</option>
-        </select>
+        </SelectBox>
         <StyledButton type="submit">로그인</StyledButton>
       </LoginForm>
       <ButtonWrapper>
