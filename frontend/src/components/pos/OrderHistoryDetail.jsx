@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
 import Button from '../common/Button';
+import { putOrderStatus } from '../../apis/Order';
 
 const OrderDetailContainer = styled.div`
   background-color: white;
@@ -30,18 +31,18 @@ const CancelledStatus = styled.span`
   font-style: italic;
 `;
 
-function OrderHistoryDetail({ order, onCancelOrder, onClose }) {
-  const [isCancelled, setIsCancelled] = useState(order.status === 'cancelled');
+function OrderHistoryDetail({ selectedOrder }) {
+  const [isCancelled, setIsCancelled] = useState(selectedOrder.status === 'cancelled');
 
-  const handleCancelOrder = () => {
-    onCancelOrder(order.id);
+  const handleCancelOrder = async () => {
+    const res = await putOrderStatus(selectedOrder.orderId);
+    console.log(res);
     setIsCancelled(true);
   };
 
   const handleClose = (e) => {
     e.preventDefault();
     e.stopPropagation();
-    onClose();
   };
 
   return (
@@ -52,24 +53,21 @@ function OrderHistoryDetail({ order, onCancelOrder, onClose }) {
         <p>
           결제 금액:{' '}
           {isCancelled ? (
-            <CancelledText>{order.totalAmount}원</CancelledText>
+            <CancelledText>{selectedOrder.totalAmount}원</CancelledText>
           ) : (
-            `${order.totalAmount}원`
+            `${selectedOrder.totalAmount}원`
           )}
         </p>
-        <p>결제 시간: {new Date(order.orderTime).toLocaleString()}</p>
+        <p>결제 시간: {new Date(selectedOrder.orderTime).toLocaleString()}</p>
         {isCancelled && <p>취소 시간: {new Date().toLocaleString()}</p>}
-        <p>
-          결제 수단:{' '}
-          {isCancelled ? <CancelledText>{order.paymentMethod}</CancelledText> : order.paymentMethod}
-        </p>
+
         <p>승인 상태: {isCancelled ? '취소됨' : '결제완료'}</p>
         <div>
           <h3>주문 내역</h3>
-          {order.items.map((item, index) => (
+          {selectedOrder.items.map((item, index) => (
             <div key={index}>
               <p>
-                {item.name} {item.quantity}개 {item.price * item.quantity}원
+                {item.itemName} {item.quantity}개 {item.price * item.quantity}원
               </p>
             </div>
           ))}

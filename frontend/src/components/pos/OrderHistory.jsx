@@ -1,7 +1,9 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import styled from 'styled-components';
+import RangeDatePicker from './RangeDatePicker';
+import { getOrdersByRange } from '../../apis/Order';
 
 const OrderHistoryContainer = styled.div`
   display: inline-block;
@@ -40,20 +42,16 @@ const DateInput = styled.input`
   }
 `;
 
-const CustomDatePicker = ({ selected, onChange }) => (
-  <DatePicker showIcon selected={selected} onChange={onChange} customInput={<DateInput />} />
-);
-
 const OrderList = styled.div``;
 
 const OrderListEach = styled.div`
   border: 1px solid #ccc;
   height: 100px;
   padding: 10px 10px 0 10px;
-  background-color: ${({ isSelected }) => (isSelected ? '#ffd8ca' : 'white')};
-  &:hover {
+  background-color: ${(props) => (props.isSelected ? '#ffd8ca' : 'white')};
+  /* &:hover {
     background-color: #ffd8ca;
-  }
+  } */
 `;
 
 const Menu = styled.div`
@@ -66,58 +64,80 @@ const OrderStatus = styled.div`
   margin-top: 15px;
 `;
 
-function OrderHistory({ date, onDateChange, orders, onOrderSelect }) {
-  const [selectedOrderId, setSelectedOrderId] = useState(null);
+function OrderHistory({ selectedOrder, setSelectedOrder }) {
+  const [orders, setOrders] = useState(null);
+  const [dateRange, setDateRange] = useState([new Date(), new Date()]);
+  const [startDate, endDate] = dateRange;
 
-  const handleOrderClick = (order) => {
-    setSelectedOrderId(order.id);
-    onOrderSelect(order);
+  useEffect(() => {
+    // console.log('dateRange is changed');
+    getOrders();
+    // setSelectedOrder(orders[0]);
+  }, [startDate, endDate]);
+
+  const getOrders = async () => {
+    // console.log(startDate, endDate);
+    const orders_temp = await getOrdersByRange(makeDateFormat(startDate), makeDateFormat(endDate));
+    console.log('order list : ', orders_temp);
+    setOrders(orders_temp);
+
+    setSelectedOrder(orders_temp[0]);
+  };
+
+  const makeDateFormat = (date) => {
+    const year = date.getFullYear();
+    const month = ('0' + (date.getMonth() + 1)).slice(-2);
+    const day = ('0' + date.getDate()).slice(-2);
+    const dateStr = `${year}-${month}-${day}`;
+    // 어떤 날짜여도 'YYYY-DD-YY'형식으로 변환!
+    return dateStr;
   };
 
   return (
     <OrderHistoryContainer>
       <Header>결제 내역</Header>
       <div className="date-picker">
-        <CustomDatePicker selected={date} onChange={onDateChange} />
+        <RangeDatePicker setDateRange={setDateRange} />
       </div>
       <OrderList>
-        {orders.map((order) => (
-          <OrderListEach
-            key={order.id}
-            onClick={() => handleOrderClick(order)}
-            isSelected={order.id === selectedOrderId}
-          >
-            {order.status === 'cancelled' ? (
-              <>
-                <SelectPayment>
-                  <CancelledText>{order.paymentMethod}</CancelledText>
-                  <CancelledText>{order.totalAmount}원</CancelledText>
-                </SelectPayment>
-                <Menu>
-                  {order.items.map((item) => `${item.name} ${item.quantity}개`).join(', ')}{' '}
-                </Menu>
-                <OrderStatus>
-                  <div>주문번호 #{order.id}</div>
-                  <div>취소</div>
-                </OrderStatus>
-              </>
-            ) : (
-              <>
-                <SelectPayment>
-                  <div>{order.paymentMethod}</div>
-                  <div>{order.totalAmount}원</div>
-                </SelectPayment>
-                <Menu>
-                  {order.items.map((item) => `${item.name} ${item.quantity}개`).join(', ')}{' '}
-                </Menu>
-                <OrderStatus>
-                  <div>주문번호 #{order.id}</div>
-                  <div>결제완료</div>
-                </OrderStatus>
-              </>
-            )}
-          </OrderListEach>
-        ))}
+        {orders &&
+          orders.map((order) => (
+            <OrderListEach
+              key={order.orderId}
+              onClick={() => setSelectedOrder(order)}
+              isSelected={order.orderId === selectedOrder.orderId}
+            >
+              {order.status === 'cancelled' ? (
+                <>
+                  <SelectPayment>
+                    <CancelledText>{order.paymentMethod}</CancelledText>
+                    <CancelledText>{order.totalAmount}원</CancelledText>
+                  </SelectPayment>
+                  <Menu>
+                    {order.items.map((item) => `${item.name} ${item.quantity}개`).join(', ')}{' '}
+                  </Menu>
+                  <OrderStatus>
+                    <div>주문번호 #{order.orderId}</div>
+                    <div>취소</div>
+                  </OrderStatus>
+                </>
+              ) : (
+                <>
+                  <SelectPayment>
+                    <div>{order.paymentMethod}</div>
+                    <div>{order.totalAmount}원</div>
+                  </SelectPayment>
+                  <Menu>
+                    {order.items.map((item) => `${item.itemName} ${item.quantity}개`).join(', ')}{' '}
+                  </Menu>
+                  <OrderStatus>
+                    <div>주문시간 # {new Date(order.orderTime).toLocaleString()}</div>
+                    <div>결제완료</div>
+                  </OrderStatus>
+                </>
+              )}
+            </OrderListEach>
+          ))}
       </OrderList>
     </OrderHistoryContainer>
   );
