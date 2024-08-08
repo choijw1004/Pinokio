@@ -1,11 +1,11 @@
 package com.example.pinokkio.api.order;
 
-import com.example.pinokkio.api.customer.CustomerService;
 import com.example.pinokkio.api.order.dto.request.GroupOrderItemRequest;
+import com.example.pinokkio.api.order.dto.request.OrderDurationRequest;
 import com.example.pinokkio.api.order.dto.response.GroupOrderItemResponse;
+import com.example.pinokkio.api.order.dto.response.OrderDetailResponse;
 import com.example.pinokkio.api.order.dto.response.OrderItemResponse;
 import com.example.pinokkio.api.order.dto.response.TopOrderedItemResponse;
-import com.example.pinokkio.api.order.orderitem.OrderItem;
 import com.example.pinokkio.api.pos.PosService;
 import com.example.pinokkio.config.jwt.JwtProvider;
 import io.swagger.v3.oas.annotations.Operation;
@@ -20,7 +20,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -58,6 +57,14 @@ public class OrderController {
         ));
     }
 
+    @Operation(summary = "특정 기간의 주문 목록 조회", description = "특정 기간 동안의 포스의 주문 내역 상세 조회")
+    @PreAuthorize("hasRole('ROLE_POS')")
+    @GetMapping("/orders/duration")
+    public ResponseEntity<List<OrderDetailResponse>> getOrdersByDuration(
+            @ModelAttribute OrderDurationRequest orderDurationRequest) {
+        List<OrderDetailResponse> orderDetails = orderService.getOrderItemsByDuration(orderDurationRequest);
+        return ResponseEntity.ok(orderDetails);
+    }
 
     @Operation(summary = "특정 고객의 최다 주문 아이템 조회", description = "특정 고객의 최다 주문 아이템 조회")
     @PreAuthorize("hasRole('ROLE_POS')")
