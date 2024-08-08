@@ -239,6 +239,7 @@ function AdvMainPage() {
           <Toast
             message={'서비스 요청이 있습니다. 수락하시겠습니까?'}
             setAnswer={setIsAccept}
+            makeButton={true}
           ></Toast>
         )}
       </AdvBody>

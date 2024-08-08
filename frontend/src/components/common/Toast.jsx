@@ -11,17 +11,24 @@ const ToastContainer = styled.div`
   right: 20px;
   background-color: #333;
   color: white;
-  padding: 10px 20px;
+  padding: 2px 20px;
   border-radius: 5px;
   opacity: 0.9;
+  height: 30px;
 `;
 const ToastButton = styled.div`
   background-color: ${(props) => props.color};
   width: 50px;
-  border-radius: 50%;
+  border-radius: 10px;
+  display: flex;
+  justify-content: center;
 `;
 
-const Toast = ({ message, setAnswer }) => {
+Toast.defaultProps = {
+  makeButton: false,
+};
+
+function Toast({ message, setAnswer, makeButton }) {
   // useEffect(() => {
   //   const timer = setTimeout(() => {
   //     onClose();
@@ -33,14 +40,18 @@ const Toast = ({ message, setAnswer }) => {
   return (
     <ToastContainer>
       {message}
-      <ToastButton color="rgb(67, 57, 255, 0.8)" onClick={() => setAnswer('accept')}>
-        수락
-      </ToastButton>
-      <ToastButton color="rgb(236, 115, 72, 0.8)" onClick={() => setAnswer('reject')}>
-        거절
-      </ToastButton>
+      {makeButton && (
+        <>
+          <ToastButton color="rgb(67, 57, 255, 0.8)" onClick={() => setAnswer('accept')}>
+            수락
+          </ToastButton>
+          <ToastButton color="rgb(236, 115, 72, 0.8)" onClick={() => setAnswer('reject')}>
+            거절
+          </ToastButton>
+        </>
+      )}
     </ToastContainer>
   );
-};
+}
 
 export default Toast;
