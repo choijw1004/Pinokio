@@ -40,7 +40,7 @@ public class KioskHardwareService extends KioskServiceGrpc.KioskServiceImplBase 
     // 타임아웃 시간을 밀리초 단위로 설정합니다.
     private static final long TIMEOUT_DURATION = 5000;
     // 키오스크 컨트롤러의 주소를 설정합니다.
-    private String kioskControllerAddress;
+    private static final String KIOSK_CONTROLLER_ADDRESS = "70.12.114.81";
     // 키오스크 컨트롤러의 포트를 설정합니다.
     private static final int KIOSK_CONTROLLER_PORT = 50052;
     // gRPC 서버의 포트를 설정합니다.
@@ -59,12 +59,6 @@ public class KioskHardwareService extends KioskServiceGrpc.KioskServiceImplBase 
     private final SSEService sseService;
     private final FaceAnalysisService faceAnalysisService;
     private final KioskService kioskService;
-
-    private void setClientIp(ServerCall<?, ?> call) {
-        String clientIp = call.getAttributes().get(Grpc.TRANSPORT_ATTR_REMOTE_ADDR).toString();
-        clientIp = clientIp.split(":")[0];
-        this.kioskControllerAddress = clientIp; // 인스턴스 변수로 설정
-    }
 
     // gRPC 서버를 시작하는 메서드입니다. 애플리케이션 시작 시 자동으로 실행됩니다.
     @PostConstruct
