@@ -3,10 +3,12 @@ package com.example.pinokkio.api.room;
 import com.example.pinokkio.api.kiosk.Kiosk;
 import com.example.pinokkio.api.teller.Teller;
 import com.example.pinokkio.api.user.UserService;
+import com.example.pinokkio.config.jwt.JwtProvider;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
@@ -20,11 +22,11 @@ import java.util.concurrent.ConcurrentHashMap;
 @RequiredArgsConstructor
 public class WebSocketService {
 
-    private final UserService userService;
+    private final JwtProvider jwtProvider;
     private final ConcurrentHashMap<UUID, WebSocketSession> sessions = new ConcurrentHashMap<>();
 
-    public void addSession(WebSocketSession session) {
-        UUID userId = getUserId(userService.getCurrentUser());
+    public void addSession(WebSocketSession session, String token) {
+        UUID userId = jwtProvider.getUserIDFromToken(token);
         sessions.put(userId, session);
         log.info("Added WebSocket session for user ID: {}", userId);
     }

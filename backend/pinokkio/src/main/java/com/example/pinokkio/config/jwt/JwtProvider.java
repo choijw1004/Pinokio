@@ -1,9 +1,15 @@
 package com.example.pinokkio.config.jwt;
 
+import com.example.pinokkio.api.kiosk.KioskRepository;
+import com.example.pinokkio.api.pos.PosRepository;
+import com.example.pinokkio.api.teller.TellerRepository;
 import com.example.pinokkio.exception.base.AuthenticationException;
 import com.example.pinokkio.exception.base.AuthorizationException;
 import com.example.pinokkio.exception.domain.auth.ExpiredTokenException;
 import com.example.pinokkio.exception.domain.auth.TokenNotValidException;
+import com.example.pinokkio.exception.domain.kiosk.KioskNotFoundException;
+import com.example.pinokkio.exception.domain.pos.PosNotFoundException;
+import com.example.pinokkio.exception.domain.teller.TellerNotFoundException;
 import io.jsonwebtoken.*;
 import jakarta.annotation.PostConstruct;
 import jakarta.servlet.http.HttpServletRequest;
@@ -13,6 +19,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.parameters.P;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
@@ -20,12 +27,17 @@ import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.Date;
 import java.util.Optional;
+import java.util.UUID;
 
 @Component
 @RequiredArgsConstructor
 @Slf4j
 public class JwtProvider {
 
+
+    private final KioskRepository kioskRepository;
+    private final TellerRepository tellerRepository;
+    private final PosRepository posRepository;
     private final CustomUserDetailService customUserDetailService;
 
     @Value("${jwt.secret}")
@@ -109,6 +121,43 @@ public class JwtProvider {
             Role roleEnum = Role.valueOf(role);
             String newInput = roleEnum + email;
             return customUserDetailService.loadUserByUsername(newInput);
+        }
+    }
+
+    /**
+     * 액세스 토큰으로부터 객체의 ID 반환
+     */
+    public UUID getUserIDFromToken(String token) {
+        log.info("[getUserFromToken] 토큰으로부터 사용자 정보 조회 시작");
+        try {
+            // 토큰 유효성 검사
+            validateToken(token, "access");
+
+            // 토큰에서 이메일과 역할 추출
+            String email = getEmailFromToken(token);
+            String role = getRoleFromToken(token);
+
+            // UserDetails에서 사용자 정보 추출
+            Object user;
+            if (role.equals("ROLE_TELLER")) {
+                return tellerRepository.findByEmail(email)
+                        .orElseThrow(() -> new TellerNotFoundException(email)).getId();
+            } else if (role.equals("ROLE_KIOSK")) {
+                return kioskRepository.findByEmail(email)
+                        .orElseThrow(() -> new KioskNotFoundException(email)).getId();
+            } else if (role.equals("ROLE_POS")) {
+                return posRepository.findByEmail(email)
+                        .orElseThrow(() -> new PosNotFoundException(email)).getId();
+            } else {
+                throw new IllegalArgumentException("Unknown user role: " + role);
+            }
+
+        } catch (ExpiredJwtException e) {
+            log.error("[getUserIdFromToken] 토큰이 만료되었습니다.", e);
+            throw new ExpiredTokenException();
+        } catch (Exception e) {
+            log.error("[getUserIdFromToken] 토큰으로부터 사용자 정보 조회 중 오류 발생", e);
+            throw new AuthenticationException("AUTH_003", "Failed to get user from token");
         }
     }
 
