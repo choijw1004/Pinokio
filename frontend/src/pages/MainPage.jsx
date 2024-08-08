@@ -30,12 +30,13 @@ const LogoContainer = styled.div`
 
 const Links = styled.div`
   display: flex;
-  margin-top: 23px;
+  margin-top: 30px;
   gap: 30px;
 `;
 
 const Link = styled.a`
-  font-size: 16px;
+  font-size: 24px;
+  font-weight: bold;
   text-decoration: none;
   cursor: pointer;
   transition: color 0.3s ease;
@@ -155,13 +156,7 @@ function MainPage() {
   const navigate = useNavigate();
   const [maxAvailable, setMaxAvailable] = useState(1);
 
-  const goPosLogin = () => {
-    navigate('/login');
-  };
-  const goKioskLogin = () => {
-    navigate('/login');
-  };
-  const goAdvisorLogin = () => {
+  const goLogin = () => {
     navigate('/login');
   };
 
@@ -224,9 +219,7 @@ function MainPage() {
           <LOGO />
         </LogoContainer>
         <Links>
-          <Link onClick={goPosLogin}>PosLogin</Link>
-          <Link onClick={goKioskLogin}>KioskLogin</Link>
-          <Link onClick={goAdvisorLogin}>AdvisorLogin</Link>
+          <Link onClick={goLogin}>로그인</Link>
         </Links>
       </LinksContainer>
       <Carousel>
