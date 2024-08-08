@@ -52,8 +52,9 @@ const ProductManagementPage = () => {
     };
 
     fetchItems();
-  }, [userData.typeInfo.posId]);
+  }, [userData.typeInfo.posId, isProductModalOpen, isCategoryModalOpen]);
 
+  useEffect(() => {});
   const handleAddProduct = () => {
     setSelectedProduct(null);
     setIsProductModalOpen(true);
@@ -158,6 +159,7 @@ const ProductManagementPage = () => {
             onEdit={handleEditProduct}
             onDelete={handleDeleteProduct}
             onToggle={handleToggleProduct}
+            setToastMessage={setToastMessage}
           />
           {isProductModalOpen && (
             <ProductModal
