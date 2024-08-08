@@ -101,7 +101,7 @@ function CarouselPage() {
 
   const startKiosk = async (kioskId) => {
     try {
-      const response = await axios.post(`https://70.12.114.81:5001/start`, { kiosk_id: kioskId });
+      const response = await axios.post(`https://localhost:5001/start`, { kiosk_id: kioskId });
       console.log(response);
     } catch (error) {
       console.error('키오스크 컨트롤러 시작 실패:', error);
