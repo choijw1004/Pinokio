@@ -28,14 +28,16 @@ Toast.defaultProps = {
   makeButton: false,
 };
 
-function Toast({ message, setAnswer, makeButton }) {
-  // useEffect(() => {
-  //   const timer = setTimeout(() => {
-  //     onClose();
-  //   }, 3000);
+function Toast({ message, setAnswer, onClose, makeButton }) {
+  useEffect(() => {
+    if (!makeButton) {
+      const timer = setTimeout(() => {
+        onClose();
+      }, 3000);
 
-  //   return () => clearTimeout(timer);
-  // }, [onClose]);
+      return () => clearTimeout(timer);
+    }
+  }, [onClose]);
 
   return (
     <ToastContainer>
