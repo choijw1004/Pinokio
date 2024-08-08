@@ -19,7 +19,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.parameters.P;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
@@ -38,6 +37,7 @@ public class JwtProvider {
     private final KioskRepository kioskRepository;
     private final TellerRepository tellerRepository;
     private final PosRepository posRepository;
+
     private final CustomUserDetailService customUserDetailService;
 
     @Value("${jwt.secret}")
@@ -138,7 +138,6 @@ public class JwtProvider {
             String role = getRoleFromToken(token);
 
             // UserDetails에서 사용자 정보 추출
-            Object user;
             if (role.equals("ROLE_TELLER")) {
                 return tellerRepository.findByEmail(email)
                         .orElseThrow(() -> new TellerNotFoundException(email)).getId();

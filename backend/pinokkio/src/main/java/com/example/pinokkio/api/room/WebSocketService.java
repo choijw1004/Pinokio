@@ -1,14 +1,10 @@
 package com.example.pinokkio.api.room;
 
-import com.example.pinokkio.api.kiosk.Kiosk;
-import com.example.pinokkio.api.teller.Teller;
-import com.example.pinokkio.api.user.UserService;
 import com.example.pinokkio.config.jwt.JwtProvider;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
@@ -29,14 +25,6 @@ public class WebSocketService {
         UUID userId = jwtProvider.getUserIDFromToken(token);
         sessions.put(userId, session);
         log.info("Added WebSocket session for user ID: {}", userId);
-    }
-
-    private UUID getUserId(Object user) {
-        return switch (user) {
-            case Teller teller -> teller.getId();
-            case Kiosk kiosk -> kiosk.getId();
-            default -> throw new IllegalArgumentException("Unknown user type: " + user.getClass().getName());
-        };
     }
 
     public void removeSession(WebSocketSession session) {
