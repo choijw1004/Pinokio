@@ -56,7 +56,10 @@ export const rejectMeeting = async () => {
 
 export const enterRoom = async (roomId, kioskId) => {
   try {
-    const response = await axios.put('/api/meeting/kiosk/enter', { roomId, kioskId });
+    const response = await axios.put('/api/meeting/kiosk/enter', {
+      roomId: roomId,
+      kioskId: kioskId,
+    });
     return response.data;
   } catch (error) {
     console.error('enterRoom 오류', error);

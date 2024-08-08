@@ -9,6 +9,7 @@ import Cart from '../../../components/kiosk/Cart';
 import MenuModal from '../../../components/kiosk/modal/MenuModal';
 import { requestMeeting } from '../../../apis/Room';
 import useWebSocket from '../../../hooks/useWebSocket';
+import { enterRoom, leaveRoom } from '../../../apis/Room';
 
 const ElderMenuPageStyle = styled.div`
   display: flex;
@@ -91,6 +92,8 @@ function ElderMenuPage() {
   const [selectedMenu, setSelectedMenu] = useState(null);
   const [cartItems, setCartItems] = useState([]);
   const [modal, setModal] = useState(false);
+  const [openViduConnection, setOpenViduConnection] = useState(false);
+  const [roomId, setRoomId] = useState(null);
 
   const userData = useSelector((store) => store.user);
   const { sendMessage, lastMessage, isConnected, connect } = useWebSocket(userData.token);
@@ -115,6 +118,13 @@ function ElderMenuPage() {
       getCategory();
     }
   }, [isConnected]);
+
+  useEffect(() => {
+    if (lastMessage) {
+      const data = JSON.parse(lastMessage.data);
+      console.log('WebSocket 메시지 수신:', data);
+    }
+  }, [lastMessage]);
 
   const requestRoomEnter = useCallback(async () => {
     try {
@@ -167,16 +177,29 @@ function ElderMenuPage() {
     if (lastMessage) {
       try {
         const data = JSON.parse(lastMessage.data);
-        if (data.type === 'consultationAccepted') {
-          console.log('상담 요청이 수락되었습니다.');
-          console.log('수락된 상담 정보:', data);
-          // 여기에 상담 수락에 대한 추가 처리 로직을 구현할 수 있습니다.
+        if (!openViduConnection && data.type === 'roomId') {
+          console.log('상담요청 수락, roomId 수신:', data.roomId);
+          setRoomId(data.roomId);
         }
       } catch (error) {
         console.error('WebSocket 메시지 파싱 오류:', error);
       }
     }
-  }, [lastMessage]);
+  }, [lastMessage, openViduConnection]);
+
+  useEffect(() => {
+    if (roomId && userData.typeInfo.kioskId && !openViduConnection) {
+      console.log('enterRoom 호출:', roomId, userData.typeInfo.kioskId);
+      enterRoom(roomId, userData.typeInfo.kioskId)
+        .then(() => {
+          console.log('enterRoom 성공');
+          setOpenViduConnection(true);
+        })
+        .catch((error) => {
+          console.error('enterRoom 오류:', error);
+        });
+    }
+  }, [roomId, userData.typeInfo.kioskId, openViduConnection]);
 
   return (
     <ElderMenuPageStyle>
