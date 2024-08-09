@@ -1,6 +1,7 @@
 package com.example.pinokkio.api.customer;
 
 import com.example.pinokkio.api.customer.dto.response.AnalysisResult;
+import com.example.pinokkio.api.customer.dto.response.CustomerResponse;
 import com.example.pinokkio.api.customer.sse.SSEService;
 import com.example.pinokkio.api.kiosk.Kiosk;
 import com.example.pinokkio.api.kiosk.KioskService;
@@ -44,9 +45,6 @@ public class CustomerService {
     private final KioskService kioskService;
     private final UserService userService;
 
-    @Value("${encryption.key}")
-    private String encryptionKey;
-
     @Value("${redis.cache.ttl}")
     private long redisCacheTTL;
 
@@ -67,7 +65,7 @@ public class CustomerService {
      * @param customer          새롭게 저장할 고객
      * @param faceEmbeddingData 얼굴 임베딩 정보     * @return
      */
-    public Customer saveCustomer(Customer customer, byte[] faceEmbeddingData) {
+    public CustomerResponse saveCustomer(Customer customer, byte[] faceEmbeddingData) {
         customer.updateFaceEmbedding(faceEmbeddingData);
         customer.updatePos(getCurrenetPos());
 
@@ -75,7 +73,7 @@ public class CustomerService {
         Customer savedCustomer = customerRepository.save(customer);
         cacheCustomerEmbedding(savedCustomer.getId(), faceEmbeddingData);
 
-        return savedCustomer;
+        return new CustomerResponse(savedCustomer);
     }
 
     // 헤더에 토큰이 있어야 확인 가능
@@ -156,10 +154,10 @@ public class CustomerService {
                 matchedCustomer = findMatchingCustomer(allCustomers, inputVector);
             }
 
-//            sseService.sendAnalysisResult(
-//                    new AnalysisResult(age, gender, true, encryptedFaceEmbedding),
-//                    matchedCustomer
-//            );
+            sseService.sendAnalysisResult(
+                    new AnalysisResult(age, gender, true, encryptedFaceEmbedding),
+                    matchedCustomer
+            );
             return matchedCustomer;
 
         } catch (Exception e) {
@@ -303,5 +301,21 @@ public class CustomerService {
 
         // 분석 결과와 매칭된 고객 정보를 SSE를 통해 전송합니다.
         sseService.sendAnalysisResult(analysisResult, matchedCustomer);
+    }
+
+    /**
+     * 전화번호로 현재 POS 내 고객을 조회하는 메서드
+     *
+     * @param phoneNumber 전화번호 8자리
+     * @return 고객 정보
+     */
+    public CustomerResponse findCustomerByPhoneNumber(String phoneNumber) {
+        Kiosk currentKiosk = userService.getCurrentKiosk();
+        Pos pos = currentKiosk.getPos();
+
+        return customerRepository
+                .findByPosIdAndPhoneNumber(pos.getId(), phoneNumber)
+                .map(CustomerResponse::new)
+                .orElseThrow(() -> new CustomerNotFoundException(phoneNumber));
     }
 }

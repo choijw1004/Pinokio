@@ -1,7 +1,6 @@
 package com.example.pinokkio.api.kiosk;
 
 import com.example.pinokkio.api.kiosk.dto.response.KioskResponse;
-import com.example.pinokkio.api.pos.dto.response.PosResponse;
 import com.example.pinokkio.api.user.UserService;
 import com.example.pinokkio.config.jwt.JwtProvider;
 import io.swagger.v3.oas.annotations.Operation;
@@ -14,8 +13,6 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.util.UUID;
 
 @Slf4j
 @RestController

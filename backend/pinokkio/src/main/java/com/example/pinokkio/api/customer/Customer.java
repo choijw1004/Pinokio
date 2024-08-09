@@ -8,17 +8,12 @@ package com.example.pinokkio.api.customer;
 import com.example.pinokkio.api.pos.Pos;
 import com.example.pinokkio.common.BaseEntity;
 import com.example.pinokkio.common.type.Gender;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
-import lombok.*;
+import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
-import java.util.Arrays;
 import java.util.UUID;
 
 @Entity
@@ -77,10 +72,6 @@ public class Customer extends BaseEntity {
 
     public void updateFaceEmbedding(byte[] faceEmbedding) {
         this.faceEmbedding = faceEmbedding;
-    }
-
-    public void setGender(String genderString) {
-        this.gender = Gender.fromString(genderString);
     }
 
     public void updatePos(Pos pos) {
