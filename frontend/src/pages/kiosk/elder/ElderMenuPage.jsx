@@ -1,6 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
-import { Router, Route, Routes, useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import { getCategories } from '../../../apis/Category';
 import { getItemsByCategoryId } from '../../../apis/Item';

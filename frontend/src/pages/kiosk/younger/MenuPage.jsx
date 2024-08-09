@@ -1,4 +1,4 @@
-import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import styled from 'styled-components';
 import MenuCategory from '../../../components/kiosk/MenuCategory';
 import MenuMain from '../../../components/kiosk/MenuMain';
