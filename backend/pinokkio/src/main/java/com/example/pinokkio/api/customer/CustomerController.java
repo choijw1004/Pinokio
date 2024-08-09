@@ -31,10 +31,8 @@ public class CustomerController {
     @PreAuthorize("hasRole('ROLE_KIOSK')")
     public ResponseEntity<?> register(@RequestBody CustomerRegistrationRequest request) {
         log.info("Received registration request: {}", request);
-        byte[] faceEmbeddingDataBytes = Base64.getDecoder().decode(request.getFaceEmbeddingData());
-        CustomerResponse newCustomer = customerService.saveCustomer(request.getCustomer(), faceEmbeddingDataBytes);
+        CustomerResponse newCustomer = customerService.saveCustomer(request.getAnalysisResult(), request.getPhoneNumber());
         return ResponseEntity.ok(newCustomer);
-
     }
 
     @Operation(summary = "전화번호를 이용한 고객 조회", description = "전화번호로 특정 포스 내의 고객 정보를 조회")
