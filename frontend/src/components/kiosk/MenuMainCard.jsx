@@ -4,6 +4,7 @@ import coffeeImage from '../../assets/images/coffee_image_rb.png';
 
 const MMC = styled.div`
   display: flex;
+  position: relative;
   flex-direction: column;
   background: white;
   border: 1px solid #c7c7c7;
@@ -35,6 +36,13 @@ const MenuPrice = styled.div`
   font-size: 1rem;
 `;
 
+const SoldOutText = styled.text`
+  padding: 0.2rem;
+  font-size: 0.8rem;
+  color: red;
+  display: ${(props) => (props.isSoldOut === 'YES' ? 'relative' : 'none')};
+  position: absolute;
+`;
 function MenuMainCard({ menu, setSelectedMenu, setModal }) {
   useEffect(() => {}, []);
 
@@ -49,6 +57,7 @@ function MenuMainCard({ menu, setSelectedMenu, setModal }) {
 
   return (
     <MMC onClick={handleClick} isSoldOut={menu.isSoldOut}>
+      <SoldOutText isSoldOut={menu.isSoldOut}>품절</SoldOutText>
       <Image src={coffeeImage} />
       <MenuContents>
         <MenuName>{menu.name}</MenuName>
