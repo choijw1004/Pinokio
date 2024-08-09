@@ -305,4 +305,14 @@ public class OrderService {
 
         return orderDetails;
     }
+
+    /**
+     * 현재 로그인된 포스의 가장 오래된 주문일자를 반환하는 메서드
+     */
+    public LocalDate getOldestOrderDate() {
+        UUID currentPosId = userService.getCurrentPosId();
+        return orderRepository.findOldestOrderDateByPosId(currentPosId)
+                .map(LocalDateTime::toLocalDate)
+                .orElseThrow(() -> new NoSuchElementException("No orders found for the current POS"));
+    }
 }
