@@ -4,6 +4,7 @@ import com.example.pinokkio.api.customer.dto.response.AnalysisResult;
 import com.example.pinokkio.api.customer.dto.response.CustomerResponse;
 import com.example.pinokkio.api.customer.sse.SSEService;
 import com.example.pinokkio.api.kiosk.Kiosk;
+import com.example.pinokkio.api.kiosk.KioskRepository;
 import com.example.pinokkio.api.kiosk.KioskService;
 import com.example.pinokkio.api.kiosk.dto.response.KioskResponse;
 import com.example.pinokkio.api.pos.Pos;
@@ -44,6 +45,7 @@ public class CustomerService {
     private final JwtProvider jwtProvider;
     private final KioskService kioskService;
     private final UserService userService;
+    private final KioskRepository kioskRepository;
 
     @Value("${redis.cache.ttl}")
     private long redisCacheTTL;
@@ -133,14 +135,15 @@ public class CustomerService {
      * @param encryptedFaceEmbedding 암호화 상태의 얼굴 임베딩 정보
      * @return 매칭된 고객 정보
      */
-    public Customer findCustomerByFaceEmbedding(int age, String gender, String encryptedFaceEmbedding) {
+    public Customer findCustomerByFaceEmbedding(UUID kioskId, int age, String gender, String encryptedFaceEmbedding) {
         try {
             // Redis 캐시 키를 생성합니다.
             String cacheKey = "face_embedding:" + encryptedFaceEmbedding;
             redisTemplate.opsForValue().set(cacheKey, encryptedFaceEmbedding, redisCacheTTL, TimeUnit.SECONDS);
 
             RealVector inputVector = parseEmbedding(encryptedFaceEmbedding);
-            UUID posId = getCurrenetPos().getId();
+            UUID posId = kioskRepository.findPosIdById(kioskId)
+                    .orElseThrow(() -> new PosNotFoundException(kioskId));
             // 성별과 나이 범위 -> 범위 한정 탐색
             List<Customer> potentialCustomers = customerRepository.findByPosIdAndGenderAndAgeBetween(posId, Gender.valueOf(gender.toUpperCase()), age - 5, age + 5);
             Customer matchedCustomer = findMatchingCustomer(potentialCustomers, inputVector);
@@ -289,9 +292,10 @@ public class CustomerService {
     }
 
     // 얼굴 분석 결과를 바탕으로 고객을 찾거나 등록하는 메서드
-    public void findCustomer(AnalysisResult analysisResult) {
+    public void findCustomer(UUID kioskId, AnalysisResult analysisResult) {
         // 얼굴 임베딩을 사용하여 고객을 찾습니다.
         Customer matchedCustomer = findCustomerByFaceEmbedding(
+                kioskId,
                 analysisResult.getAge(),
                 analysisResult.getGender(),
                 analysisResult.getEncryptedEmbedding());
