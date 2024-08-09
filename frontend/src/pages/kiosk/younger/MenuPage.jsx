@@ -1,4 +1,4 @@
-import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import styled from 'styled-components';
 import MenuCategory from '../../../components/kiosk/MenuCategory';
 import MenuMain from '../../../components/kiosk/MenuMain';
@@ -101,10 +101,14 @@ function MenuPage() {
     if (selectedCategory && userData) {
       const menu_data = await getItemsByCategoryId(selectedCategory.id);
       console.log('received menus datas : ', menu_data);
-      menu_data.responseList.map((menu) => {
-        menu['count'] = 0;
-      });
-      setMenus(menu_data.responseList);
+      // 화면에 보여줄 데이터만 필터링 (isScreen이 YES인 경우)
+      const filteredMenus = menu_data.responseList
+        .filter((menu) => menu.isScreen === 'YES')
+        .map((menu) => {
+          menu['count'] = 0; // count 초기화
+          return menu;
+        });
+      setMenus(filteredMenus);
     }
   };
 

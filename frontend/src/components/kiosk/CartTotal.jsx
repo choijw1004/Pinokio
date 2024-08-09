@@ -47,7 +47,11 @@ function CartTotal({ cartItems, isElder }) {
 
   const goPayment = () => {
     // 결제 버튼을 누르면 다음 페이지로 이동
-    navigate('/kiosk/payment');
+    if (!isElder) {
+      navigate('/kiosk/payment');
+    } else {
+      navigate('/kiosk/elder-payment');
+    }
   };
   return (
     <CT>

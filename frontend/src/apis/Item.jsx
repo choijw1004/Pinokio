@@ -69,6 +69,7 @@ export const getItemsByCategoryId = async (categoryId) => {
 // 아이템 추가
 export const postItem = async (formData) => {
   try {
+    console.log(formData);
     const response = await axios.post('/api/pos/items', formData, {
       headers: {
         'Content-Type': 'multipart/form-data',

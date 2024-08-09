@@ -3,7 +3,14 @@ import { createCategory } from '../../apis/Category';
 import styled from 'styled-components';
 
 const Modal = styled.div`
-  ${'' /* 모달 스타일 */}
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: white;
+  padding: 20px;
+  border-radius: 5px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 `;
 
 const Input = styled.input`
@@ -25,9 +32,14 @@ const CategoryModal = ({ category, onSave, onClose }) => {
       return;
     }
     console.log(e);
-    await createCategory(name);
-    onSave({ id: category?.id, name });
-    onClose();
+
+    if (name.length <= 8) {
+      await createCategory(name);
+      onSave({ id: category?.id, name });
+      onClose();
+    } else {
+      alert('카테고리명을 8글자 이하로 설정해주세요.');
+    }
   };
 
   return (
