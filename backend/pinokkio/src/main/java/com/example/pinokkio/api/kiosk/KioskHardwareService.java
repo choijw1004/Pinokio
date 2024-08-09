@@ -42,7 +42,7 @@ public class KioskHardwareService extends KioskServiceGrpc.KioskServiceImplBase 
     // 키오스크 컨트롤러의 주소를 설정합니다.
     private static final String KIOSK_CONTROLLER_ADDRESS = "70.12.246.232";
     // 키오스크 컨트롤러의 포트를 설정합니다.
-    private static final int KIOSK_CONTROLLER_PORT = 3334;
+    private static final int KIOSK_CONTROLLER_PORT = 3333;
     // gRPC 서버의 포트를 설정합니다.
     private static final int GRPC_SERVER_PORT = 3333;
 
