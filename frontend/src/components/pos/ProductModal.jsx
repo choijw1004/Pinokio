@@ -48,8 +48,8 @@ const ProductModal = ({ categories, onClose }) => {
       price: parseInt(price),
       amount: parseInt(amount),
       detail,
-      isScreen,
-      isSoldout,
+      // isScreen,
+      // isSoldout,
     };
 
     const formData = new FormData();
@@ -62,6 +62,8 @@ const ProductModal = ({ categories, onClose }) => {
     }
 
     try {
+      console.log(itemRequest);
+      console.log(image);
       await postItem(formData);
       onClose(); // Close the modal and trigger screen update
     } catch (error) {

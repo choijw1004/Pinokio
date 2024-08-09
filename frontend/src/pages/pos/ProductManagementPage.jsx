@@ -6,7 +6,7 @@ import CategoryList from '../../components/pos/CategoryList';
 import CategoryModal from '../../components/pos/CategoryModal';
 import Button from '../../components/common/Button';
 import Toast from '../../components/common/Toast';
-import { getItems, itemScreenToggle, itemSoldOutToggle, getItemsByKeyword } from '../../apis/Item'; // Import the API functions
+import { getItems, getItemsByKeyword } from '../../apis/Item'; // Import the API functions
 import { getCategories } from '../../apis/Category'; // Import the API function
 import { useSelector } from 'react-redux'; // Assuming you use Redux to get posId
 
@@ -59,21 +59,6 @@ const ProductManagementPage = () => {
   const handleEditProduct = (product) => {
     setSelectedProduct(product);
     setIsProductModalOpen(true);
-  };
-
-  const handleToggleProduct = async (product) => {
-    try {
-      if (product.hasOwnProperty('isScreen')) {
-        await itemScreenToggle(product.itemId);
-      }
-      if (product.hasOwnProperty('isSoldOut')) {
-        await itemSoldOutToggle(product.itemId);
-      }
-      setProducts(products.map((p) => (p.itemId === product.itemId ? product : p)));
-      setToastMessage(`${product.name} 상품 정보가 업데이트되었습니다.`);
-    } catch (error) {
-      setToastMessage('상품 정보를 업데이트하는 데 실패했습니다.');
-    }
   };
 
   const handleDeleteProduct = (productId) => {
@@ -178,8 +163,8 @@ const ProductManagementPage = () => {
             products={filteredProducts}
             onEdit={handleEditProduct}
             onDelete={handleDeleteProduct}
-            onToggle={handleToggleProduct}
             setToastMessage={setToastMessage}
+            setProducts={setProducts}
           />
           {isProductModalOpen && (
             <ProductModal
