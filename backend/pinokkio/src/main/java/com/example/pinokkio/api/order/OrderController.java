@@ -18,8 +18,10 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -109,4 +111,15 @@ public class OrderController {
     }
 
 
+    @Operation(summary = "가장 오래된 주문일자 조회", description = "현재 로그인된 포스의 가장 오래된 주문날짜를 반환합니다.")
+    @PreAuthorize("hasRole('ROLE_POS')")
+    @GetMapping("/orders/oldest-date")
+    public ResponseEntity<LocalDate> getOldestOrderDate() {
+        try {
+            LocalDate oldestDate = orderService.getOldestOrderDate();
+            return ResponseEntity.ok(oldestDate);
+        } catch (NoSuchElementException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
 }

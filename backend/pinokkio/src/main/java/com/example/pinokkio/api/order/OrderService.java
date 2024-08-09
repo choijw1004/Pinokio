@@ -12,10 +12,12 @@ import com.example.pinokkio.api.order.dto.response.OrderItemDetail;
 import com.example.pinokkio.api.order.dto.response.TopOrderedItemResponse;
 import com.example.pinokkio.api.order.orderitem.OrderItem;
 import com.example.pinokkio.api.order.orderitem.OrderItemRepository;
+import com.example.pinokkio.api.order.statistics.SalesStatisticsService;
 import com.example.pinokkio.api.pos.Pos;
 import com.example.pinokkio.api.pos.PosRepository;
 import com.example.pinokkio.api.pos.dto.response.PosStatisticsResponse;
 import com.example.pinokkio.api.user.UserService;
+import com.example.pinokkio.common.type.OrderStatus;
 import com.example.pinokkio.config.RedisUtil;
 import com.example.pinokkio.exception.domain.customer.CustomerNotFoundException;
 import com.example.pinokkio.exception.domain.customer.NotCustomerOfPosException;
@@ -49,6 +51,7 @@ public class OrderService {
     private final ItemRepository itemRepository;
     private final RedisUtil redisUtil;
     private final UserService userService;
+    private final SalesStatisticsService salesStatisticsService;
 
     /**
      * 주문 요청정보를 기반으로 주문을 생성한다.
@@ -108,6 +111,7 @@ public class OrderService {
         });
 
         // Order 저장
+        salesStatisticsService.updateSalesStatisticsOnOrderChange(order, order.getTotalPrice());
         return orderRepository.save(order);
     }
 
@@ -178,6 +182,9 @@ public class OrderService {
             throw new OrderNotFoundException(posId);
 
         findOrder.toggleOrderStatus();
+        if (findOrder.getStatus() == OrderStatus.CANCELLED) {
+            salesStatisticsService.updateSalesStatisticsOnOrderChange(findOrder, -findOrder.getTotalPrice());
+        }
     }
 
     /**
@@ -297,5 +304,15 @@ public class OrderService {
         log.info("[getOrderItemsByDuration] 기간별 주문 조회 완료. 조회된 주문 수: {}", orderDetails.size());
 
         return orderDetails;
+    }
+
+    /**
+     * 현재 로그인된 포스의 가장 오래된 주문일자를 반환하는 메서드
+     */
+    public LocalDate getOldestOrderDate() {
+        UUID currentPosId = userService.getCurrentPosId();
+        return orderRepository.findOldestOrderDateByPosId(currentPosId)
+                .map(LocalDateTime::toLocalDate)
+                .orElseThrow(() -> new NoSuchElementException("No orders found for the current POS"));
     }
 }
