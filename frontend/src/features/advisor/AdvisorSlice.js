@@ -1,8 +1,5 @@
 import { createSlice } from '@reduxjs/toolkit';
 
-// 최대 연결 가능한 고객 수
-const MAX_CONNECTIONS = 3;
-
 const createInitialKioskState = (id) => ({ id, status: 'waiting', kioskId: null });
 
 const advisorSlice = createSlice({
@@ -17,6 +14,7 @@ const advisorSlice = createSlice({
       createInitialKioskState(2),
       createInitialKioskState(3),
     ], // 연결된 키오스크 정보 배열
+    maxConnections: 3, // 최대 연결 가능한 고객 수
   },
   reducers: {
     setAvailability: (state, action) => {
@@ -30,11 +28,11 @@ const advisorSlice = createSlice({
     connectKiosk: (state, action) => {
       const { id, kioskId } = action.payload;
       const availableSlot = state.connectedKiosks.find((kiosk) => kiosk.status === 'waiting');
-      if (availableSlot && state.currentConnections < MAX_CONNECTIONS) {
+      if (availableSlot && state.currentConnections < state.maxConnections) {
         availableSlot.kioskId = kioskId;
         availableSlot.status = 'connected';
         state.currentConnections += 1;
-        if (state.currentConnections === MAX_CONNECTIONS) {
+        if (state.currentConnections === state.maxConnections) {
           state.isAvailable = false;
         }
       }
@@ -46,7 +44,7 @@ const advisorSlice = createSlice({
         connectedKiosk.status = 'waiting';
         connectedKiosk.kioskId = null;
         state.currentConnections -= 1;
-        if (state.currentConnections < MAX_CONNECTIONS) {
+        if (state.currentConnections < state.maxConnections) {
           state.isAvailable = true;
         }
       }

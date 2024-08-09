@@ -66,10 +66,6 @@ const HeaderRight = styled.div`
   align-items: center;
 `;
 
-const MaxButtonContainer = styled.div`
-  display: flex;
-`;
-
 const ToggleContainer = styled.div`
   display: flex;
 `;
@@ -77,17 +73,17 @@ const ToggleContainer = styled.div`
 const AdvMainPage = () => {
   const advisorData = useSelector((state) => state.advisor);
   const userData = useSelector((state) => state.user);
-  const { isAvailable, currentConnections, roomToken, roomId, connectedKiosks } = advisorData;
-  const [maxAvailable, setMaxAvailable] = useState(3);
+  const { isAvailable, currentConnections, roomToken, roomId, connectedKiosks, maxConnections } =
+    advisorData;
+  const dispatch = useDispatch();
   const [showModal, setShowModal] = useState(false);
   const [consultationRequest, setConsultationRequest] = useState(null);
-  const [publisher, setPublisher] = useState(null);
-  const [subscribers, setSubscribers] = useState([]);
-  const dispatch = useDispatch();
   const { sendMessage, lastMessage, isConnected, connect } = useWebSocket(userData.token);
 
   const [OV, setOV] = useState(null);
   const [session, setSession] = useState(null);
+  const [publisher, setPublisher] = useState(null);
+  const [subscribers, setSubscribers] = useState([]);
   const [isInitialized, setIsInitialized] = useState(false);
 
   const initializeAdvisor = useCallback(async () => {
@@ -103,6 +99,16 @@ const AdvMainPage = () => {
     }
   }, [dispatch, connect, isConnected]);
 
+  const handleCustomerDisconnect = useCallback(
+    (kioskId) => {
+      dispatch(disconnectKiosk(kioskId));
+      setSubscribers((prevSubscribers) =>
+        prevSubscribers.filter((sub) => sub.stream.connection.connectionId !== kioskId)
+      );
+    },
+    [dispatch]
+  );
+
   const initializeSession = useCallback(
     async (roomId, token) => {
       const ov = new OpenVidu();
@@ -114,12 +120,13 @@ const AdvMainPage = () => {
       session.on('streamCreated', (event) => {
         const subscriber = session.subscribe(event.stream, undefined);
         setSubscribers((prevSubscribers) => [...prevSubscribers, subscriber]);
+        const kioskId = event.stream.connection.connectionId;
+        dispatch(connectKiosk({ id: kioskId, kioskId: kioskId }));
       });
 
       session.on('streamDestroyed', (event) => {
-        setSubscribers((prevSubscribers) =>
-          prevSubscribers.filter((sub) => sub !== event.stream.streamManager)
-        );
+        const kioskId = event.stream.connection.connectionId;
+        handleCustomerDisconnect(kioskId);
       });
 
       try {
@@ -144,8 +151,20 @@ const AdvMainPage = () => {
         console.error('세션 연결 또는 스트림 발행 오류:', error);
       }
     },
-    [userData.email]
+    [userData.email, dispatch, handleCustomerDisconnect]
   );
+
+  useEffect(() => {
+    setSubscribers((prevSubscribers) => {
+      const newSubscribers = prevSubscribers.filter((sub) => {
+        const kioskId = sub.stream.connection.connectionId;
+        return connectedKiosks.some(
+          (kiosk) => kiosk.kioskId === kioskId && kiosk.status === 'connected'
+        );
+      });
+      return newSubscribers;
+    });
+  }, [connectedKiosks]);
 
   useEffect(() => {
     if (userData.token && !isConnected) {
@@ -175,7 +194,8 @@ const AdvMainPage = () => {
 
   const handleConsultationRequest = (data) => {
     console.log('상담 요청 받음:', data);
-    if (isAvailable && currentConnections < maxAvailable) {
+    console.log(isAvailable, currentConnections, maxConnections);
+    if (isAvailable && currentConnections < maxConnections) {
       setConsultationRequest(data);
       setShowModal(true);
     }
@@ -187,6 +207,7 @@ const AdvMainPage = () => {
       dispatch(
         connectKiosk({ id: consultationRequest.kioskId, kioskId: consultationRequest.kioskId })
       );
+      console.log(connectedKiosks);
       setShowModal(false);
       setConsultationRequest(null);
     } catch (error) {
@@ -204,23 +225,11 @@ const AdvMainPage = () => {
     setConsultationRequest(null);
   };
 
-  const handleCustomerDisconnect = (kioskId) => {
-    dispatch(disconnectKiosk(kioskId));
-  };
-
   return (
     <AdvMainPageWrapper>
       <AdvHeader>
         <Logo size={'2.5rem'} />
         <HeaderRight>
-          <MaxButtonContainer>
-            <UpDownButtons
-              value={maxAvailable}
-              setValue={setMaxAvailable}
-              color={'#7392ff'}
-              size={'2rem'}
-            />
-          </MaxButtonContainer>
           <ToggleContainer>
             <Toggle
               value={!isAvailable}
@@ -228,7 +237,7 @@ const AdvMainPage = () => {
               size={'5rem'}
             />
             <p>
-              연결 거절모드 토글 (현재 연결: {currentConnections}/{maxAvailable})
+              연결 거절모드 토글 (현재 연결: {currentConnections}/{maxConnections})
             </p>
           </ToggleContainer>
         </HeaderRight>
