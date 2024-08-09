@@ -5,8 +5,7 @@ import KioskMain from '../assets/images/main/kioskmain.png';
 import KioskSenior from '../assets/images/main/kiosksenior.png';
 import PosMain from '../assets/images/main/posmain.png';
 import LOGO from '../components/common/Logo';
-import Toggle from '../components/common/Toggle';
-import UpDownButtons from '../components/common/UpDownButtons';
+import CustomKeyboard from '../components/common/Keyboard/CustomKeyboard';
 
 const MainContainer = styled.div`
   display: flex;
@@ -152,9 +151,22 @@ const DiscriptionBox = styled.div`
   }
 `;
 
+const KeyboardContainer = styled.div`
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  transition: transform 0.3s ease-in-out;
+  transform: translateY(${({ $showKeyboard }) => ($showKeyboard ? '0' : '100%')});
+  z-index: 1000;
+`;
+
 function MainPage() {
   const navigate = useNavigate();
   const [maxAvailable, setMaxAvailable] = useState(1);
+  const [text, setText] = useState('');
+  const [showKeyboard, setShowKeyboard] = useState(false); // 상태 추가
 
   const goLogin = () => {
     navigate('/login');
@@ -212,8 +224,22 @@ function MainPage() {
     }
   };
 
+  // input에 포커스가 되었을 때 키보드를 보이도록 설정
+  const handleInputFocus = () => setShowKeyboard(true);
+  const handleInputBlur = () => setShowKeyboard(false);
+
   return (
     <MainContainer>
+      <input
+        value={text}
+        onChange={(e) => setText(e.target.value)}
+        onFocus={handleInputFocus} // 포커스 시 키보드 표시
+        onBlur={handleInputBlur} // 포커스 잃을 시 키보드 숨김
+        placeholder="키보드테스트"
+      />
+      <KeyboardContainer $showKeyboard={showKeyboard}>
+        <CustomKeyboard text={text} setText={setText} />
+      </KeyboardContainer>
       <LinksContainer>
         <LogoContainer>
           <LOGO />
