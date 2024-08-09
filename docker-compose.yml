@@ -8,8 +8,8 @@ services:
       dockerfile: Dockerfile
     ports:
       - "8080:8080"
-      - "5001:5001"
-      - "5002:5002"
+      - "3333:3333"
+      - "3334:3334"
         
     environment:
       - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/pinokkio?serverTimezone=Asia/Seoul
