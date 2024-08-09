@@ -21,6 +21,7 @@ import java.util.UUID;
 @Getter
 @AllArgsConstructor
 @NoArgsConstructor
+@Builder
 public class Customer extends BaseEntity {
 
     @Id

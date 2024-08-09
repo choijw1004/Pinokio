@@ -61,33 +61,10 @@ public class CustomerService {
 
     /**
      * 얼굴 임베딩 정보와 함께 고객을 저장한다.
-     *
-     * @param customer          새롭게 저장할 고객
-     * @param faceEmbeddingData 얼굴 임베딩 정보     * @return
      */
-    public CustomerResponse saveCustomer(Customer customer, byte[] faceEmbeddingData) {
-        customer.updateFaceEmbedding(faceEmbeddingData);
-        customer.updatePos(getCurrenetPos());
+    public CustomerResponse saveCustomer(AnalysisResult analysisResult, String phoneNumber) {
+        byte[] faceEmbeddingData = Base64.getDecoder().decode(analysisResult.getEncryptedEmbedding());
 
-        log.info("customer 등록: " + customer);
-        Customer savedCustomer = customerRepository.save(customer);
-        cacheCustomerEmbedding(savedCustomer.getId(), faceEmbeddingData);
-
-        return new CustomerResponse(savedCustomer);
-    }
-
-    // 헤더에 토큰이 있어야 확인 가능
-    private Pos getCurrenetPos() {
-        Kiosk kiosk = userService.getCurrentKiosk();
-        KioskResponse kioskInfo = kioskService.getKioskInfo(kiosk);
-        UUID posId = UUID.fromString(kioskInfo.getPosId());
-        return posRepository.findById(posId)
-                .orElseThrow(() -> new PosNotFoundException(posId));
-    }
-
-    // 새로운 고객을 등록하는 메서드
-    // TODO 추후 수정 필
-    private void getFaceEmbedding(AnalysisResult analysisResult) {
         String cacheKey = "analysis_result:" + analysisResult.getEncryptedEmbedding();
 
         AnalysisResult cachedResult;
@@ -99,23 +76,43 @@ public class CustomerService {
                 String jsonString = objectMapper.writeValueAsString(cachedResult);
                 redisTemplate.opsForValue().set(cacheKey, jsonString, 30, TimeUnit.MINUTES);
             } catch (JsonProcessingException e) {
-                return;
+                throw new RuntimeException(e);
             }
         } else {
             try {
                 cachedResult = objectMapper.readValue(cachedString, AnalysisResult.class);
             } catch (JsonProcessingException e) {
-                return;
+                throw new RuntimeException(e);
             }
         }
 
-//        Customer newCustomer = new Customer(cachedResult.getGender(), cachedResult.getAge());
         byte[] embeddingData = Base64.getDecoder().decode(cachedResult.getEncryptedEmbedding());
 
-        CompletableFuture.runAsync(() -> {
-//            Customer savedCustomer = saveCustomer(newCustomer, embeddingData);
-//            sseService.sendAnalysisResult(cachedResult, savedCustomer);
-        });
+        Pos currenetPos = getCurrenetPos();
+        Customer customer = Customer.builder()
+                .pos(currenetPos)
+                .gender(Gender.fromString(cachedResult.getGender()))
+                .phoneNumber(phoneNumber)
+                .age(cachedResult.getAge())
+                .faceEmbedding(embeddingData)
+                .build();
+
+        log.info("customer 등록: " + customer);
+        Customer savedCustomer = customerRepository.save(customer);
+        cacheCustomerEmbedding(savedCustomer.getId(), faceEmbeddingData);
+
+        sseService.sendAnalysisResult(cachedResult, savedCustomer);
+
+        return new CustomerResponse(savedCustomer);
+    }
+
+    // 헤더에 토큰이 있어야 확인 가능
+    private Pos getCurrenetPos() {
+        Kiosk kiosk = userService.getCurrentKiosk();
+        KioskResponse kioskInfo = kioskService.getKioskInfo(kiosk);
+        UUID posId = UUID.fromString(kioskInfo.getPosId());
+        return posRepository.findById(posId)
+                .orElseThrow(() -> new PosNotFoundException(posId));
     }
 
     /**

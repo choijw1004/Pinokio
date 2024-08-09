@@ -81,8 +81,8 @@ public class FaceAnalysisService {
                                 encodedEmbedding
                         );
 
-                        log.info("Analysis result processed: Age - {}, Gender - {}, Is Face - {}",
-                                result.getAge(), result.getGender(), result.isFace());
+                        log.info("Analysis result processed: Age - {}, Gender - {}, Is Face - {}, faceEmbedding - {}",
+                                result.getAge(), result.getGender(), result.isFace(), result.getEncryptedEmbedding());
 
                         if (result.isFace()) {
                             log.debug("Face detected. Caching analysis result and proceeding with customer search.");
