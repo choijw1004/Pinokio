@@ -7,10 +7,11 @@ import ElderMenuCategory from '../../../components/kiosk/ElderMenuCategory';
 import MenuMain from '../../../components/kiosk/MenuMain';
 import Cart from '../../../components/kiosk/Cart';
 import MenuModal from '../../../components/kiosk/modal/MenuModal';
-import { requestMeeting, enterRoom } from '../../../apis/Room';
+import { requestMeeting, enterRoom, leaveRoom } from '../../../apis/Room';
 import useWebSocket from '../../../hooks/useWebSocket';
 import { OpenVidu } from 'openvidu-browser';
-import OpenViduVideoComponent from '../../../components/advisor/OpenViduComponent';
+import OpenViduVideoComponent from '../../../components/kiosk/OpenViduComponent';
+import Button from '../../../components/common/Button';
 
 const ElderMenuPageStyle = styled.div`
   display: flex;
@@ -246,6 +247,18 @@ function ElderMenuPage() {
     [userData.typeInfo.kioskId]
   );
 
+  const handleLeaveRoom = async () => {
+    try {
+      setRoomId(null);
+      session.disconnect();
+      leaveRoom(roomId);
+      setOpenViduConnection(false);
+      console.log('상담 종료 성공');
+    } catch (error) {
+      console.error('상담 종료 오류:', error);
+    }
+  };
+
   return (
     <ElderMenuPageStyle>
       <KioskHeader>
@@ -256,7 +269,7 @@ function ElderMenuPage() {
           <ScreenStyle>
             {subscriber && <OpenViduVideoComponent streamManager={subscriber} />}
           </ScreenStyle>
-          <p>{userData.typeInfo.kioskId}</p>
+          {session && <Button onClick={handleLeaveRoom}>상담 종료</Button>}
         </KioskRightHeader>
       </KioskHeader>
       <KioskBody>

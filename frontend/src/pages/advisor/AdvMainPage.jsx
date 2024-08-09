@@ -9,7 +9,7 @@ import CustomerWaiting from '../../components/advisor/CustomerWaiting';
 import Toggle from '../../components/common/Toggle';
 import UpDownButtons from '../../components/common/UpDownButtons';
 import useWebSocket from '../../hooks/useWebSocket';
-import { makeMeetingRoom, acceptMeeting, deleteMeetingRoom } from '../../apis/Room';
+import { makeMeetingRoom, acceptMeeting, deleteMeetingRoom, rejectMeeting } from '../../apis/Room';
 import {
   setAvailability,
   setRoomInfo,
@@ -78,7 +78,7 @@ const AdvMainPage = () => {
   const advisorData = useSelector((state) => state.advisor);
   const userData = useSelector((state) => state.user);
   const { isAvailable, currentConnections, roomToken, roomId, connectedKiosks } = advisorData;
-  const [maxAvailable, setMaxAvailable] = useState(1);
+  const [maxAvailable, setMaxAvailable] = useState(3);
   const [showModal, setShowModal] = useState(false);
   const [consultationRequest, setConsultationRequest] = useState(null);
   const [publisher, setPublisher] = useState(null);
@@ -194,7 +194,12 @@ const AdvMainPage = () => {
     }
   };
 
-  const handleRejectMeeting = () => {
+  const handleRejectMeeting = async () => {
+    try {
+      await rejectMeeting();
+    } catch (error) {
+      console.error('상담 거절 오류:', error);
+    }
     setShowModal(false);
     setConsultationRequest(null);
   };
@@ -218,7 +223,7 @@ const AdvMainPage = () => {
           </MaxButtonContainer>
           <ToggleContainer>
             <Toggle
-              value={isAvailable}
+              value={!isAvailable}
               setValue={(value) => dispatch(setAvailability(value))}
               size={'5rem'}
             />
