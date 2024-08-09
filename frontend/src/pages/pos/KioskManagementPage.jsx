@@ -3,14 +3,17 @@ import Modal from 'react-modal';
 import styled from 'styled-components';
 import { postRegisterKiosk } from '../../apis/Auth'; // API 함수 import
 import { getKiosks, deleteKiosk } from '../../apis/Pos';
+import Navbar from '../../components/pos/Navbar';
 
-const Container = styled.div`
-  text-align: center;
-  padding: 20px;
+const KioskManagementPageStyle = styled.div`
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 `;
 
 const Table = styled.table`
-  width: 80%;
+  width: 60%;
   margin: 20px auto;
   border-collapse: collapse;
   text-align: left;
@@ -54,7 +57,7 @@ const ModalContent = styled.div`
   flex-direction: column;
   align-items: center;
   padding: 20px;
-
+  font-family: 'CafeOhsquareAir';
   input {
     margin: 10px 0;
     padding: 10px;
@@ -63,7 +66,27 @@ const ModalContent = styled.div`
   }
 `;
 
+const modalStyles = {
+  content: {
+    top: '50%',
+    left: '50%',
+    right: 'auto',
+    bottom: 'auto',
+    marginRight: '-50%',
+    transform: 'translate(-50%, -50%)',
+  },
+  overlay: {
+    position: 'fixed',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+};
+
 const KioskManagementPage = () => {
+  const [isNavbarOpen, setIsNavbarOpen] = useState(false);
   const [kiosks, setKiosks] = useState([]);
   const [modalIsOpen, setModalIsOpen] = useState(false);
   const [editingKiosk, setEditingKiosk] = useState(null);
@@ -99,7 +122,7 @@ const KioskManagementPage = () => {
 
   const handleAddSubmit = async () => {
     try {
-      const response = await postRegisterKiosk(newKiosk.code);
+      const response = await postRegisterKiosk();
       setKiosks([...kiosks, response]);
       await fetchKiosks(); // Fetch the updated kiosks list after adding a new kiosk
       closeModal();
@@ -122,8 +145,8 @@ const KioskManagementPage = () => {
   };
 
   return (
-    <Container>
-      <h1>키오스크 관리</h1>
+    <KioskManagementPageStyle>
+      <Navbar isOpen={isNavbarOpen} toggleNavbar={() => setIsNavbarOpen(!isNavbarOpen)} />
       <Table>
         <thead>
           <TableRow>
@@ -148,18 +171,21 @@ const KioskManagementPage = () => {
         </tbody>
       </Table>
       <AddButton onClick={() => openModal()}>+</AddButton>
-      <Modal isOpen={modalIsOpen} onRequestClose={closeModal} contentLabel="Edit Kiosk">
+      <Modal
+        isOpen={modalIsOpen}
+        onRequestClose={closeModal}
+        contentLabel="Edit Kiosk"
+        style={modalStyles}
+      >
         <ModalContent>
-          <>
-            <h2>키오스크 추가</h2>
-
+          <h2>키오스크를 추가하시겠습니까?</h2>
+          <div style={{ display: 'flex' }}>
             <ActionButton onClick={handleAddSubmit}>추가</ActionButton>
-          </>
-
-          <ActionButton onClick={closeModal}>취소</ActionButton>
+            <ActionButton onClick={closeModal}>취소</ActionButton>
+          </div>
         </ModalContent>
       </Modal>
-    </Container>
+    </KioskManagementPageStyle>
   );
 };
 

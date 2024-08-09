@@ -17,11 +17,7 @@ export const getOrdersByRange = async (startDate, endDate) => {
 
 export const putOrderStatus = async (orderId) => {
   try {
-    const response = await axios.put(`/api/orders/${orderId}/status`, {
-      params: {
-        orderId: orderId,
-      },
-    });
+    const response = await axios.put(`/api/orders/${orderId}/status`);
     return response.data;
   } catch (error) {
     console.error('change order status error', error);

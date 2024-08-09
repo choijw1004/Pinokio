@@ -99,22 +99,23 @@ function ElderMenuPage() {
 
   const [modal, setModal] = useState(false);
 
-  const isFirstRender = useRef(true);
+  // const isFirstRender = useRef(true);
 
   useEffect(() => {
-    if (isFirstRender.current) {
-      console.log('first rendering');
-      console.log(userData.typeInfo.kioskId);
-      requestRoomEnter();
-      getCategory();
-      isFirstRender.current = false;
-    }
+    // if (isFirstRender.current) {
+    //   console.log('first rendering');
+    //   console.log(userData.typeInfo.kioskId);
+    //   requestRoomEnter();
+    //   getCategory();
+    //   isFirstRender.current = false;
+    // }
+    getCategory();
   }, []);
 
-  const requestRoomEnter = async () => {
-    const response = await requestMeeting();
-    console.log(response);
-  };
+  // const requestRoomEnter = async () => {
+  //   const response = await requestMeeting();
+  //   console.log(response);
+  // };
 
   const getCategory = async () => {
     /* axios를 이용하여 category를 가져온다. */
@@ -147,7 +148,7 @@ function ElderMenuPage() {
 
   const getMenu = async () => {
     if (selectedCategory && userData) {
-      const menu_data = await getItemsByCategoryId(userData.typeInfo.posId, selectedCategory.id);
+      const menu_data = await getItemsByCategoryId(selectedCategory.id);
       console.log('received menus datas : ', menu_data);
       menu_data.responseList.map((menu) => {
         menu['count'] = 0;

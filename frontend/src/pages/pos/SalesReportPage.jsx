@@ -6,14 +6,15 @@ import { Chart, registerables } from 'chart.js';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import { ko } from 'date-fns/locale';
+import Navbar from '../../components/pos/Navbar';
 
 Chart.register(...registerables);
 
 const MainOuter = styled.div`
   display: flex;
-  justify-content: center;
-  padding: 20px;
-  background-color: #f4f4f9;
+  flex-direction: column;
+  width: 100%;
+  align-items: center;
   min-height: 100vh;
 `;
 
@@ -145,6 +146,7 @@ const Charts = styled.div`
 `;
 
 function SalesReportPage() {
+  const [isNavbarOpen, setIsNavbarOpen] = useState(false);
   const [startDate, setStartDate] = useState(new Date());
   const [endDate, setEndDate] = useState(new Date());
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
@@ -228,6 +230,7 @@ function SalesReportPage() {
 
   return (
     <MainOuter>
+      <Navbar isOpen={isNavbarOpen} toggleNavbar={() => setIsNavbarOpen(!isNavbarOpen)} />
       <Main>
         <Header onClick={handleTest}>매출 리포트</Header>
         <DateNavBar>

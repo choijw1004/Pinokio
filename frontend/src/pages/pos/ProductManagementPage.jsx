@@ -9,6 +9,11 @@ import Toast from '../../components/common/Toast';
 import { getItems, itemScreenToggle, itemSoldOutToggle, getItemsByKeyword } from '../../apis/Item'; // Import the API functions
 import { getCategories } from '../../apis/Category'; // Import the API function
 import { useSelector } from 'react-redux'; // Assuming you use Redux to get posId
+import Navbar from '../../components/pos/Navbar';
+
+const ProductManagementPageStyle = styled.div`
+  width: 100%;
+`;
 
 const TabContainer = styled.div`
   display: flex;
@@ -23,6 +28,7 @@ const Tab = styled.div`
 `;
 
 const ProductManagementPage = () => {
+  const [isNavbarOpen, setIsNavbarOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('상품');
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
@@ -141,7 +147,9 @@ const ProductManagementPage = () => {
       : products.filter((product) => product.categoryId === selectedCategoryFilter);
 
   return (
-    <div>
+    <ProductManagementPageStyle>
+      <Navbar isOpen={isNavbarOpen} toggleNavbar={() => setIsNavbarOpen(!isNavbarOpen)} />
+
       <TabContainer>
         <Tab isActive={activeTab === '상품'} onClick={() => setActiveTab('상품')}>
           상품
@@ -150,7 +158,6 @@ const ProductManagementPage = () => {
           카테고리
         </Tab>
       </TabContainer>
-
       {activeTab === '상품' && (
         <>
           <Button onClick={handleAddProduct} text="상품 추가" />
@@ -191,7 +198,6 @@ const ProductManagementPage = () => {
           )}
         </>
       )}
-
       {activeTab === '카테고리' && (
         <>
           <Button onClick={handleAddCategory} text="카테고리 추가" />
@@ -209,9 +215,8 @@ const ProductManagementPage = () => {
           )}
         </>
       )}
-
       {toastMessage && <Toast message={toastMessage} onClose={() => setToastMessage('')} />}
-    </div>
+    </ProductManagementPageStyle>
   );
 };
 
