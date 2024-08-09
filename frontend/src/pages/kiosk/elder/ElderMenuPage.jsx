@@ -80,6 +80,7 @@ const KioskCategoriesStyle = styled.div`
   flex-direction: column;
   align-items: center;
   overflow: scroll;
+  height: calc(22rem - 2px);
   &::-webkit-scrollbar {
     display: none;
   }
