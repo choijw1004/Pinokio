@@ -7,9 +7,10 @@ import ElderMenuCategory from '../../../components/kiosk/ElderMenuCategory';
 import MenuMain from '../../../components/kiosk/MenuMain';
 import Cart from '../../../components/kiosk/Cart';
 import MenuModal from '../../../components/kiosk/modal/MenuModal';
-import { requestMeeting } from '../../../apis/Room';
+import { requestMeeting, enterRoom } from '../../../apis/Room';
 import useWebSocket from '../../../hooks/useWebSocket';
-import { enterRoom, leaveRoom } from '../../../apis/Room';
+import { OpenVidu } from 'openvidu-browser';
+import OpenViduVideoComponent from '../../../components/advisor/OpenViduComponent';
 
 const ElderMenuPageStyle = styled.div`
   display: flex;
@@ -27,16 +28,19 @@ const KioskHeader = styled.div`
   width: 100%;
   height: 13rem;
 `;
+
 const KioskLeftHeader = styled.div`
   width: 30%;
   height: 100%;
 `;
+
 const KioskRightHeader = styled.div`
   display: flex;
   flex-direction: column;
   justify-content: center;
   width: 70%;
 `;
+
 const ScreenStyle = styled.div`
   background-color: #222222;
   width: 90%;
@@ -94,6 +98,10 @@ function ElderMenuPage() {
   const [modal, setModal] = useState(false);
   const [openViduConnection, setOpenViduConnection] = useState(false);
   const [roomId, setRoomId] = useState(null);
+  const [OV, setOV] = useState(null);
+  const [session, setSession] = useState(null);
+  const [publisher, setPublisher] = useState(null);
+  const [subscriber, setSubscriber] = useState(null);
 
   const userData = useSelector((store) => store.user);
   const { sendMessage, lastMessage, isConnected, connect } = useWebSocket(userData.token);
@@ -121,8 +129,16 @@ function ElderMenuPage() {
 
   useEffect(() => {
     if (lastMessage) {
-      const data = JSON.parse(lastMessage.data);
-      console.log('WebSocket 메시지 수신:', data);
+      try {
+        const data = JSON.parse(lastMessage.data);
+        console.log('WebSocket 메시지 수신:', data);
+        if (data.type === 'roomId') {
+          console.log('상담요청 수락, roomId 수신:', data.roomId);
+          setRoomId(data.roomId);
+        }
+      } catch (error) {
+        console.error('WebSocket 메시지 파싱 오류:', error);
+      }
     }
   }, [lastMessage]);
 
@@ -174,25 +190,12 @@ function ElderMenuPage() {
   }, [selectedCategory, getMenu]);
 
   useEffect(() => {
-    if (lastMessage) {
-      try {
-        const data = JSON.parse(lastMessage.data);
-        if (!openViduConnection && data.type === 'roomId') {
-          console.log('상담요청 수락, roomId 수신:', data.roomId);
-          setRoomId(data.roomId);
-        }
-      } catch (error) {
-        console.error('WebSocket 메시지 파싱 오류:', error);
-      }
-    }
-  }, [lastMessage, openViduConnection]);
-
-  useEffect(() => {
     if (roomId && userData.typeInfo.kioskId && !openViduConnection) {
       console.log('enterRoom 호출:', roomId, userData.typeInfo.kioskId);
       enterRoom(roomId, userData.typeInfo.kioskId)
-        .then(() => {
-          console.log('enterRoom 성공');
+        .then((response) => {
+          console.log('enterRoom 성공', response);
+          initializeSession(response.token);
           setOpenViduConnection(true);
         })
         .catch((error) => {
@@ -201,6 +204,48 @@ function ElderMenuPage() {
     }
   }, [roomId, userData.typeInfo.kioskId, openViduConnection]);
 
+  const initializeSession = useCallback(
+    async (token) => {
+      const ov = new OpenVidu();
+      setOV(ov);
+
+      const session = ov.initSession();
+      setSession(session);
+
+      session.on('streamCreated', (event) => {
+        const subscriber = session.subscribe(event.stream, undefined);
+        setSubscriber(subscriber);
+      });
+
+      session.on('streamDestroyed', (event) => {
+        setSubscriber(null);
+      });
+
+      try {
+        await session.connect(token, { clientData: userData.typeInfo.kioskId });
+        console.log('OpenVidu 세션 연결 성공');
+
+        const publisher = await ov.initPublisherAsync(undefined, {
+          audioSource: undefined,
+          videoSource: undefined,
+          publishAudio: true,
+          publishVideo: true,
+          resolution: '640x480',
+          frameRate: 30,
+          insertMode: 'APPEND',
+          mirror: false,
+        });
+
+        await session.publish(publisher);
+        setPublisher(publisher);
+        console.log('키오스크 스트림 발행 성공');
+      } catch (error) {
+        console.error('세션 연결 또는 스트림 발행 오류:', error);
+      }
+    },
+    [userData.typeInfo.kioskId]
+  );
+
   return (
     <ElderMenuPageStyle>
       <KioskHeader>
@@ -208,8 +253,10 @@ function ElderMenuPage() {
           <Logo>Pinokio</Logo>
         </KioskLeftHeader>
         <KioskRightHeader>
-          <ScreenStyle>Screen for advisor</ScreenStyle>
-          <p>{userData.typeInfo.KioskId}</p>
+          <ScreenStyle>
+            {subscriber && <OpenViduVideoComponent streamManager={subscriber} />}
+          </ScreenStyle>
+          <p>{userData.typeInfo.kioskId}</p>
         </KioskRightHeader>
       </KioskHeader>
       <KioskBody>

@@ -81,12 +81,13 @@ const AdvMainPage = () => {
   const [maxAvailable, setMaxAvailable] = useState(1);
   const [showModal, setShowModal] = useState(false);
   const [consultationRequest, setConsultationRequest] = useState(null);
+  const [publisher, setPublisher] = useState(null);
+  const [subscribers, setSubscribers] = useState([]);
   const dispatch = useDispatch();
   const { sendMessage, lastMessage, isConnected, connect } = useWebSocket(userData.token);
 
   const [OV, setOV] = useState(null);
   const [session, setSession] = useState(null);
-  const [subscribers, setSubscribers] = useState([]);
   const [isInitialized, setIsInitialized] = useState(false);
 
   const initializeAdvisor = useCallback(async () => {
@@ -117,15 +118,30 @@ const AdvMainPage = () => {
 
       session.on('streamDestroyed', (event) => {
         setSubscribers((prevSubscribers) =>
-          prevSubscribers.filter((subscriber) => subscriber !== event.stream.streamManager)
+          prevSubscribers.filter((sub) => sub !== event.stream.streamManager)
         );
       });
 
       try {
         await session.connect(token, { clientData: userData.email });
         console.log('OpenVidu 세션 연결 성공');
+
+        const publisher = await ov.initPublisherAsync(undefined, {
+          audioSource: undefined,
+          videoSource: undefined,
+          publishAudio: true,
+          publishVideo: true,
+          resolution: '640x480',
+          frameRate: 30,
+          insertMode: 'APPEND',
+          mirror: false,
+        });
+
+        await session.publish(publisher);
+        setPublisher(publisher);
+        console.log('상담원 스트림 발행 성공');
       } catch (error) {
-        console.error('세션 연결 오류:', error);
+        console.error('세션 연결 또는 스트림 발행 오류:', error);
       }
     },
     [userData.email]
@@ -215,7 +231,7 @@ const AdvMainPage = () => {
       <AdvBody>
         <LeftSection>
           <LeftTopSection>
-            <CustomerVideo roomToken={roomToken} />
+            <CustomerVideo streamManager={subscribers.length > 0 ? subscribers[0] : null} />
           </LeftTopSection>
           <LeftBottomSection>
             <CustomerWaiting
