@@ -8,7 +8,7 @@ import java.util.UUID;
 public class OrderNotFoundException extends NotFoundException {
     public OrderNotFoundException(UUID orderId) {
         super(
-                "NOT_FOUND_KIOSK_01",
+                "NOT_FOUND_ORDER_01",
                 "아이디에 부합한 주문 정보를 찾을 수 없습니다.",
                 Map.of("orderId", String.valueOf(orderId))
         );
