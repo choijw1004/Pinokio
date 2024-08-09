@@ -39,4 +39,6 @@ public interface OrderRepository extends JpaRepository<Order, UUID> {
             "FROM Order o " +
             "WHERE o.pos.id = :posId ")
     Optional<LocalDateTime> findOldestOrderDateByPosId(@Param("posId") UUID posId);
+
+    Optional<Order> findByPosIdAndId(UUID posId, UUID orderId);
 }

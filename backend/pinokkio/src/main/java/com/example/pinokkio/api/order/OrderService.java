@@ -174,12 +174,12 @@ public class OrderService {
      * 특정 주문의 상태를 전환한다. [완료, 취소]
      * @param orderId 주문 식별자
      */
-    public void toggleOrderStatus(UUID posId, UUID orderId) {
+    public void toggleOrderStatus(UUID orderId) {
+        Pos currentPos = userService.getCurrentPos();
+
         Order findOrder = orderRepository
-                .findById(orderId)
+                .findByPosIdAndId(currentPos.getId(), orderId)
                 .orElseThrow(() -> new OrderNotFoundException(orderId));
-        if(!findOrder.getPos().getId().equals(posId))
-            throw new OrderNotFoundException(posId);
 
         findOrder.toggleOrderStatus();
         if (findOrder.getStatus() == OrderStatus.CANCELLED) {

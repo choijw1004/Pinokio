@@ -103,10 +103,7 @@ public class OrderController {
     @PreAuthorize("hasRole('ROLE_POS')")
     @PutMapping("/orders/{orderId}/status")
     public ResponseEntity<Void> toggleOrderStatus(@PathVariable UUID orderId) {
-        orderService.toggleOrderStatus(
-                orderId,
-                posService.getPosByEmail(jwtProvider.getCurrentUserEmail()).getId()
-        );
+        orderService.toggleOrderStatus(orderId);
         return ResponseEntity.noContent().build(); // No Content 반환
     }
 
