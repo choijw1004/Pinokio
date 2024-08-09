@@ -1,10 +1,7 @@
 package com.example.pinokkio.api.pos;
 
-import com.example.pinokkio.api.pos.code.Code;
-import com.example.pinokkio.api.pos.dto.response.PosResponse;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 import java.util.Optional;
@@ -32,4 +29,8 @@ public interface PosRepository extends JpaRepository<Pos, UUID> {
      * @return 특정 codeId 를 가지는 Pos 리스트
      */
     List<Pos> findByCodeId(UUID codeId); // 특정 code_id를 가진 모든 Pos 를 찾는 메소드
+
+    @Query("SELECT p.id " +
+            "FROM Pos p ")
+    List<UUID> findAllPosId();
 }
