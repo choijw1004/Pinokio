@@ -15,6 +15,8 @@ import {
 } from '../../apis/Auth';
 import axios from '../../apis/Axios';
 import Cookies from 'js-cookie';
+import LogoWithSymbol from '../../components/common/LogoWithSymbol';
+import Symbol from '../../components/common/Symbol';
 
 const LoginWrapper = styled.div`
   display: flex;
@@ -83,7 +85,7 @@ const StyledButton = styled.button`
     transform: translateY(-2px);
   }
   &:active {
-    background-color: #d8ff75;
+    background-color: #c383d9;
   }
 `;
 
@@ -100,7 +102,7 @@ const ButtonWrapper = styled.div`
     margin: 0 3px;
 
     &:hover {
-      color: #d8ff75;
+      color: #c383d9;
     }
   }
 `;
@@ -214,7 +216,7 @@ function Login() {
 
   return (
     <LoginWrapper>
-      <LOGO />
+      <LogoWithSymbol size="2rem" />
       <LoginForm id="login-form" onSubmit={handleLogin}>
         <Input
           type="text"
