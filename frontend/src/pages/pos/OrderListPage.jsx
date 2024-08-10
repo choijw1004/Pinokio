@@ -3,6 +3,7 @@ import OrderHistory from '../../components/pos/OrderHistory';
 import OrderHistoryDetail from '../../components/pos/OrderHistoryDetail';
 import styled from 'styled-components';
 import Navbar from '../../components/pos/Navbar';
+import ReceiptImage from '../../components/pos/ReceiptImage';
 
 const OrderListPageStyle = styled.div`
   display: flex;

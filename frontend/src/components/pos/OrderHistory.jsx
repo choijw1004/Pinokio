@@ -152,7 +152,7 @@ function OrderHistory({ selectedOrder, setSelectedOrder }) {
       </FilterContainer>
       <TableHeader>
         <ColumnTitle>주문 날짜</ColumnTitle>
-        <ColumnTitle>물품 내역</ColumnTitle>
+        <ColumnTitle>상품 내역</ColumnTitle>
 
         <ColumnTitle>주문 시간</ColumnTitle>
         <ColumnTitle>총 금액</ColumnTitle>
