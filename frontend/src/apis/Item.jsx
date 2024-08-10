@@ -44,32 +44,21 @@ export const getItems = async () => {
   }
 };
 
-export const getItemsByKeyword = (posId, keyword) => {
-  axios
-    .get('/api/pos/:posId/items/search', {
-      params: {
-        posId: posId,
-        searchItemRequest: {
-          keyword: keyword,
-        },
-      },
-    })
-    .then((response) => {
-      // response
-
-      return response;
-    })
-    .catch((error) => {
-      // 오류발생시 실행
-    })
-    .then(() => {
-      // 항상 실행
+export const getItemsByKeyword = async (keyWord) => {
+  try {
+    const response = await axios.get('/api/pos/items/search', {
+      params: { keyWord: keyWord },
     });
+    console.log(`keyWord : ${keyWord}`);
+    return response.data;
+  } catch (error) {
+    console.error('Cannot get items by keyword');
+  }
 };
 
-export const getItemsByCategoryId = async (posId, categoryId) => {
+export const getItemsByCategoryId = async (categoryId) => {
   try {
-    const response = await axios.get(`/api/pos/${posId}/items/categories/${categoryId}`);
+    const response = await axios.get(`/api/pos/items/categories/${categoryId}`);
     return response.data;
   } catch (error) {
     console.error('get menus by category failed:', error);
@@ -80,6 +69,7 @@ export const getItemsByCategoryId = async (posId, categoryId) => {
 // 아이템 추가
 export const postItem = async (formData) => {
   try {
+    console.log(formData);
     const response = await axios.post('/api/pos/items', formData, {
       headers: {
         'Content-Type': 'multipart/form-data',

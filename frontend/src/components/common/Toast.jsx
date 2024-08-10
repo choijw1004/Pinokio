@@ -3,25 +3,31 @@ import styled from 'styled-components';
 
 const ToastContainer = styled.div`
   position: fixed;
+  bottom: 20px;
+  right: 20px;
   display: flex;
   flex-direction: row;
   justify-content: center;
   align-items: center;
-  bottom: 20px;
-  right: 20px;
-  background-color: #333;
+
+  background-color: rgb(65, 65, 65, 0.6);
   color: white;
-  padding: 2px 20px;
+  padding: 0.1rem 1rem;
   border-radius: 5px;
-  opacity: 0.9;
-  height: 30px;
+  height: 3rem;
+`;
+const ToastMessage = styled.div`
+  margin-right: 0.5rem;
 `;
 const ToastButton = styled.div`
   background-color: ${(props) => props.color};
-  width: 50px;
-  border-radius: 10px;
+  width: 3.2rem;
+  height: 2.4rem;
+  border-radius: 1.2rem;
+  margin: 0 0.1rem;
   display: flex;
   justify-content: center;
+  line-height: 2.4rem;
 `;
 
 Toast.defaultProps = {
@@ -41,7 +47,7 @@ function Toast({ message, setAnswer, onClose, makeButton }) {
 
   return (
     <ToastContainer>
-      {message}
+      <ToastMessage>{message}</ToastMessage>
       {makeButton && (
         <>
           <ToastButton color="rgb(67, 57, 255, 0.8)" onClick={() => setAnswer('accept')}>

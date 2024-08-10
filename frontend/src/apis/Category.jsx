@@ -10,9 +10,7 @@ import axios from './Axios';
 
 export const deleteCategory = async (categoryId) => {
   try {
-    const response = await axios.delete('/api/pos/categories/:categoryId', {
-      params: { categoryId: categoryId },
-    });
+    const response = await axios.delete(`/api/pos/categories/${categoryId}`);
     return response.data;
   } catch (error) {
     console.error('delete category failed:', error);
@@ -42,11 +40,9 @@ export const createCategory = async (name) => {
   }
 };
 
-export const modifyCategory = async (categoryId) => {
+export const modifyCategory = async (categoryId, name) => {
   try {
-    const response = await axios.put('/api/pos/categories/:categoryId', {
-      params: { categoryId: categoryId },
-    });
+    const response = await axios.put(`/api/pos/categories/${categoryId}`, { name: name });
     return response.data;
   } catch (error) {
     console.error('modify category failed:', error);

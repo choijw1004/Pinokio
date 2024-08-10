@@ -16,6 +16,8 @@ import {
 import UpDownButtons from '../../components/common/UpDownButtons';
 import Toast from '../../components/common/Toast';
 
+import { Resizable } from 'react-resizable';
+
 // 스타일 컴포넌트 정의
 const AdvMainPageWrapper = styled.div`
   display: flex;

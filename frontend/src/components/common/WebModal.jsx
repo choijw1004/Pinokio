@@ -1,17 +1,32 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import ToggleButton from '../common/Toggle';
 import { postItem } from '../../apis/Item';
 
+const ModalBg = styled.div`
+  /* display: none; */
+  background-color: rgba(0, 0, 0, 0.5);
+  position: absolute;
+  display: flex;
+  top: 1rem;
+  width: 27rem;
+  height: 47rem;
+`;
 const Modal = styled.div`
-  position: fixed;
+  background: white;
+  border-radius: 0.5rem;
+  position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  background-color: white;
-  padding: 20px;
-  border-radius: 5px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  width: 54%;
+  height: 50%;
+  display: flex;
+  flex-direction: column;
+  /* align-items: center; */
+  justify-content: space-between;
+  overflow: hidden;
+  font-family: 'CafeOhsquareAir';
 `;
 
 const Input = styled.input`
@@ -48,8 +63,8 @@ const ProductModal = ({ categories, onClose }) => {
       price: parseInt(price),
       amount: parseInt(amount),
       detail,
-      // isScreen,
-      // isSoldout,
+      isScreen,
+      isSoldout,
     };
 
     const formData = new FormData();
@@ -62,8 +77,6 @@ const ProductModal = ({ categories, onClose }) => {
     }
 
     try {
-      console.log(itemRequest);
-      console.log(image);
       await postItem(formData);
       onClose(); // Close the modal and trigger screen update
     } catch (error) {
