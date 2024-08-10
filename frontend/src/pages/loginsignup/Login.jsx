@@ -23,9 +23,8 @@ const LoginWrapper = styled.div`
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  height: 100vh;
   background-color: #f4f4f9;
-  padding: 20px;
+  height: 100vh;
 `;
 
 const LoginForm = styled.form`
@@ -216,7 +215,8 @@ function Login() {
 
   return (
     <LoginWrapper>
-      <LogoWithSymbol size="2rem" />
+      <img src="/PSymbol.svg" width="400rem" />
+      {/* <LogoWithSymbol size="2rem" /> */}
       <LoginForm id="login-form" onSubmit={handleLogin}>
         <Input
           type="text"
