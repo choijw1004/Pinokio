@@ -14,7 +14,8 @@ const PosIndexStyle = styled.div`
   justify-content: center;
   background-color: #efefef;
   font-family: 'CafeOhsquareAir';
-  height: 100vh;
+  /* width: 80%; */
+  min-height: 100vh;
 `;
 
 function PosIndex() {

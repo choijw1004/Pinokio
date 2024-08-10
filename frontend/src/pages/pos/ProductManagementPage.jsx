@@ -4,7 +4,6 @@ import ProductList from '../../components/pos/ProductList';
 import ProductModal from '../../components/pos/ProductModal';
 import CategoryList from '../../components/pos/CategoryList';
 import CategoryModal from '../../components/pos/CategoryModal';
-import Button from '../../components/common/Button';
 import Toast from '../../components/common/Toast';
 import { getItems, getItemsByKeyword } from '../../apis/Item'; // Import the API functions
 import { getCategories } from '../../apis/Category'; // Import the API function
@@ -13,7 +12,16 @@ import Navbar from '../../components/pos/Navbar';
 
 const ProductManagementPageStyle = styled.div`
   width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 `;
+
+const ProductManagementBodyStyle = styled.div`
+  width: 80%;
+`;
+
+const CategoryTabStyle = styled.div``;
 
 const TabContainer = styled.div`
   display: flex;
@@ -134,73 +142,74 @@ const ProductManagementPage = () => {
   return (
     <ProductManagementPageStyle>
       <Navbar isOpen={isNavbarOpen} toggleNavbar={() => setIsNavbarOpen(!isNavbarOpen)} />
-
-      <TabContainer>
-        <Tab isActive={activeTab === '상품'} onClick={() => setActiveTab('상품')}>
-          상품
-        </Tab>
-        <Tab isActive={activeTab === '카테고리'} onClick={() => setActiveTab('카테고리')}>
-          카테고리
-        </Tab>
-      </TabContainer>
-      {activeTab === '상품' && (
-        <>
-          <Button onClick={handleAddProduct} text="상품 추가" />
-          <select
-            value={selectedCategoryFilter}
-            onChange={(e) => setSelectedCategoryFilter(e.target.value)}
-          >
-            <option value="전체">전체</option>
-            {categories.map((category) => (
-              <option key={category.id} value={category.id}>
-                {category.name}
-              </option>
-            ))}
-          </select>
-          <form onSubmit={handleSearch} style={{ display: 'inline' }}>
-            <input
-              type="text"
-              value={searchKeyword}
-              onChange={(e) => setSearchKeyword(e.target.value)}
-              placeholder="상품 검색"
+      <ProductManagementBodyStyle>
+        <TabContainer>
+          <Tab isActive={activeTab === '상품'} onClick={() => setActiveTab('상품')}>
+            상품
+          </Tab>
+          <Tab isActive={activeTab === '카테고리'} onClick={() => setActiveTab('카테고리')}>
+            카테고리
+          </Tab>
+        </TabContainer>
+        {activeTab === '상품' && (
+          <>
+            <button onClick={handleAddProduct}>상품 추가</button>
+            <select
+              value={selectedCategoryFilter}
+              onChange={(e) => setSelectedCategoryFilter(e.target.value)}
+            >
+              <option value="전체">전체</option>
+              {categories.map((category) => (
+                <option key={category.id} value={category.id}>
+                  {category.name}
+                </option>
+              ))}
+            </select>
+            <form onSubmit={handleSearch} style={{ display: 'inline' }}>
+              <input
+                type="text"
+                value={searchKeyword}
+                onChange={(e) => setSearchKeyword(e.target.value)}
+                placeholder="상품 검색"
+              />
+              <button type="submit">검색</button>
+            </form>
+            <ProductList
+              products={filteredProducts}
+              onEdit={handleEditProduct}
+              onDelete={handleDeleteProduct}
+              setToastMessage={setToastMessage}
+              setProducts={setProducts}
             />
-            <Button type="submit" text="검색" />
-          </form>
-          <ProductList
-            products={filteredProducts}
-            onEdit={handleEditProduct}
-            onDelete={handleDeleteProduct}
-            setToastMessage={setToastMessage}
-            setProducts={setProducts}
-          />
-          {isProductModalOpen && (
-            <ProductModal
-              product={selectedProduct}
+            {isProductModalOpen && (
+              <ProductModal
+                product={selectedProduct}
+                categories={categories}
+                onSave={handleSaveProduct}
+                onClose={() => setIsProductModalOpen(false)}
+              />
+            )}
+          </>
+        )}
+        {activeTab === '카테고리' && (
+          <CategoryTabStyle>
+            <button onClick={handleAddCategory}>카테고리 추가</button>
+            <CategoryList
               categories={categories}
-              onSave={handleSaveProduct}
-              onClose={() => setIsProductModalOpen(false)}
+              onEdit={handleEditCategory}
+              onDelete={handleDeleteCategory}
             />
-          )}
-        </>
-      )}
-      {activeTab === '카테고리' && (
-        <>
-          <Button onClick={handleAddCategory} text="카테고리 추가" />
-          <CategoryList
-            categories={categories}
-            onEdit={handleEditCategory}
-            onDelete={handleDeleteCategory}
-          />
-          {isCategoryModalOpen && (
-            <CategoryModal
-              category={selectedCategory}
-              onSave={handleSaveCategory}
-              onClose={() => setIsCategoryModalOpen(false)}
-            />
-          )}
-        </>
-      )}
-      {toastMessage && <Toast message={toastMessage} onClose={() => setToastMessage('')} />}
+            {isCategoryModalOpen && (
+              <CategoryModal
+                category={selectedCategory}
+                onSave={handleSaveCategory}
+                onClose={() => setIsCategoryModalOpen(false)}
+              />
+            )}
+          </CategoryTabStyle>
+        )}
+        {toastMessage && <Toast message={toastMessage} onClose={() => setToastMessage('')} />}
+      </ProductManagementBodyStyle>
     </ProductManagementPageStyle>
   );
 };

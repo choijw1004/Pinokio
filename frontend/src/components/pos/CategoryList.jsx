@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
 import { deleteCategory, modifyCategory } from '../../apis/Category'; // API 함수 import
+import { getItemsByCategoryId } from '../../apis/Item';
 
 const CategoryTable = styled.table`
   width: 100%;
   border-collapse: collapse;
+  table-layout: 'fixed';
 `;
 
 const CategoryRow = styled.tr`
@@ -16,6 +18,7 @@ const CategoryRow = styled.tr`
 
 const CategoryCell = styled.td`
   padding: 10px;
+  text-align: center;
   vertical-align: middle;
 `;
 
@@ -113,28 +116,35 @@ const CategoryList = ({ categories, onEdit, onDelete }) => {
     }
   };
 
+  const calculateItemCount = async (categoryId) => {
+    try {
+      const data = await getItemsByCategoryId(categoryId);
+    } catch (error) {
+      // setToastMessage('상품 및 카테고리 데이터를 가져오는 데 실패했습니다.');
+    }
+    return 1;
+  };
+
   return (
     <>
-      <CategoryTable>
+      <CategoryTable style={{ width: '100%' }}>
         <thead>
           <CategoryRow>
-            <th></th>
-            <th>카테고리명</th>
-            <th>수정</th>
+            <th style={{ textAlign: 'center', width: '33.33%' }}>카테고리명</th>
+            <th style={{ textAlign: 'center', width: '33.33%' }}>보유 상품 수</th>
           </CategoryRow>
         </thead>
         <tbody>
           {categories.map((category) => (
             <CategoryRow key={category.id}>
+              <CategoryCell>{category.name}</CategoryCell>
+              <CategoryCell>{calculateItemCount()}</CategoryCell>
               <DeleteCell>
+                <EditButton onClick={() => handleEditClick(category)}>수정</EditButton>
                 <DeleteButton className="delete-button" onClick={() => handleDeleteClick(category)}>
                   X
                 </DeleteButton>
               </DeleteCell>
-              <CategoryCell>{category.name}</CategoryCell>
-              <CategoryCell>
-                <EditButton onClick={() => handleEditClick(category)}>수정</EditButton>
-              </CategoryCell>
             </CategoryRow>
           ))}
         </tbody>

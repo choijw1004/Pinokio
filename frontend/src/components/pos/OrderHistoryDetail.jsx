@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
-import Button from '../common/Button';
 import { putOrderStatus } from '../../apis/Order';
-import ReceiptImage from './ReceiptImage';
+import Logo from '../common/Logo';
 
 const ModalBg = styled.div`
   background-color: rgba(0, 0, 0, 0.5);
@@ -55,20 +54,34 @@ const CancelledStatus = styled.span`
   font-style: italic;
 `;
 
+const CancelledButton = styled.button`
+  width: ${(props) => props.width};
+  height: ${(props) => props.height};
+  box-shadow: 1px 2px 0 rgb(0 0 0 / 0.25);
+  background-color: white;
+  border: 1px solid black;
+  /* border-radius: 0.25rem; */
+  &:hover {
+    background-color: #ededed;
+  }
+`;
+
 function OrderHistoryDetail({ selectedOrder, setSelectedOrder }) {
-  const [isCancelled, setIsCancelled] = useState(selectedOrder.status === 'cancelled');
+  const [isCancelled, setIsCancelled] = useState(selectedOrder.status === 'CANCELLED');
 
   const handleCancelOrder = async () => {
     console.log('handle cancel order');
     console.log(selectedOrder.orderId);
     const res = await putOrderStatus(selectedOrder.orderId);
-    if (selectedOrder.status === 'ACTIVE') {
+    if (!isCancelled) {
       selectedOrder.status = 'CANCELLED';
-    } else if (selectedOrder.status === 'CANCELLED') {
+      setIsCancelled(true);
+    } else {
+      console.log('check');
       selectedOrder.status = 'ACTIVE';
+      setIsCancelled(false);
     }
-    console.log(res);
-    setIsCancelled(true);
+    // console.log(res);
   };
 
   const handleClose = (e) => {
@@ -100,6 +113,8 @@ function OrderHistoryDetail({ selectedOrder, setSelectedOrder }) {
         <OrderDetailContainer>
           <CloseButton onClick={handleClose}>&times;</CloseButton>
           <hr style={{ marginTop: '30px', borderTop: 'dashed 1px' }} />
+          <Logo color={'black'} />
+          <hr style={{ marginTop: '30px', borderTop: 'dashed 1px' }} />
           <div>
             <h2>주문 상세</h2>
             <p>
@@ -112,25 +127,32 @@ function OrderHistoryDetail({ selectedOrder, setSelectedOrder }) {
             </p>
             <p>결제 시간: {new Date(selectedOrder.orderTime).toLocaleString()}</p>
             {isCancelled && <p>취소 시간: {new Date().toLocaleString()}</p>}
-
             <p>승인 상태: {isCancelled ? '취소됨' : '결제완료'}</p>
-            <div>
-              <hr style={{ marginTop: '30px', borderTop: 'dashed 1px' }} />
-              <h3>주문 내역</h3>
-              {selectedOrder.items.map((item, index) => (
-                <div key={index}>
-                  <p>
-                    {item.itemName} {item.quantity}개 {item.price * item.quantity}원
-                  </p>
-                </div>
-              ))}
-            </div>
-            <div>
-              <Button text="결제 수단 변경" disabled={isCancelled} />
-              {selectedOrder.status === 'ACTIVE' ? (
-                <Button text="결제 취소" onClick={handleCancelOrder} />
+            <hr style={{ marginTop: '30px', borderTop: 'dashed 1px' }} />
+            <h3>주문 내역</h3>
+            <table style={{ width: '100%' }}>
+              <thead>
+                <tr>
+                  <th style={{ textAlign: 'left' }}>상품 이름</th>
+                  <th style={{ textAlign: 'left' }}>수량</th>
+                  <th style={{ textAlign: 'left' }}>가격</th>
+                </tr>
+              </thead>
+              <tbody>
+                {selectedOrder.items.map((item, index) => (
+                  <tr key={index}>
+                    <td>{item.itemName}</td>
+                    <td>{item.quantity}개</td>
+                    <td>{item.price * item.quantity}원</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            <div style={{ display: 'flex', justifyContent: 'center' }}>
+              {!isCancelled ? (
+                <CancelledButton onClick={handleCancelOrder}>결제 취소</CancelledButton>
               ) : (
-                <Button text="취소 결제 복구" onClick={handleCancelOrder} />
+                <CancelledButton onClick={handleCancelOrder}>취소 결제 복구</CancelledButton>
               )}
             </div>
           </div>

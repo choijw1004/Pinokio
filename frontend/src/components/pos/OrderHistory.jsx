@@ -166,30 +166,15 @@ function OrderHistory({ selectedOrder, setSelectedOrder }) {
               onClick={() => setSelectedOrder(order)}
               isSelected={selectedOrder && order.orderId === selectedOrder.orderId}
             >
-              {order.status === 'cancelled' ? (
-                <>
-                  <SelectPayment>
-                    <CancelledText>{order.paymentMethod}</CancelledText>
-                    <CancelledText>{order.totalAmount}원</CancelledText>
-                  </SelectPayment>
-                  <Menu>
-                    {order.items.map((item) => `${item.name} ${item.quantity}개`).join(', ')}{' '}
-                  </Menu>
-                  <OrderStatus>
-                    <div>주문번호 #{order.orderId}</div>
-                    <div>취소</div>
-                  </OrderStatus>
-                </>
-              ) : (
-                <>
-                  <ColumnContent>{makeDateFormat(new Date(order.orderTime))}</ColumnContent>
-                  <ColumnContent>{`${order.items[0].itemName} 외  ${
-                    order.items.length - 1
-                  }건`}</ColumnContent>
-                  <ColumnContent>{makeTimeFormat(new Date(order.orderTime))}</ColumnContent>
-                  <ColumnContent>{changePriceForm(order.totalAmount)}</ColumnContent>
-                  <ColumnContent>{order.status}</ColumnContent>
-                  {/* <SelectPayment>
+              <>
+                <ColumnContent>{makeDateFormat(new Date(order.orderTime))}</ColumnContent>
+                <ColumnContent>{`${order.items[0].itemName} 외  ${
+                  order.items.length - 1
+                }건`}</ColumnContent>
+                <ColumnContent>{makeTimeFormat(new Date(order.orderTime))}</ColumnContent>
+                <ColumnContent>{changePriceForm(order.totalAmount)}</ColumnContent>
+                <ColumnContent>{order.status}</ColumnContent>
+                {/* <SelectPayment>
                     <div>{order.paymentMethod}</div>
                     <div>{order.totalAmount}원</div>
                   </SelectPayment>
@@ -200,8 +185,7 @@ function OrderHistory({ selectedOrder, setSelectedOrder }) {
                     <div>주문시간 # {new Date(order.orderTime).toLocaleString()}</div>
                     <div>결제완료</div>
                   </OrderStatus> */}
-                </>
-              )}
+              </>
             </OrderListEach>
           ))}
       </OrderList>
