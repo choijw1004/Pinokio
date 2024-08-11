@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import styled from 'styled-components';
 
 const EMCC = styled.div`
@@ -15,7 +15,7 @@ const EMCC = styled.div`
 `;
 
 function MenuCategoryCard({ cat, setselectedcat, selectedcat }) {
-  const borderRadius = useState('10px');
+  const [borderRadius, setBorderRadius] = useState('0px');
   const mccRef = useRef(null);
 
   const handleClick = () => {

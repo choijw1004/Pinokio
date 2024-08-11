@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
+import { Router, Route, Routes, useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import { getCategories } from '../../../apis/Category';
 import { getItemsByCategoryId } from '../../../apis/Item';
@@ -58,7 +59,6 @@ const Logo = styled.div`
 const KioskBody = styled.div`
   display: flex;
   flex-direction: row;
-  width: 100%;
 `;
 
 const KioskMenusStyle = styled.div`
@@ -79,7 +79,6 @@ const KioskCategoriesStyle = styled.div`
   flex-direction: column;
   align-items: center;
   overflow: scroll;
-  height: calc(22rem - 2px);
   &::-webkit-scrollbar {
     display: none;
   }
@@ -100,23 +99,22 @@ function ElderMenuPage() {
 
   const [modal, setModal] = useState(false);
 
-  // const isFirstRender = useRef(true);
+  const isFirstRender = useRef(true);
 
   useEffect(() => {
-    // if (isFirstRender.current) {
-    //   console.log('first rendering');
-    //   console.log(userData.typeInfo.kioskId);
-    //   requestRoomEnter();
-    //   getCategory();
-    //   isFirstRender.current = false;
-    // }
-    getCategory();
+    if (isFirstRender.current) {
+      console.log('first rendering');
+      console.log(userData.typeInfo.kioskId);
+      requestRoomEnter();
+      getCategory();
+      isFirstRender.current = false;
+    }
   }, []);
 
-  // const requestRoomEnter = async () => {
-  //   const response = await requestMeeting();
-  //   console.log(response);
-  // };
+  const requestRoomEnter = async () => {
+    const response = await requestMeeting();
+    console.log(response);
+  };
 
   const getCategory = async () => {
     /* axios를 이용하여 category를 가져온다. */
@@ -151,14 +149,10 @@ function ElderMenuPage() {
     if (selectedCategory && userData) {
       const menu_data = await getItemsByCategoryId(selectedCategory.id);
       console.log('received menus datas : ', menu_data);
-      // 화면에 보여줄 데이터만 필터링 (isScreen이 YES인 경우)
-      const filteredMenus = menu_data.responseList
-        .filter((menu) => menu.isScreen === 'YES')
-        .map((menu) => {
-          menu['count'] = 0; // count 초기화
-          return menu;
-        });
-      setMenus(filteredMenus);
+      menu_data.responseList.map((menu) => {
+        menu['count'] = 0;
+      });
+      setMenus(menu_data.responseList);
     }
   };
 

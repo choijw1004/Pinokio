@@ -9,15 +9,20 @@ import org.springframework.web.socket.config.annotation.EnableWebSocket;
 import org.springframework.web.socket.config.annotation.WebSocketConfigurer;
 import org.springframework.web.socket.config.annotation.WebSocketHandlerRegistry;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import java.util.Map;
 
 @Configuration
 @EnableWebSocket
 public class WebSocketConfig implements WebSocketConfigurer {
 
     private final WebSocketService webSocketService;
+    private final ObjectMapper objectMapper;
 
-    public WebSocketConfig(WebSocketService webSocketService) {
+    public WebSocketConfig(WebSocketService webSocketService, ObjectMapper objectMapper) {
         this.webSocketService = webSocketService;
+        this.objectMapper = objectMapper;
     }
 
     @Override
@@ -26,15 +31,31 @@ public class WebSocketConfig implements WebSocketConfigurer {
     }
 
     private class CustomWebSocketHandler extends TextWebSocketHandler {
+
         @Override
         public void afterConnectionEstablished(WebSocketSession session) throws Exception {
             System.out.println("New WebSocket connection: " + session.getId());
-            webSocketService.addSession(session);
         }
 
         @Override
         protected void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
-            webSocketService.handleMessage(session, message);
+            // 메시지에서 토큰을 추출하고 인증
+            String payload = message.getPayload();
+            Map<String, String> messageData = objectMapper.readValue(payload, Map.class);
+
+            String type = messageData.get("type");
+            if ("authentication".equals(type)) {
+                String token = messageData.get("token");
+                if (token != null && !token.isEmpty()) {
+                    webSocketService.addSession(session, token);
+                } else {
+                    System.out.println("Invalid token received");
+                    session.close(CloseStatus.BAD_DATA);
+                }
+            } else {
+                // 다른 메시지 처리
+                webSocketService.handleMessage(session, message);
+            }
         }
 
         @Override

@@ -2,15 +2,12 @@ import React, { useState } from 'react';
 import styled from 'styled-components';
 import OrderList from '../../components/pos/OrderList';
 import OrderDetail from '../../components/pos/OrderDetail';
-import Navbar from '../../components/pos/Navbar';
+
 const PosMainPageWrapper = styled.div`
   font-family: 'Arial', sans-serif;
-  width: 100%;
 `;
 
 function PosMainPage() {
-  const [isNavbarOpen, setIsNavbarOpen] = useState(false);
-
   const initialOrders = [
     {
       id: 1,
@@ -120,8 +117,6 @@ function PosMainPage() {
 
   return (
     <PosMainPageWrapper>
-      <Navbar isOpen={isNavbarOpen} toggleNavbar={() => setIsNavbarOpen(!isNavbarOpen)} />
-
       <OrderList
         orders={orders}
         onOrderSelect={selectOrder}

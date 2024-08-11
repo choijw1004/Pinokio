@@ -1,40 +1,87 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
-import { ReactComponent as PlusIcon } from '../../assets/images/plus_icon.svg';
-import { ReactComponent as MinusIcon } from '../../assets/images/minus_icon.svg';
+
+const DownButton = styled.div`
+  width: ${(props) => props.size};
+  height: ${(props) => props.size};
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: ${(props) => props.color};
+`;
 
 const UpDownButtonsStyle = styled.div`
   --height: ${(props) => props.size};
   display: flex;
   flex-direction: row;
+  justify-content: space-between;
   width: calc(var(--height) * 3);
-  height: auto;
+  height: var(--height);
   border: calc(var(--height) / 60) solid #d9d9d9;
-  border-radius: calc(var(--height) * 0.17);
-  font-size: calc(var(--height) * 0.8);
-  line-height: var(--height);
+  border-radius: 0.1rem;
 `;
 
+// const DownButton = styled.div`
+//   width: 20px;
+//   height: 20px;
+//   display: flex;
+//   justify-content: center;
+//   align-items: center;
+//   color: black;
+// `;
+
 const MenuCount = styled.div`
-  --height: ${(props) => props.size};
-  width: var(--height);
-  height: var(--height);
+  width: ${(props) => props.size};
+  height: ${(props) => props.size};
   display: flex;
   justify-content: center;
   align-items: center;
 `;
+// const MenuCount = styled.div`
+//   width: 20px;
+//   height: 20px;
+//   display: flex;
+//   justify-content: center;
+//   align-items: center;
+// `;
+
+const UpButton = styled.div`
+  width: ${(props) => props.size};
+  height: ${(props) => props.size};
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: ${(props) => props.color};
+`;
+
+// const UpButton = styled.div`
+//   width: 20px;
+//   height: 20px;
+//   justify-content: center;
+//   align-items: center;
+//   color: black;
+// `;
+
+// UpDownButtons.defaultProps = {
+//   // 기본 색, 사이즈 설정
+//   color: '#7392ff',
+//   size: '2rem',
+// };
 
 function UpDownButtons({ value, setValue, size, color }) {
-  // console.log(size);
   return (
-    <UpDownButtonsStyle size={size} color={color}>
-      <MinusIcon
+    <UpDownButtonsStyle>
+      <DownButton
         onClick={() => (value > 0 ? setValue(value - 1) : null)}
-        width={size}
-        height={size}
-      ></MinusIcon>
+        size={size}
+        color={color}
+      >
+        -
+      </DownButton>
       <MenuCount size={size}>{value}</MenuCount>
-      <PlusIcon onClick={() => setValue(value + 1)} width={size} height={size}></PlusIcon>
+      <UpButton onClick={() => setValue(value + 1)} size={size} color={color}>
+        +
+      </UpButton>
     </UpDownButtonsStyle>
   );
 }

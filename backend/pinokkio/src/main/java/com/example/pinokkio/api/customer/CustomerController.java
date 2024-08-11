@@ -1,19 +1,16 @@
 package com.example.pinokkio.api.customer;
 
-import com.example.pinokkio.api.category.dto.response.GroupCategoryResponse;
 import com.example.pinokkio.api.customer.dto.request.CustomerRegistrationEvent;
 import com.example.pinokkio.api.customer.dto.request.CustomerRegistrationRequest;
+import com.example.pinokkio.api.customer.dto.response.CustomerResponse;
 import com.example.pinokkio.api.customer.sse.SSEService;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
@@ -30,22 +27,21 @@ public class CustomerController {
     private final SSEService sseService;
 
     @Operation(summary = "신규 고객 등록", description = "특정 포스에 신규 고객을 등록")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "고객 등록 성공",
-                    content = @Content(schema = @Schema(implementation = GroupCategoryResponse.class))),
-            @ApiResponse(responseCode = "401", description = "인증 실패",
-                    content = @Content(schema = @Schema(implementation = String.class))),
-            @ApiResponse(responseCode = "403", description = "권한 없음",
-                    content = @Content(schema = @Schema(implementation = String.class))),
-            @ApiResponse(responseCode = "404", description = "리소스를 찾을 수 없음",
-                    content = @Content(schema = @Schema(implementation = String.class)))
-    })
     @PostMapping("/register")
+    @PreAuthorize("hasRole('ROLE_KIOSK')")
     public ResponseEntity<?> register(@RequestBody CustomerRegistrationRequest request) {
         log.info("Received registration request: {}", request);
-        byte[] faceEmbeddingDataBytes = Base64.getDecoder().decode(request.getFaceEmbeddingData());
-        Customer newCustomer = customerService.saveCustomer(request.getCustomer(), faceEmbeddingDataBytes);
+        CustomerResponse newCustomer = customerService.saveCustomer(request.getAnalysisResult(), request.getPhoneNumber());
         return ResponseEntity.ok(newCustomer);
+    }
+
+    @Operation(summary = "전화번호를 이용한 고객 조회", description = "전화번호로 특정 포스 내의 고객 정보를 조회")
+    @GetMapping("/phone-number")
+    @PreAuthorize("hasRole('ROLE_KIOSK')")
+    public ResponseEntity<?> register(@RequestParam String phoneNumber) {
+        log.info("[고객 정보 조회] phoneNumber: {}", phoneNumber);
+        CustomerResponse findCustomer = customerService.findCustomerByPhoneNumber(phoneNumber);
+        return ResponseEntity.ok(findCustomer);
 
     }
 

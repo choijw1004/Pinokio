@@ -1,7 +1,6 @@
 package com.example.pinokkio.api.auth;
 
 import com.example.pinokkio.api.auth.dto.request.LoginRequest;
-import com.example.pinokkio.api.auth.dto.request.SignUpKioskRequest;
 import com.example.pinokkio.api.auth.dto.request.SignUpPosRequest;
 import com.example.pinokkio.api.auth.dto.request.SignUpTellerRequest;
 import com.example.pinokkio.api.auth.dto.response.KioskLoginResponse;
@@ -18,7 +17,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -50,19 +48,6 @@ public class AuthController {
     @PostMapping("/register/teller")
     public ResponseEntity<?> registerTeller(@Validated @RequestBody SignUpTellerRequest signUpTellerRequest) {
         authService.registerTeller(signUpTellerRequest);
-        return new ResponseEntity<>(HttpStatus.CREATED);
-    }
-
-    @Operation(summary = "키오스크 등록", description = "POS 사용자가 키오스크를 등록,  ROLE_POS인 사용자가 Header에 Access Token을 가진 경우만 접근가능")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "201", description = "키오스크 등록 성공"),
-            @ApiResponse(responseCode = "400", description = "잘못된 요청"),
-            @ApiResponse(responseCode = "403", description = "접근 권한 없음")
-    })
-    @PreAuthorize("hasRole('ROLE_POS')")
-    @PostMapping("/register/kiosk")
-    public ResponseEntity<?> registerKiosk(@Validated @RequestBody SignUpKioskRequest signUpKioskRequest) {
-        authService.registerKiosk(signUpKioskRequest);
         return new ResponseEntity<>(HttpStatus.CREATED);
     }
 

@@ -1,6 +1,5 @@
 package com.example.pinokkio.api.customer;
 
-
 import com.example.pinokkio.api.customer.dto.response.AnalysisResult;
 import com.example.pinokkio.api.customer.sse.SSEService;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -15,10 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.Base64;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 @Service
@@ -44,7 +40,9 @@ public class FaceAnalysisService {
      * @param images 이미지 리스트
      * @return 이미지 리스트를 분석한 결과를
      */
-    public AnalysisResult analyzeImages(List<String> images) throws JsonProcessingException {
+    public AnalysisResult analyzeImages(UUID kioskId, List<String> images) throws JsonProcessingException {
+        log.info("Starting image analysis for {} images.", images.size());
+
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
 
@@ -54,41 +52,60 @@ public class FaceAnalysisService {
         HttpEntity<Map<String, Object>> request = new HttpEntity<>(requestBody, headers);
 
         try {
+            log.debug("Sending request to FastAPI at {}.", fastApiUrl + "/fast/analyze_faces");
             ResponseEntity<Map> response = restTemplate.exchange(
                     fastApiUrl + "/fast/analyze_faces",
                     HttpMethod.POST,
                     request,
                     Map.class);
 
-            if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
-                Map<String, Object> responseBody = response.getBody();
+            if (response.getStatusCode().is2xxSuccessful()) {
+                log.info("Received successful response from FastAPI with status code {}.", response.getStatusCode());
 
-                if (responseBody.containsKey("result")) {
-                    Map<String, Object> resultMap = (Map<String, Object>) responseBody.get("result");
-                    String embeddingString = objectMapper.writeValueAsString(resultMap.get("encrypted_embedding"));
-                    String encodedEmbedding = Base64.getEncoder().encodeToString(embeddingString.getBytes());
+                if (response.getBody() != null) {
+                    Map<String, Object> responseBody = response.getBody();
+                    log.debug("Response body: {}", responseBody);
 
-                    AnalysisResult result = new AnalysisResult(
-                            ((Number) resultMap.get("age")).intValue(),
-                            (String) resultMap.get("gender"),
-                            (Boolean) resultMap.get("is_face"),
-                            encodedEmbedding
-                    );
+                    if (responseBody.containsKey("result")) {
+                        Map<String, Object> resultMap = (Map<String, Object>) responseBody.get("result");
+                        String embeddingString = objectMapper.writeValueAsString(resultMap.get("encrypted_embedding"));
+                        String encodedEmbedding = Base64.getEncoder().encodeToString(embeddingString.getBytes());
 
-                    if (result.isFace()) {
-                        cacheAnalysisResult(result);
-                        customerService.findCustomer(result);
-                        return result;
-                    } else {
-                        sseService.sendWaitingEvent(false);
-                        return null;
+                        AnalysisResult result = new AnalysisResult(
+                                ((Number) resultMap.get("age")).intValue(),
+                                (String) resultMap.get("gender"),
+                                (Boolean) resultMap.get("is_face"),
+                                encodedEmbedding
+                        );
+
+                        log.info("Analysis result processed: Age - {}, Gender - {}, Is Face - {}, faceEmbedding - {}",
+                                result.getAge(), result.getGender(), result.isFace(), result.getEncryptedEmbedding());
+
+                        if (result.isFace()) {
+                            log.debug("Face detected. Caching analysis result and proceeding with customer search.");
+                            cacheAnalysisResult(result);
+                            customerService.findCustomer(kioskId, result);
+                            return result;
+                        } else {
+                            log.info("No face detected. Sending waiting event.");
+                            sseService.sendWaitingEvent(false);
+                            return null;
+                        }
                     }
                 }
+            } else {
+                log.warn("Received non-successful response from FastAPI: {}", response.getStatusCode());
             }
 
+            log.info("No valid result found in response. Sending waiting event.");
             sseService.sendWaitingEvent(false);
             return null;
+        } catch (RestClientException e) {
+            log.error("Error occurred while communicating with FastAPI: {}", e.getMessage(), e);
+            sseService.sendWaitingEvent(false);
+            throw e;
         } catch (Exception e) {
+            log.error("Unexpected error occurred: {}", e.getMessage(), e);
             sseService.sendWaitingEvent(false);
             throw e;
         }
@@ -101,9 +118,12 @@ public class FaceAnalysisService {
     private void cacheAnalysisResult(AnalysisResult result) {
         String cacheKey = "analysis_result:" + result.getEncryptedEmbedding();
         try {
+            log.debug("Caching analysis result with key: {}", cacheKey);
             String jsonResult = objectMapper.writeValueAsString(result);
             redisTemplate.opsForValue().set(cacheKey, jsonResult, redisCacheTTL, TimeUnit.SECONDS);
+            log.info("Analysis result cached successfully with TTL of {} seconds.", redisCacheTTL);
         } catch (JsonProcessingException e) {
+            log.error("Error occurred while serializing analysis result for caching: {}", e.getMessage(), e);
         }
     }
 

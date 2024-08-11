@@ -4,13 +4,21 @@ import coffeeImage from '../../assets/images/coffee_image_rb.png';
 
 const MMC = styled.div`
   display: flex;
-  position: relative;
   flex-direction: column;
   background: white;
   border: 1px solid #c7c7c7;
   margin: 0.5vh 0.2vw;
   width: 6.5rem;
-  opacity: ${(props) => (props.isSoldOut === 'YES' ? '0.2' : '1')};
+  /* visibility: ${(props) => (props.menu.id ? 'visible' : 'hidden')}; */
+  /* font-family: 'PeoplefirstNeatLoudTTF';
+  margin: 10px;
+  @font-face {
+    font-family: 'PeoplefirstNeatLoudTTF';
+    src: url('https://fastly.jsdelivr.net/gh/projectnoonnu/2406-2@1.0/PeoplefirstNeatLoudTTF.woff2')
+      format('woff2');
+    font-weight: normal;
+    font-style: normal;
+  } */
 `;
 
 const Image = styled.img`
@@ -23,41 +31,26 @@ const MenuContents = styled.div`
   padding-left: 1vw;
   font-family: var(--font-CafeOhsquareAir);
 `;
-
 const MenuName = styled.div`
   font-size: 0.7rem;
 `;
-
 const MenuNameEng = styled.div`
   font-size: 0.3rem;
 `;
-
 const MenuPrice = styled.div`
   font-size: 1rem;
 `;
 
-const SoldOutText = styled.text`
-  padding: 0.2rem;
-  font-size: 0.8rem;
-  color: red;
-  display: ${(props) => (props.isSoldOut === 'YES' ? 'relative' : 'none')};
-  position: absolute;
-`;
 function MenuMainCard({ menu, setSelectedMenu, setModal }) {
   useEffect(() => {}, []);
 
   const handleClick = () => {
-    if (menu.isSoldOut === 'NO') {
-      setModal(true);
-      setSelectedMenu(menu);
-    } else {
-      setModal(false);
-    }
+    setModal(true);
+    setSelectedMenu(menu);
   };
 
   return (
-    <MMC onClick={handleClick} isSoldOut={menu.isSoldOut}>
-      <SoldOutText isSoldOut={menu.isSoldOut}>품절</SoldOutText>
+    <MMC onClick={handleClick} menu={menu}>
       <Image src={coffeeImage} />
       <MenuContents>
         <MenuName>{menu.name}</MenuName>

@@ -6,15 +6,14 @@ import { Chart, registerables } from 'chart.js';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import { ko } from 'date-fns/locale';
-import Navbar from '../../components/pos/Navbar';
 
 Chart.register(...registerables);
 
 const MainOuter = styled.div`
   display: flex;
-  flex-direction: column;
-  width: 100%;
-  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background-color: #f4f4f9;
   min-height: 100vh;
 `;
 
@@ -38,31 +37,28 @@ const Header = styled.div`
   font-weight: bold;
 `;
 
-const Buttons = styled.div`
+const ButtonGroup = styled.div`
   display: flex;
-`;
-
-const DateNavBar = styled.div`
-  display: flex;
-  flex-direction: row;
-  justify-content: space-between;
-  align-items: center;
-
-  /* gap: 10px; */
+  gap: 10px;
 `;
 
 const Button = styled.button`
-  background-color: ${(props) =>
-    props.startDate.getDate() === props.configStartDate &&
-    props.endDate.getDate() === props.configEndDate
-      ? '#d9d9d9'
-      : 'rgb(255, 255, 255, 0)'};
-  color: black;
+  background-color: #007bff;
+  color: white;
   border: none;
   border-radius: 5px;
   padding: 10px 15px;
   cursor: pointer;
-  font-size: 1rem;
+  font-size: 16px;
+
+  &:hover {
+    background-color: #0056b3;
+  }
+
+  &:focus {
+    outline: none;
+    box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+  }
 `;
 
 const DateDisplay = styled.div`
@@ -146,18 +142,14 @@ const Charts = styled.div`
 `;
 
 function SalesReportPage() {
-  const [isNavbarOpen, setIsNavbarOpen] = useState(false);
   const [startDate, setStartDate] = useState(new Date());
   const [endDate, setEndDate] = useState(new Date());
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
 
-  // useEffect(() => {
-  //   setStartDate(new Date());
-  //   setEndDate(new Date());
-  // }, []);
-
-  useEffect(() => {}, [startDate]);
-  useEffect(() => {}, [endDate]);
+  useEffect(() => {
+    setStartDate(new Date());
+    setEndDate(new Date());
+  }, []);
 
   const handleTodayClick = () => {
     const today = new Date();
@@ -194,16 +186,6 @@ function SalesReportPage() {
     return date instanceof Date && !isNaN(date.getTime()) ? date.toLocaleDateString() : '';
   };
 
-  const handleTest = () => {
-    console.log('start - date');
-    console.log(startDate.getDate());
-    console.log('end - date');
-    console.log(endDate.getDate());
-    console.log('boolean');
-    console.log(startDate === endDate);
-    console.log(new Date().getDate() - 1);
-  };
-
   const data = {
     labels: ['1월', '2월', '3월', '4월', '5월', '6월', '7월'],
     datasets: [
@@ -230,61 +212,20 @@ function SalesReportPage() {
 
   return (
     <MainOuter>
-      <Navbar isOpen={isNavbarOpen} toggleNavbar={() => setIsNavbarOpen(!isNavbarOpen)} />
       <Main>
-        <Header onClick={handleTest}>매출 리포트</Header>
-        <DateNavBar>
-          <Buttons>
-            <Button
-              onClick={handleYesterdayClick}
-              startDate={startDate}
-              endDate={endDate}
-              configStartDate={new Date().getDate() - 1}
-              configEndDate={new Date().getDate() - 1}
-            >
-              어제
-            </Button>
-            <Button
-              onClick={handleTodayClick}
-              startDate={startDate}
-              endDate={endDate}
-              configStartDate={new Date().getDate()}
-              configEndDate={new Date().getDate()}
-            >
-              오늘
-            </Button>
-            <Button
-              onClick={handleThisWeekClick}
-              startDate={startDate}
-              endDate={endDate}
-              configStartDate={new Date().getDate() - new Date().getDay() + 1}
-              configEndDate={new Date().getDate() - new Date().getDay() + 7}
-            >
-              이번주
-            </Button>
-            <Button
-              onClick={handleThisMonthClick}
-              startDate={startDate}
-              endDate={endDate}
-              configStartDate={new Date(
-                new Date().getFullYear(),
-                new Date().getMonth(),
-                1
-              ).getDate()}
-              configEndDate={new Date(
-                new Date().getFullYear(),
-                new Date().getMonth() + 1,
-                0
-              ).getDate()}
-            >
-              이번달
-            </Button>
-          </Buttons>
+        <Header>
+          매출 리포트
+          <ButtonGroup>
+            <Button onClick={handleYesterdayClick}>어제</Button>
+            <Button onClick={handleTodayClick}>오늘</Button>
+            <Button onClick={handleThisWeekClick}>이번주</Button>
+            <Button onClick={handleThisMonthClick}>이번달</Button>
+          </ButtonGroup>
+        </Header>
+        <MainBody>
           <DateDisplay onClick={() => setIsDatePickerOpen(!isDatePickerOpen)} tabIndex="0">
             날짜 {formatDate(startDate)} ~ {formatDate(endDate)}
           </DateDisplay>
-        </DateNavBar>
-        <MainBody>
           {isDatePickerOpen && (
             <DatePickerWrapper>
               <DatePicker

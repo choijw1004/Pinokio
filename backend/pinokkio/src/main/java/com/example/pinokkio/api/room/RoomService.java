@@ -2,194 +2,232 @@ package com.example.pinokkio.api.room;
 
 import com.example.pinokkio.api.kiosk.Kiosk;
 import com.example.pinokkio.api.kiosk.KioskRepository;
+import com.example.pinokkio.api.room.dto.response.RoomResponse;
 import com.example.pinokkio.api.teller.Teller;
-import com.example.pinokkio.api.teller.TellerRepository;
+import com.example.pinokkio.api.user.UserService;
 import com.example.pinokkio.common.utils.EntityUtils;
+import com.example.pinokkio.exception.domain.kiosk.KioskNotFoundException;
 import com.example.pinokkio.exception.domain.room.RoomAccessRestrictedException;
 import com.example.pinokkio.exception.domain.room.RoomNotAvailableException;
-import com.example.pinokkio.exception.domain.kiosk.KioskNotFoundException;
 import com.example.pinokkio.exception.domain.room.RoomNotFoundException;
-import com.example.pinokkio.exception.domain.teller.TellerNotFoundException;
-import io.livekit.server.*;
+import io.openvidu.java.client.*;
 import jakarta.annotation.PostConstruct;
-import livekit.LivekitModels;
-import livekit.LivekitWebhook;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.socket.TextMessage;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.UUID;
-import java.util.function.Function;
+import java.util.concurrent.locks.ReentrantLock;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
-@Transactional(readOnly = true)
 public class RoomService {
-//TODO: 상담원, 고객 서비스 로직 분리
 
-    // 상담원의 최대 응대 고객 수
-    private final int MAX_CAPACITY = 3;
+    private static final int MAX_CAPACITY = 3;
+    private static final String KIOSK_ROLE = "KIOSK";
+    private static final String TELLER_ROLE = "TELLER";
+
+    private OpenVidu openvidu;
 
     private final RoomRepository roomRepository;
-    private final TellerRepository tellerRepository;
     private final KioskRepository kioskRepository;
+    private final WebSocketService webSocketService;
+    private final UserService userService;
 
-    private RoomServiceClient roomServiceClient;
+    private final ReentrantLock roomLock = new ReentrantLock();
 
-    @Value("${livekit.api.key}")
-    private String LIVEKIT_API_KEY;
+    @Value("${openvidu.url}")
+    public String OPENVIDU_URL;
 
-    @Value("${livekit.api.secret}")
-    private String LIVEKIT_API_SECRET;
+    @Value("${openvidu.secret}")
+    private String OPENVIDU_SECRET;
 
     @PostConstruct
     public void init() {
-        this.roomServiceClient = RoomServiceClient.create("http://localhost:7880/", LIVEKIT_API_KEY, LIVEKIT_API_SECRET);
+        this.openvidu = new OpenVidu(OPENVIDU_URL, OPENVIDU_SECRET);
     }
 
-    /**
-     * 상담원 - 방 생성 후 입장을 위한 토큰 발급
-     */
     @Transactional
-    public AccessToken createRoom(String tellerId) {
-        // 상담원 존재 여부 검증
-        Teller teller = EntityUtils.getEntityById(tellerRepository, tellerId, TellerNotFoundException::new);
+    public RoomResponse createRoom() {
+        Teller teller = userService.getCurrentTeller();
 
-        // 기존 방 존재 여부 확인 및 토큰 발급
         return roomRepository.findByTeller(teller)
-                .map(room -> createToken(room.getRoomId().toString(), tellerId))
-                .orElseGet(() -> {
-                    Room newRoom =  Room.builder()
-                            .teller(teller)
-                            .numberOfCustomers(0)
-                            .build();
-                    roomRepository.save(newRoom);
-
-                    return createToken(newRoom.getRoomId().toString(), tellerId);
-                });
+                .map(room -> createRoomResponseForExistingRoom(room, teller))
+                .orElseGet(() -> createRoomResponseForNewRoom(teller));
     }
 
-    /**
-     * 상담원 - 상담원 퇴장 시 방 삭제
-     */
-    @Transactional
-    public void deleteRoom(String tellerId) {
-        Teller teller = EntityUtils.getEntityById(tellerRepository, tellerId, TellerNotFoundException::new);
-        roomRepository.deleteByTeller(teller);
-        log.info("[deleteRoom] complete for tellerId: {}", tellerId);
-    }
-
-    /**
-     * 상담원 - 상담 요청 수락시 고객의 방 접근을 위한 roomId 정보 제공
-     */
-    public String acceptInvitation(String roomId, String tellerId, String kioskId) {
-        EntityUtils.getEntityById(roomRepository, roomId, RoomNotFoundException::new);
-        EntityUtils.getEntityById(tellerRepository, tellerId, TellerNotFoundException::new);
-        EntityUtils.getEntityById(kioskRepository, kioskId, KioskNotFoundException::new);
-        log.info("[acceptInvitation] roomId: {}, participantName: {}", roomId, tellerId);
-        return roomId;
-    }
-
-    /**
-     * 상담원 - 상담 요청 거절
-     */
-    public void rejectInvitation(String roomId, String tellerId) {
-        log.info("[rejectInvitation] roomId: {}, tellerId: {}", roomId, tellerId);
-    }
-
-    /**
-     * 고객 -모든 방에 상담 요청 전송
-     */
-    public void messageAllRooms(String kioskId) {
+    private RoomResponse createRoomResponseForExistingRoom(Room room, Teller teller) {
         try {
-            List<LivekitModels.Room> rooms = roomServiceClient.listRooms().execute().body();
-            if (rooms == null || rooms.isEmpty()) throw new RoomAccessRestrictedException();
-            rooms.forEach(room -> {
-                try {
-                    sendMessageToRoom(room, kioskId);
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
-            });
-        } catch (IOException e) {
-            log.error("[messageAllRooms] Error: {}", e.getMessage());
-            throw new RuntimeException("모든 방에 상담 요청 보내기 실패", e);
+            String token = createToken(room.getRoomId(), teller.getId(), TELLER_ROLE);
+            return new RoomResponse(room.getRoomId().toString(), token);
+        } catch (OpenViduJavaClientException | OpenViduHttpException e) {
+            log.error("Error creating token for existing room: {}", room.getRoomId(), e);
+            throw new RoomAccessRestrictedException("Failed to create token for existing room");
         }
     }
 
-    /**
-     * 고객 - 입장
-     */
     @Transactional
-    public AccessToken enterRoom(String roomId, String kioskId) {
-        Kiosk kiosk = EntityUtils.getEntityById(kioskRepository, kioskId, KioskNotFoundException::new);
-        Room room = EntityUtils.getEntityById(roomRepository, roomId, RoomNotFoundException::new);
-        int currentCustomerCount = room.getNumberOfCustomers();
-        if (room.getNumberOfCustomers() >= MAX_CAPACITY) {
-            throw new RoomNotAvailableException(UUID.fromString(roomId));
-        }
-        room.updateNumberOfCustomers(currentCustomerCount+1);
+    public RoomResponse createRoomResponseForNewRoom(Teller teller) {
+        Room newRoom = Room.builder()
+                .teller(teller)
+                .numberOfCustomers(0)
+                .build();
+        roomRepository.save(newRoom);
 
-        // 토큰 발급
-        AccessToken roomToken = createToken(roomId, kioskId);
-        log.info("[createRoom] roomId: {}, kioskId: {}", roomId, kioskId);
-        return roomToken;
+        try {
+            SessionProperties properties = new SessionProperties.Builder()
+                    .customSessionId(newRoom.getRoomId().toString())
+                    .build();
+            Session session = openvidu.createSession(properties);
+            String token = createToken(UUID.fromString(session.getSessionId()), teller.getId(), TELLER_ROLE);
+            return new RoomResponse(session.getSessionId(), token);
+        } catch (OpenViduJavaClientException | OpenViduHttpException e) {
+            log.error("Error creating new room for teller: {}", teller.getId(), e);
+            throw new RoomAccessRestrictedException("Failed to create new room");
+        }
     }
 
-    /**
-     * 고객 - 방 퇴장
-     */
+    @Transactional
+    public void deleteRoom() {
+        Teller teller = userService.getCurrentTeller();
+        roomRepository.deleteByTeller(teller);
+        log.info("Room deleted for teller: {}", teller.getId());
+    }
+
+    public void acceptInvitation(UUID roomId, UUID kioskId) {
+        if (webSocketService.isTokenIssued(kioskId)) {
+            throw new RoomAccessRestrictedException("Token already issued for kiosk: " + kioskId);
+        }
+
+        Teller teller = userService.getCurrentTeller();
+        Room room = roomRepository.findByTeller(teller)
+                .orElseThrow(() -> new RoomNotFoundException("Room not found for teller: " + teller.getId()));
+
+        validateRoomId(roomId, room);
+        validateKioskId(kioskId);
+
+        webSocketService.sendRoomId(kioskId, room.getRoomId());
+        log.info("Invitation accepted for room: {}, kiosk: {}, teller: {}", roomId, kioskId, teller.getId());
+    }
+
+    private void validateKioskId(UUID kioskId) {
+        EntityUtils.getEntityById(kioskRepository, kioskId, KioskNotFoundException::new);
+    }
+
+    private void validateRoomId(UUID roomId, Room room) {
+        if (!room.getRoomId().equals(roomId)) {
+            throw new RoomNotFoundException("Room not found: " + roomId);
+        }
+    }
+
+    public void rejectInvitation() {
+        Teller teller = userService.getCurrentTeller();
+        Room room = roomRepository.findByTeller(teller)
+                .orElseThrow(() -> new RoomNotFoundException("Room not found for teller: " + teller.getId()));
+        log.info("Invitation rejected for room: {}, teller: {}", room.getRoomId(), teller.getId());
+    }
+
+    public void sendRequestToAllActiveTellers() {
+        Kiosk curKiosk = userService.getCurrentKiosk();
+        List<Session> activeSessions = openvidu.getActiveSessions();
+
+        if (activeSessions.isEmpty()) {
+            throw new RoomAccessRestrictedException("No active sessions available");
+        }
+
+        for (Session session : activeSessions) {
+            processActiveSession(session, curKiosk);
+        }
+
+        log.info("Consultation request sent to all active tellers for kiosk: {}", curKiosk.getId());
+    }
+
+    private void processActiveSession(Session session, Kiosk kiosk) {
+        UUID curRoomId = UUID.fromString(session.getSessionId());
+        Room room = roomRepository.findById(curRoomId)
+                .orElseThrow(() -> new RoomNotFoundException("Room not found: " + curRoomId));
+
+        Teller teller = room.getTeller();
+        if (teller != null) {
+            sendConsultationRequestToTeller(teller, kiosk, curRoomId.toString());
+        } else {
+            log.warn("Room {} has no associated teller", curRoomId);
+        }
+    }
+
+    private void sendConsultationRequestToTeller(Teller teller, Kiosk kiosk, String sessionId) {
+        try {
+            JSONObject jsonMessage = new JSONObject()
+                    .put("type", "consultationRequest")
+                    .put("kioskId", kiosk.getId().toString())
+                    .put("sessionId", sessionId);
+
+            webSocketService.sendMessage(teller.getId(), new TextMessage(jsonMessage.toString()));
+        } catch (JSONException e) {
+            log.error("Error creating JSON message for consultation request", e);
+        }
+    }
+
+    @Transactional
+    public String enterRoom(UUID roomId, UUID kioskId) throws OpenViduJavaClientException, OpenViduHttpException {
+        roomLock.lock();
+        try {
+            Room room = roomRepository.findById(roomId)
+                    .orElseThrow(() -> new RoomNotFoundException("Room not found: " + roomId));
+
+            if (room.getNumberOfCustomers() >= MAX_CAPACITY) {
+                throw new RoomNotAvailableException(roomId);
+            }
+
+            room.updateNumberOfCustomers(room.getNumberOfCustomers() + 1);
+            roomRepository.save(room);
+
+            log.info("Kiosk {} entered room {}", kioskId, roomId);
+            return createToken(roomId, kioskId, KIOSK_ROLE);
+        } finally {
+            roomLock.unlock();
+        }
+    }
+
     @Transactional
     public void leaveRoom(String roomId) {
-        Room room = EntityUtils.getEntityById(roomRepository, roomId, RoomNotFoundException::new);
-
-        int currentCustomerCount = room.getNumberOfCustomers();
-        if (currentCustomerCount > 0) {
-            room.updateNumberOfCustomers(currentCustomerCount - 1);
-        }
-        log.info("[leaveRoom] roomId: {}, new number of customers: {}", roomId, room.getNumberOfCustomers());
-    }
-
-    public void handleWebhook(String authHeader, String body) {
-        WebhookReceiver webhookReceiver = new WebhookReceiver(LIVEKIT_API_KEY, LIVEKIT_API_SECRET);
+        roomLock.lock();
         try {
-            LivekitWebhook.WebhookEvent event = webhookReceiver.receive(body, authHeader);
-            log.info("LiveKit Webhook: {}", event);
-        } catch (Exception e) {
-            log.error("Error validating webhook event: {}", e.getMessage());
-            throw new RuntimeException("Failed to handle webhook", e);
+            Room room = roomRepository.findById(UUID.fromString(roomId))
+                    .orElseThrow(() -> new RoomNotFoundException("Room not found: " + roomId));
+
+            if (room.getNumberOfCustomers() > 0) {
+                room.updateNumberOfCustomers(room.getNumberOfCustomers() - 1);
+                roomRepository.save(room);
+            }
+            log.info("A customer left room: {}, new number of customers: {}", roomId, room.getNumberOfCustomers());
+        } finally {
+            roomLock.unlock();
         }
     }
 
-    /**
-     * roomID, userId롤 openVidu 접근을 위한 토큰 생성
-     */
-    private AccessToken createToken(String roomId, String userId) {
-        AccessToken token = new AccessToken(LIVEKIT_API_KEY, LIVEKIT_API_SECRET);
-        token.setName(roomId);
-        token.setIdentity(userId);
-        token.addGrants(new RoomJoin(true), new RoomName(roomId));
-        return token;
-    }
+    private String createToken(UUID roomId, UUID userId, String userRole) throws OpenViduJavaClientException, OpenViduHttpException {
+        Session session = openvidu.getActiveSession(roomId.toString());
+        if (session == null) {
+            throw new RoomNotFoundException("Active session not found: " + roomId);
+        }
 
-    /**
-     * Room 메시지 송신 메서드
-     *
-     * @param room
-     * @param participantName 송신자
-     */
-    private void sendMessageToRoom(LivekitModels.Room room, String participantName) throws IOException {
-        LivekitModels.DataPacket.Kind kind = LivekitModels.DataPacket.Kind.RELIABLE;
-        List<String> destinationIdentities = List.of();
-        String jsonPayload = String.format("{\"participantName\": \"상담 요청: %s\"}", participantName);
-        roomServiceClient.sendData(room.getName(), jsonPayload.getBytes(), kind, destinationIdentities).execute();
-        log.info("Message sent to room: {}", room.getName());
-    }
+        JSONObject userData = new JSONObject();
+        userData.put("userId", userId);
+        userData.put("role", userRole);
 
+        ConnectionProperties properties = new ConnectionProperties.Builder()
+                .role(OpenViduRole.valueOf(userRole.equals(KIOSK_ROLE) ? "PUBLISHER" : "MODERATOR"))
+                .data(userData.toString())
+                .build();
+        Connection connection = session.createConnection(properties);
+        return connection.getToken();
+    }
 }

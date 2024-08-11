@@ -5,13 +5,12 @@ const RoomsContainer = styled.div`
   display: flex;
   justify-content: space-between;
   margin-top: 10px;
-  padding: 0 15px;
 `;
 
 const Room = styled.div`
-  width: 32%;
+  width: 30%;
   height: 150px;
-
+  border: 1px solid #ccc;
   border-radius: 8px;
   display: flex;
   justify-content: center;
@@ -24,8 +23,7 @@ const Room = styled.div`
       : props.status === 'connected'
       ? '#c8e6c9'
       : 'white'};
-  background-color: #d9d9d9;
-  font-family: 'CafeOhsquareAir';
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 `;
 
 function CustomerWaitingRooms({ connectedKiosks }) {

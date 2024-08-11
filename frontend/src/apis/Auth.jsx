@@ -39,9 +39,11 @@ export const postRegisterPos = async (code, username, password, confirmPassword)
 };
 
 // 키오스크 회원가입
-export const postRegisterKiosk = async () => {
+export const postRegisterKiosk = async (posId) => {
   try {
-    const response = await axios.post('/api/pos/kiosks/register');
+    const response = await axios.post('/api/register/kiosk', {
+      posId: posId,
+    });
     return response.data;
   } catch (error) {
     console.error('register kiosk failed:', error);
