@@ -60,7 +60,7 @@ encryption:
           key: ${ENCRYPTION_KEY}
 
 fastapi:
-  url: https://pinokkio-fast-backend:5000
+  url: https://fast-pinokkio-backend:5000
   timeout: 10000
 
 grpc:
