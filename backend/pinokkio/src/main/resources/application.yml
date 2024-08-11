@@ -60,7 +60,8 @@ encryption:
           key: ${ENCRYPTION_KEY}
 
 fastapi:
-  url: https://fast-pinokkio-backend:5000
+  # 수정 유의
+  url: https://i11a601.p.ssafy.io:5000
   timeout: 10000
 
 grpc:
