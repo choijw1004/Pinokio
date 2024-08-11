@@ -14,10 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.Base64;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 @Service
@@ -43,7 +40,7 @@ public class FaceAnalysisService {
      * @param images 이미지 리스트
      * @return 이미지 리스트를 분석한 결과를
      */
-    public AnalysisResult analyzeImages(List<String> images) throws JsonProcessingException {
+    public AnalysisResult analyzeImages(UUID kioskId, List<String> images) throws JsonProcessingException {
         log.info("Starting image analysis for {} images.", images.size());
 
         HttpHeaders headers = new HttpHeaders();
@@ -87,7 +84,7 @@ public class FaceAnalysisService {
                         if (result.isFace()) {
                             log.debug("Face detected. Caching analysis result and proceeding with customer search.");
                             cacheAnalysisResult(result);
-                            customerService.findCustomer(result);
+                            customerService.findCustomer(kioskId, result);
                             return result;
                         } else {
                             log.info("No face detected. Sending waiting event.");
