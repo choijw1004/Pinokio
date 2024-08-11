@@ -61,7 +61,7 @@ encryption:
 
 fastapi:
   # 수정 유의
-  url: https://i11a601.p.ssafy.io:5000
+  url: https://i11a601.p.ssafy.io
   timeout: 10000
 
 grpc:
