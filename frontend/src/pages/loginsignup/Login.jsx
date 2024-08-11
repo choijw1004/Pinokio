@@ -66,17 +66,19 @@ const StyledButton = styled.button`
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 
   &:hover {
-    transform: translateY(-2px);
+    transform: translateY(-1px);
+  }
+  &:hover {
+    background-color: #c383d9;
   }
   &:active {
-    background-color: #d8ff75;
+    background-color: #7392ff;
   }
 `;
 
 const ButtonWrapper = styled.div`
   display: flex;
   flex-direction: row-reverse;
-
   margin-top: 20px;
 
   div {
@@ -87,6 +89,9 @@ const ButtonWrapper = styled.div`
 
     &:hover {
       color: #d8ff75;
+    }
+    &:active {
+      color: #7392ff;
     }
   }
 `;
