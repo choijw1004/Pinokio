@@ -1,9 +1,12 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
+import { deleteCategory, modifyCategory } from '../../apis/Category'; // API 함수 import
+import { getItemsByCategoryId } from '../../apis/Item';
 
 const CategoryTable = styled.table`
   width: 100%;
   border-collapse: collapse;
+  table-layout: 'fixed';
 `;
 
 const CategoryRow = styled.tr`
@@ -15,6 +18,7 @@ const CategoryRow = styled.tr`
 
 const CategoryCell = styled.td`
   padding: 10px;
+  text-align: center;
   vertical-align: middle;
 `;
 
@@ -29,6 +33,14 @@ const DeleteButton = styled.button`
   color: red;
   cursor: pointer;
   transition: opacity 0.3s ease;
+`;
+
+const EditButton = styled.button`
+  background: none;
+  border: none;
+  color: blue;
+  cursor: pointer;
+  margin-left: 10px;
 `;
 
 const ModalBackground = styled.div`
@@ -64,46 +76,97 @@ const ModalButton = styled.button`
 
 const CategoryList = ({ categories, onEdit, onDelete }) => {
   const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
   const [categoryToDelete, setCategoryToDelete] = useState(null);
+  const [categoryToEdit, setCategoryToEdit] = useState(null);
+  const [editName, setEditName] = useState('');
 
   const handleDeleteClick = (category) => {
     setCategoryToDelete(category);
     setShowConfirmModal(true);
   };
 
-  const confirmDelete = () => {
-    onDelete(categoryToDelete.id);
-    setShowConfirmModal(false);
+  const handleEditClick = (category) => {
+    setCategoryToEdit(category);
+    setEditName(category.name);
+    setShowEditModal(true);
+  };
+
+  const confirmDelete = async () => {
+    try {
+      await deleteCategory(categoryToDelete.id);
+      onDelete(categoryToDelete.id); // 부모 컴포넌트에 삭제 알림
+      setShowConfirmModal(false);
+    } catch (error) {
+      console.error('카테고리 삭제 실패:', error);
+      alert('카테고리 삭제에 실패했습니다.');
+    }
+  };
+
+  const confirmEdit = async () => {
+    try {
+      console.log(categoryToEdit.id);
+      console.log(editName);
+      await modifyCategory(categoryToEdit.id, editName);
+      onEdit(editName); // 부모 컴포넌트에 수정 알림
+      setShowEditModal(false);
+    } catch (error) {
+      console.error('카테고리 수정 실패:', error);
+      alert('카테고리 수정에 실패했습니다.');
+    }
+  };
+
+  const calculateItemCount = async (categoryId) => {
+    try {
+      const data = await getItemsByCategoryId(categoryId);
+    } catch (error) {
+      // setToastMessage('상품 및 카테고리 데이터를 가져오는 데 실패했습니다.');
+    }
+    return 1;
   };
 
   return (
     <>
-      <CategoryTable>
+      <CategoryTable style={{ width: '100%' }}>
         <thead>
           <CategoryRow>
-            <th></th>
-            <th>카테고리명</th>
+            <th style={{ textAlign: 'center', width: '33.33%' }}>카테고리명</th>
+            <th style={{ textAlign: 'center', width: '33.33%' }}>보유 상품 수</th>
           </CategoryRow>
         </thead>
         <tbody>
           {categories.map((category) => (
             <CategoryRow key={category.id}>
+              <CategoryCell>{category.name}</CategoryCell>
+              <CategoryCell>{calculateItemCount()}</CategoryCell>
               <DeleteCell>
+                <EditButton onClick={() => handleEditClick(category)}>수정</EditButton>
                 <DeleteButton className="delete-button" onClick={() => handleDeleteClick(category)}>
                   X
                 </DeleteButton>
               </DeleteCell>
-              <CategoryCell onClick={() => onEdit(category)}>{category.name}</CategoryCell>
             </CategoryRow>
           ))}
         </tbody>
       </CategoryTable>
+
       {showConfirmModal && (
         <ModalBackground>
           <ModalContent>
             <p>{categoryToDelete.name} 카테고리를 삭제하시겠습니까?</p>
             <ModalButton onClick={confirmDelete}>확인</ModalButton>
             <ModalButton onClick={() => setShowConfirmModal(false)}>취소</ModalButton>
+          </ModalContent>
+        </ModalBackground>
+      )}
+
+      {showEditModal && (
+        <ModalBackground>
+          <ModalContent>
+            <p>카테고리 이름 수정:</p>
+            <input type="text" value={editName} onChange={(e) => setEditName(e.target.value)} />
+            <ModalButton onClick={confirmEdit}>확인</ModalButton>
+            <ModalButton onClick={() => setShowEditModal(false)}>취소</ModalButton>
           </ModalContent>
         </ModalBackground>
       )}
