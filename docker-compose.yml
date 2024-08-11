@@ -33,7 +33,8 @@ services:
       - redis
 
   fast_pinokkio:
-    build:
+      container_name: fast-pinokkio-backend
+      build:
       context: ./backend/fast_pinokkio
       dockerfile: Dockerfile
     ports:
