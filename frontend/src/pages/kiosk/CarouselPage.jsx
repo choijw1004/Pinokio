@@ -99,124 +99,124 @@ function CarouselPage() {
     carouselimage,
   ]);
 
-  // const startKiosk = async (kioskId) => {
-  //   try {
-  //     const response = await axios.post(`http://localhost:5001/start`, { kiosk_id: kioskId });
-  //     console.log(response);
-  //   } catch (error) {
-  //     console.error('키오스크 컨트롤러 시작 실패:', error);
-  //   }
-  // };
+  const startKiosk = async (kioskId) => {
+    try {
+      const response = await axios.post(`http://localhost:5001/start`, { kiosk_id: kioskId });
+      console.log(response);
+    } catch (error) {
+      console.error('키오스크 컨트롤러 시작 실패:', error);
+    }
+  };
 
-  // useEffect(() => {
-  //   if (isFirstRender.current) {
-  //     console.log(kioskId);
-  //     startKiosk(kioskId);
-  //     const connectEventSource = () => {
-  //       const url = 'http://localhost:8080/api/customer/face-recognition-events';
-  //       console.log('Connecting to:', url);
+  useEffect(() => {
+    if (isFirstRender.current) {
+      console.log(kioskId);
+      startKiosk(kioskId);
+      const connectEventSource = () => {
+        const url = 'http://localhost:8080/api/customer/face-recognition-events';
+        console.log('Connecting to:', url);
 
-  //       const eventSource = new EventSource(url);
+        const eventSource = new EventSource(url);
 
-  //       eventSource.addEventListener('waitingStatus', (event) => {
-  //         const data = JSON.parse(event.data);
-  //         console.log('Received waitingStatus event:', data);
-  //         setIsWaiting(data.waiting);
-  //         setShowModal(data.waiting);
-  //       });
+        eventSource.addEventListener('waitingStatus', (event) => {
+          const data = JSON.parse(event.data);
+          console.log('Received waitingStatus event:', data);
+          setIsWaiting(data.waiting);
+          setShowModal(data.waiting);
+        });
 
-  //       eventSource.addEventListener('faceDetectionResult', (event) => {
-  //         const data = JSON.parse(event.data);
-  //         console.log('Received faceDetectionResult event:', data);
-  //         if (!data.isFace) {
-  //           setIsWaiting(false);
-  //           setShowModal(false);
-  //           setResult(null);
-  //         }
-  //       });
+        eventSource.addEventListener('faceDetectionResult', (event) => {
+          const data = JSON.parse(event.data);
+          console.log('Received faceDetectionResult event:', data);
+          if (!data.isFace) {
+            setIsWaiting(false);
+            setShowModal(false);
+            setResult(null);
+          }
+        });
 
-  //       eventSource.addEventListener('analysisResult', (event) => {
-  //         const data = JSON.parse(event.data);
-  //         console.log('Received analysisResult event:', data);
-  //         setResult({
-  //           age: data.age,
-  //           gender: data.gender,
-  //           isFace: data.isFace,
-  //           isCustomer: data.isCustomer,
-  //           customerId: data.customerId,
-  //           customerAge: data.customerAge,
-  //           customerGender: data.customerGender,
-  //           faceEmbeddingData: data.faceEmbeddingData,
-  //         });
-  //         setIsWaiting(false);
-  //         setShowModal(true);
-  //       });
+        eventSource.addEventListener('analysisResult', (event) => {
+          const data = JSON.parse(event.data);
+          console.log('Received analysisResult event:', data);
+          setResult({
+            age: data.age,
+            gender: data.gender,
+            isFace: data.isFace,
+            isCustomer: data.isCustomer,
+            customerId: data.customerId,
+            customerAge: data.customerAge,
+            customerGender: data.customerGender,
+            faceEmbeddingData: data.faceEmbeddingData,
+          });
+          setIsWaiting(false);
+          setShowModal(true);
+        });
 
-  //       eventSource.onerror = (error) => {
-  //         console.error('SSE error:', error);
-  //         eventSource.close();
-  //         setTimeout(connectEventSource, 5000); // Retry connection
-  //       };
+        eventSource.onerror = (error) => {
+          console.error('SSE error:', error);
+          eventSource.close();
+          setTimeout(connectEventSource, 5000); // Retry connection
+        };
 
-  //       return () => {
-  //         eventSource.close();
-  //       };
-  //     };
+        return () => {
+          eventSource.close();
+        };
+      };
 
-  //     connectEventSource();
-  //     isFirstRender.current = false;
-  //     return;
-  //   }
-  // }, []);
+      connectEventSource();
+      isFirstRender.current = false;
+      return;
+    }
+  }, []);
 
-  // const connectEventSource = () => {
-  //   const url = 'http://localhost:8080/api/customer/face-recognition-events';
-  //   console.log('Connecting to:', url);
+  const connectEventSource = () => {
+    const url = 'http://localhost:8080/api/customer/face-recognition-events';
+    console.log('Connecting to:', url);
 
-  //   const eventSource = new EventSource(url);
+    const eventSource = new EventSource(url);
 
-  //   eventSource.addEventListener('waitingStatus', (event) => {
-  //     const data = JSON.parse(event.data);
-  //     console.log('Received waitingStatus event:', data);
-  //     setIsWaiting(data.waiting);
-  //   });
+    eventSource.addEventListener('waitingStatus', (event) => {
+      const data = JSON.parse(event.data);
+      console.log('Received waitingStatus event:', data);
+      setIsWaiting(data.waiting);
+    });
 
-  //   eventSource.addEventListener('faceDetectionResult', (event) => {
-  //     const data = JSON.parse(event.data);
-  //     console.log('Received faceDetectionResult event:', data);
-  //     if (!data.isFace) {
-  //       setIsWaiting(false);
-  //       setResult(null);
-  //     }
-  //   });
+    eventSource.addEventListener('faceDetectionResult', (event) => {
+      const data = JSON.parse(event.data);
+      console.log('Received faceDetectionResult event:', data);
+      if (!data.isFace) {
+        setIsWaiting(false);
+        setResult(null);
+      }
+    });
 
-  //   eventSource.addEventListener('analysisResult', (event) => {
-  //     const data = JSON.parse(event.data);
-  //     console.log('Received analysisResult event:', data);
-  //     setResult({
-  //       age: data.age,
-  //       gender: data.gender,
-  //       isFace: data.isFace,
-  //       isCustomer: data.isCustomer,
-  //       customerId: data.customerId,
-  //       customerAge: data.customerAge,
-  //       customerGender: data.customerGender,
-  //       faceEmbeddingData: data.faceEmbeddingData,
-  //     });
-  //     setIsWaiting(false);
-  //     setShowModal(true);
-  //   });
+    eventSource.addEventListener('analysisResult', (event) => {
+      const data = JSON.parse(event.data);
+      console.log('Received analysisResult event:', data);
+      setResult({
+        age: data.age,
+        gender: data.gender,
+        isFace: data.isFace,
+        isCustomer: data.isCustomer,
+        customerId: data.customerId,
+        customerAge: data.customerAge,
+        customerGender: data.customerGender,
+        faceEmbeddingData: data.faceEmbeddingData,
+      });
+      setIsWaiting(false);
+      setShowModal(true);
+    });
 
-  //   eventSource.onerror = (error) => {
-  //     console.error('SSE error:', error);
-  //     eventSource.close();
-  //     setTimeout(connectEventSource, 5000); // 재연결 시도
-  //   };
+    eventSource.onerror = (error) => {
+      console.error('SSE error:', error);
+      eventSource.close();
+      setTimeout(connectEventSource, 5000); // 재연결 시도
+    };
 
-  //   return () => {
-  //     eventSource.close();
-  //   };
-  // };
+    return () => {
+      eventSource.close();
+    };
+  };
 
   const havingHere = () => {
     navigate('/kiosk/menu', { state: { where: 'having here' } });
@@ -226,20 +226,20 @@ function CarouselPage() {
     navigate('/kiosk/elder-menu', { state: { where: 'take away' } });
   };
 
-  // const slideAutoPlay = () => {
-  //   const interval = setInterval(() => {
-  //     handleSwipe(1);
+  const slideAutoPlay = () => {
+    const interval = setInterval(() => {
+      handleSwipe(1);
 
-  //     if (carouselIndex === $slider.children.length - 1) {
-  //       setTimeout(() => {
-  //         $slider.style.transition = 'none';
-  //         currentIndex = 1;
-  //         moveOffset = (100 / slideAmount) * currentIndex;
-  //         $slider.style.transform = `translateX(-${moveOffset}%)`;
-  //       }, slideSpeed);
-  //     }
-  //   }, 3000);
-  // };
+      if (carouselIndex === $slider.children.length - 1) {
+        setTimeout(() => {
+          $slider.style.transition = 'none';
+          currentIndex = 1;
+          moveOffset = (100 / slideAmount) * currentIndex;
+          $slider.style.transform = `translateX(-${moveOffset}%)`;
+        }, slideSpeed);
+      }
+    }, 3000);
+  };
 
   useEffect(() => {
     const interval = setInterval(() => {
