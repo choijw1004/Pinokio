@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import styled from 'styled-components';
 import ToggleButton from '../common/Toggle';
 import { postItem } from '../../apis/Item';
@@ -33,7 +33,22 @@ const ProductModal = ({ product, categories, onClose }) => {
   const [isScreen, setIsScreen] = useState(false);
   const [isSoldout, setIsSoldout] = useState(false);
   const [category, setCategory] = useState('');
-
+  useEffect(() => {
+    if (product !== null) {
+      console.log(product);
+      setName(product.name);
+      setPrice(product.price);
+      setAmount(product.amount);
+      setImage(product.image);
+      setDetail(product.detail);
+      console.log(categories.filter((category) => category.id === product.categoryId));
+      const categoryName = categories.filter((category) => category.id === product.categoryId)[0]
+        .name;
+      setCategory(categoryName);
+      setIsScreen(product.isScreen);
+      setIsSoldout(product.isSoldout);
+    }
+  }, []);
   const handleSave = async () => {
     if (!name.trim() || !detail.trim() || !price || price === '0') {
       alert('필수 항목을 모두 입력해주세요.');
@@ -107,7 +122,9 @@ const ProductModal = ({ product, categories, onClose }) => {
         required
       />
       <select value={category} onChange={(e) => setCategory(e.target.value)}>
-        <option value="">카테고리 선택</option>
+        <option value="" disabled>
+          카테고리 선택
+        </option>
         {categories.map((cat) => (
           <option key={cat.id} value={cat.name}>
             {cat.name}

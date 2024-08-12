@@ -1,20 +1,26 @@
 import { createSlice } from '@reduxjs/toolkit';
 
-const createInitialKioskState = (id) => ({ id, status: 'waiting', kioskId: null });
+const createInitialKioskState = (id) => ({
+  id,
+  status: 'waiting',
+  kioskId: null,
+  connectionId: null,
+  isActive: false,
+});
 
 const advisorSlice = createSlice({
   name: 'advisor',
   initialState: {
-    isAvailable: true, // 상담원이 새로운 연결을 받을 수 있는지 여부
-    currentConnections: 0, // 현재 연결된 고객 수
-    maxConnections: 3, // 최대 연결할 수 있는 고객 수
-    roomToken: null, // 방 토큰
-    roomId: null, // 방 ID
+    isAvailable: true,
+    currentConnections: 0,
+    roomToken: null,
+    roomId: null,
     connectedKiosks: [
       createInitialKioskState(1),
       createInitialKioskState(2),
       createInitialKioskState(3),
-    ], // 연결된 키오스크 정보 배열
+    ],
+    maxConnections: 3,
   },
   reducers: {
     setAvailability: (state, action) => {
@@ -26,42 +32,82 @@ const advisorSlice = createSlice({
       state.roomId = roomId;
     },
     connectKiosk: (state, action) => {
-      const { id, kioskId } = action.payload;
-      const availableSlot = state.connectedKiosks.find((kiosk) => kiosk.status === 'waiting');
-      if (availableSlot && state.currentConnections < state.maxConnections) {
-        availableSlot.kioskId = kioskId;
-        availableSlot.status = 'connected';
-        state.currentConnections += 1;
-        if (state.currentConnections === state.maxConnections) {
-          state.isAvailable = false;
+      const { kioskId } = action.payload;
+      const targetKiosk = state.connectedKiosks.find((kiosk) => kiosk.status === 'waiting');
+      if (targetKiosk) {
+        targetKiosk.kioskId = kioskId;
+        targetKiosk.status = 'connected';
+        if (state.currentConnections === 0) {
+          targetKiosk.isActive = true;
+        }
+        if (state.currentConnections < state.maxConnections) {
+          state.currentConnections += 1;
+          if (state.currentConnections === state.maxConnections) {
+            state.isAvailable = false;
+          }
         }
       }
     },
+    updateKiosk: (state, action) => {
+      const { connectionId } = action.payload;
+      const targetKiosk = state.connectedKiosks.find(
+        (kiosk) => kiosk.status === 'connected' && !kiosk.connectionId
+      );
+      if (targetKiosk) {
+        targetKiosk.connectionId = connectionId;
+      }
+    },
     disconnectKiosk: (state, action) => {
-      const kioskId = action.payload;
-      const connectedKiosk = state.connectedKiosks.find((kiosk) => kiosk.kioskId === kioskId);
+      const connectionId = action.payload;
+      const connectedKiosk = state.connectedKiosks.find(
+        (kiosk) => kiosk.connectionId === connectionId
+      );
       if (connectedKiosk) {
+        const wasActive = connectedKiosk.isActive;
         connectedKiosk.status = 'waiting';
         connectedKiosk.kioskId = null;
+        connectedKiosk.connectionId = null;
+        connectedKiosk.isActive = false;
         state.currentConnections -= 1;
         if (state.currentConnections < state.maxConnections) {
           state.isAvailable = true;
         }
+        if (wasActive && state.currentConnections > 0) {
+          const newActiveKiosk = state.connectedKiosks.find(
+            (kiosk) => kiosk.status === 'connected'
+          );
+          if (newActiveKiosk) {
+            newActiveKiosk.isActive = true;
+          }
+        }
       }
+    },
+    setActiveKiosk: (state, action) => {
+      const connectionId = action.payload;
+      state.connectedKiosks.forEach((kiosk) => {
+        kiosk.isActive = kiosk.connectionId === connectionId;
+      });
     },
     resetAdvisor: (state) => {
       state.isAvailable = true;
       state.currentConnections = 0;
       state.roomToken = null;
       state.roomId = null;
-      state.connectedKiosks = state.connectedKiosks.map((kiosk, index) =>
+      state.connectedKiosks = state.connectedKiosks.map((_, index) =>
         createInitialKioskState(index + 1)
       );
     },
   },
 });
 
-export const { setAvailability, setRoomInfo, connectKiosk, disconnectKiosk, resetAdvisor } =
-  advisorSlice.actions;
+export const {
+  setAvailability,
+  setRoomInfo,
+  connectKiosk,
+  updateKiosk,
+  disconnectKiosk,
+  setActiveKiosk,
+  resetAdvisor,
+} = advisorSlice.actions;
 
 export default advisorSlice.reducer;

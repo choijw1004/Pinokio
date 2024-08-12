@@ -1,9 +1,5 @@
 package com.example.pinokkio.api.teller;
 
-import com.example.pinokkio.api.pos.Pos;
-import com.example.pinokkio.api.pos.PosRepository;
-import com.example.pinokkio.api.pos.dto.response.PosResponse;
-import com.example.pinokkio.exception.domain.pos.PosEmailNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -18,5 +14,13 @@ public class TellerService {
 
     public boolean isEmailDuplicated(String email) {
         return tellerRepository.existsByEmail(email);
+    }
+
+    /**
+     * 상담원 회원탈퇴
+     * @param teller 상담원
+     */
+    public void deleteTeller(Teller teller) {
+        tellerRepository.delete(teller);
     }
 }

@@ -5,7 +5,6 @@ import styled from 'styled-components';
 import carouselimage from '../../assets/images/carouselimage.jpg';
 import carouselimage2 from '../../assets/images/carouselimage2.jpg';
 import carouselimage3 from '../../assets/images/carouselimage3.jpg';
-import menudata from '../../data/MenuData.json';
 import NumberModal from '../../components/kiosk/modal/NumberModal';
 import axios from 'axios';
 
@@ -99,75 +98,83 @@ function CarouselPage() {
     carouselimage,
   ]);
 
-  // const startKiosk = async (kioskId) => {
-  //   try {
-  //     const response = await axios.post(`http://localhost:5001/start`, { kiosk_id: kioskId });
-  //     console.log(response);
-  //   } catch (error) {
-  //     console.error('키오스크 컨트롤러 시작 실패:', error);
-  //   }
-  // };
+  const [customer, setCustomer] = useState({ customerId: null, gender: null, age: null });
 
-  // useEffect(() => {
-  //   if (isFirstRender.current) {
-  //     console.log(kioskId);
-  //     startKiosk(kioskId);
-  //     const connectEventSource = () => {
-  //       const url = 'http://localhost:8080/api/customer/face-recognition-events';
-  //       console.log('Connecting to:', url);
+  const startKiosk = async (kioskId) => {
+    try {
+      const response = await axios.post(`http://localhost:5001/start`, { kiosk_id: kioskId });
+      console.log(response);
+    } catch (error) {
+      console.error('키오스크 컨트롤러 시작 실패:', error);
+    }
+  };
 
-  //       const eventSource = new EventSource(url);
+  useEffect(() => {
+    if (isFirstRender.current) {
+      console.log(kioskId);
+      startKiosk(kioskId);
+      const connectEventSource = () => {
+        const url = 'https://i11a601.p.ssafy.io/api/customer/face-recognition-events';
+        console.log('Connecting to:', url);
 
-  //       eventSource.addEventListener('waitingStatus', (event) => {
-  //         const data = JSON.parse(event.data);
-  //         console.log('Received waitingStatus event:', data);
-  //         setIsWaiting(data.waiting);
-  //         setShowModal(data.waiting);
-  //       });
+        const eventSource = new EventSource(url);
 
-  //       eventSource.addEventListener('faceDetectionResult', (event) => {
-  //         const data = JSON.parse(event.data);
-  //         console.log('Received faceDetectionResult event:', data);
-  //         if (!data.isFace) {
-  //           setIsWaiting(false);
-  //           setShowModal(false);
-  //           setResult(null);
-  //         }
-  //       });
+        eventSource.addEventListener('waitingStatus', (event) => {
+          const data = JSON.parse(event.data);
+          console.log('Received waitingStatus event:', data);
+          setIsWaiting(data.waiting);
+          setShowModal(data.waiting);
+        });
 
-  //       eventSource.addEventListener('analysisResult', (event) => {
-  //         const data = JSON.parse(event.data);
-  //         console.log('Received analysisResult event:', data);
-  //         setResult({
-  //           age: data.age,
-  //           gender: data.gender,
-  //           isFace: data.isFace,
-  //           isCustomer: data.isCustomer,
-  //           customerId: data.customerId,
-  //           customerAge: data.customerAge,
-  //           customerGender: data.customerGender,
-  //           faceEmbeddingData: data.faceEmbeddingData,
-  //         });
-  //         setIsWaiting(false);
-  //         setShowModal(true);
-  //       });
+        eventSource.addEventListener('faceDetectionResult', (event) => {
+          const data = JSON.parse(event.data);
+          console.log('Received faceDetectionResult event:', data);
+          if (!data.isFace) {
+            setIsWaiting(false);
+            setShowModal(false);
+            setResult(null);
+          }
+        });
 
-  //       eventSource.onerror = (error) => {
-  //         console.error('SSE error:', error);
-  //         eventSource.close();
-  //         setTimeout(connectEventSource, 5000); // Retry connection
-  //       };
+        eventSource.addEventListener('analysisResult', (event) => {
+          const data = JSON.parse(event.data);
+          console.log('Received analysisResult event:', data);
+          setResult({
+            age: data.age,
+            gender: data.gender,
+            isFace: data.isFace,
+            isCustomer: data.isCustomer,
+            customerId: data.customerId,
+            customerAge: data.customerAge,
+            customerGender: data.customerGender,
+            faceEmbeddingData: data.faceEmbeddingData,
+          });
+          setIsWaiting(false);
+          setShowModal(true);
+        });
 
-  //       return () => {
-  //         eventSource.close();
-  //       };
-  //     };
+        eventSource.onerror = (error) => {
+          console.error('SSE error:', error);
+          eventSource.close();
+          setTimeout(connectEventSource, 5000); // Retry connection
+        };
 
-  //     connectEventSource();
-  //     isFirstRender.current = false;
-  //     return;
-  //   }
-  // }, []);
+        return () => {
+          eventSource.close();
+        };
+      };
+
+      connectEventSource();
+      isFirstRender.current = false;
+      return;
+    }
+
+    setCustomer({
+      customerId: 'a97804be-a882-48d9-bff4-be27f7b043df',
+      gender: null,
+      age: null,
+    });
+  }, []);
 
   // const connectEventSource = () => {
   //   const url = 'http://localhost:8080/api/customer/face-recognition-events';
@@ -219,11 +226,15 @@ function CarouselPage() {
   // };
 
   const havingHere = () => {
-    navigate('/kiosk/menu', { state: { where: 'having here' } });
+    navigate('/kiosk/menu', {
+      state: { where: 'having here', customer: customer, orderList: null },
+    });
   };
 
   const takeAway = () => {
-    navigate('/kiosk/elder-menu', { state: { where: 'take away' } });
+    navigate('/kiosk/elder-menu', {
+      state: { where: 'take away', customer: customer, orderList: null },
+    });
   };
 
   // const slideAutoPlay = () => {

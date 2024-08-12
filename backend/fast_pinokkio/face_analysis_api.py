@@ -49,7 +49,7 @@ def get_closest_face(faces):
         return None
     return max(faces, key=lambda face: (face.bbox[2] - face.bbox[0]) * (face.bbox[3] - face.bbox[1]))
 
-@app.post("/fast/analyze_faces")
+@app.post("/analyze_faces")
 async def analyze_faces(data: ImageData):
     request_id = str(uuid.uuid4())
     logger.info(f"Received request with {len(data.images)} images")

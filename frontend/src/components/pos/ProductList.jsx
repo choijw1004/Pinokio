@@ -16,8 +16,9 @@ const ProductRow = styled.tr`
 `;
 
 const ProductCell = styled.td`
-  padding: 10px;
+  padding: 0.5rem 0;
   vertical-align: middle;
+  text-align: left;
 `;
 
 const DeleteCell = styled(ProductCell)`
@@ -118,29 +119,23 @@ const ProductList = ({ setProducts, products, onEdit, onDelete, setToastMessage 
       <ProductTable>
         <thead>
           <ProductRow>
-            <th></th>
-            <th>이미지</th>
-            <th>상품명</th>
-            <th>가격</th>
-            <th>재고</th>
-            <th>품절 여부</th>
-            <th>키오스크 노출</th>
+            <th style={{ textAlign: 'left' }}>이미지</th>
+            <th style={{ textAlign: 'left' }}>상품명</th>
+            <th style={{ textAlign: 'left' }}>가격</th>
+            <th style={{ textAlign: 'left' }}>재고</th>
+            <th style={{ textAlign: 'left' }}>품절 여부</th>
+            <th style={{ textAlign: 'left' }}>키오스크 노출</th>
           </ProductRow>
         </thead>
         <tbody>
           {products.map((product) => (
             <ProductRow key={product.id}>
-              <DeleteCell>
-                <DeleteButton className="delete-button" onClick={() => handleDeleteClick(product)}>
-                  X
-                </DeleteButton>
-              </DeleteCell>
               <ProductCell>
                 <ProductImage src={product.file} alt={product.name} />
               </ProductCell>
               <ProductCell onClick={() => onEdit(product)}>{product.name}</ProductCell>
-              <ProductCell>{product.price.toLocaleString()} 원</ProductCell>
-              <ProductCell>{product.amount.toLocaleString()} 개</ProductCell>
+              <ProductCell>{product.price.toLocaleString()}</ProductCell>
+              <ProductCell>{product.amount.toLocaleString()}</ProductCell>
               <ProductCell>
                 <ToggleButton
                   value={product.isSoldOut === 'YES'}
@@ -153,6 +148,11 @@ const ProductList = ({ setProducts, products, onEdit, onDelete, setToastMessage 
                   setValue={() => handleToggle(product, 'isScreen')}
                 />
               </ProductCell>
+              <DeleteCell>
+                <DeleteButton className="delete-button" onClick={() => handleDeleteClick(product)}>
+                  X
+                </DeleteButton>
+              </DeleteCell>
             </ProductRow>
           ))}
         </tbody>

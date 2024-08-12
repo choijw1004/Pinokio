@@ -1,10 +1,11 @@
 package com.example.pinokkio.api.auth;
 
 import com.example.pinokkio.api.auth.dto.request.LoginRequest;
-import com.example.pinokkio.api.auth.dto.request.SignUpKioskRequest;
 import com.example.pinokkio.api.auth.dto.request.SignUpPosRequest;
 import com.example.pinokkio.api.auth.dto.request.SignUpTellerRequest;
 import com.example.pinokkio.api.auth.dto.response.KioskLoginResponse;
+import com.example.pinokkio.api.customer.Customer;
+import com.example.pinokkio.api.customer.CustomerRepository;
 import com.example.pinokkio.api.kiosk.Kiosk;
 import com.example.pinokkio.api.kiosk.KioskRepository;
 import com.example.pinokkio.api.pos.Pos;
@@ -13,6 +14,7 @@ import com.example.pinokkio.api.pos.code.Code;
 import com.example.pinokkio.api.pos.code.CodeRepository;
 import com.example.pinokkio.api.teller.Teller;
 import com.example.pinokkio.api.teller.TellerRepository;
+import com.example.pinokkio.common.type.Gender;
 import com.example.pinokkio.config.RedisUtil;
 import com.example.pinokkio.config.jwt.JwtProvider;
 import com.example.pinokkio.config.jwt.Role;
@@ -21,7 +23,6 @@ import com.example.pinokkio.exception.domain.auth.EmailConflictException;
 import com.example.pinokkio.exception.domain.auth.PasswordBadInputException;
 import com.example.pinokkio.exception.domain.code.CodeNotFoundException;
 import com.example.pinokkio.exception.domain.kiosk.KioskNotFoundException;
-import com.example.pinokkio.exception.domain.pos.PosNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.digest.DigestUtils;
@@ -33,9 +34,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.security.SecureRandom;
 import java.util.Map;
-import java.util.Random;
 import java.util.UUID;
 import java.util.function.Predicate;
 
@@ -60,10 +59,8 @@ public class AuthService {
     private final KioskRepository kioskRepository;
     private final TellerRepository tellerRepository;
 
-    //랜덤 ID 생성기
-    private static final String DIGITS = "0123456789";
-    private static final Random RANDOM = new SecureRandom();
 
+    private final CustomerRepository customerRepository;
 
     /**
      * 가맹 코드, 이메일, 비밀번호, 비밀번호 확인 정보를 바탕으로 회원가입을 진행한다.
@@ -80,7 +77,17 @@ public class AuthService {
                 .password(passwordEncode(signUpPosRequest.getPassword()))
                 .code(requestCode)
                 .build();
-        posRepository.save(pos);
+        Pos savedPos = posRepository.save(pos);
+
+        Customer customer = Customer.builder()
+                .phoneNumber("00000000")
+                .pos(pos)
+                .age(99)
+                .gender(Gender.MALE)
+                .faceEmbedding(null)
+                .build();
+        Customer savedCustomer = customerRepository.save(customer);
+        savedPos.updateDummyCustomerUUID(savedCustomer.getId());
     }
 
     /**
@@ -100,30 +107,6 @@ public class AuthService {
                 .build();
         tellerRepository.save(teller);
         log.info("SAVE TELLER: {}", teller);
-    }
-
-    /**
-     * email = 코드 이름 + 숫자 4자리
-     * password = 숫자 4자리
-     *
-     * @param signUpKioskRequest 키오스크 회원가입을 위한 Dto
-     */
-    @Transactional
-    public void registerKiosk(SignUpKioskRequest signUpKioskRequest) {
-        String posId = signUpKioskRequest.getPosId();
-        Pos findPos = posRepository
-                .findById(UUID.fromString(posId))
-                .orElseThrow(() -> new PosNotFoundException(posId));
-
-        String randomEmail = randomEmail(findPos);
-        String randomPassword = randomPassword();
-
-        Kiosk kiosk = Kiosk.builder()
-                .pos(findPos)
-                .email(randomEmail)
-                .password(passwordEncode(randomPassword))
-                .build();
-        kioskRepository.save(kiosk);
     }
 
     @Transactional
@@ -279,11 +262,10 @@ public class AuthService {
      *
      * @param code 코드
      */
-    public Code checkValidateCode(String code) {
-        UUID codeId = UUID.fromString(code);
+    public Code checkValidateCode(UUID code) {
         return codeRepository
-                .findById(codeId)
-                .orElseThrow(() -> new CodeNotFoundException(codeId.toString()));
+                .findById(code)
+                .orElseThrow(() -> new CodeNotFoundException(code.toString()));
     }
 
     /**
@@ -304,35 +286,6 @@ public class AuthService {
      */
     public String passwordEncode(String password) {
         return passwordEncoder.encode(password);
-    }
-
-    /**
-     * 입력받은 포스의 키오스크 아이디를 랜덤으로 생성한다.
-     *
-     * @param pos 키오스크의 출처 포스
-     * @return 랜덤 생성된 키오스크 아이디
-     */
-    public String randomEmail(Pos pos) {
-        StringBuilder sb = new StringBuilder(pos.getCode().getName());
-        for (int i = 0; i < 4; i++) {
-            int index = RANDOM.nextInt(DIGITS.length());
-            sb.append(DIGITS.charAt(index));
-        }
-        return sb.toString();
-    }
-
-    /**
-     * 숫자 4자리 비밀번호를 랜덤 생성한다.
-     *
-     * @return 숫자 4자리 비밀번호
-     */
-    public String randomPassword() {
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < 4; i++) {
-            int index = RANDOM.nextInt(DIGITS.length());
-            sb.append(DIGITS.charAt(index));
-        }
-        return sb.toString();
     }
 
     /**

@@ -1,7 +1,10 @@
 package com.example.pinokkio.api.kiosk;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -19,4 +22,13 @@ public interface KioskRepository extends JpaRepository<Kiosk, UUID> {
      * @return 가입 여부 정보
      */
     boolean existsByEmail(String email);
+
+    List<Kiosk> findAllByPosId(UUID posId);
+
+    Optional<Kiosk> findByIdAndPosId(UUID id, UUID posId);
+
+    @Query("SELECT k.pos.id " +
+            "FROM Kiosk k " +
+            "WHERE k.id = :kioskId")
+    Optional<UUID> findPosIdById(@Param("kioskId") UUID kioskId);
 }

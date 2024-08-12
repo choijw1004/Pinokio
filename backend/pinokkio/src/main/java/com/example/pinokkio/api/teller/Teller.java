@@ -25,7 +25,6 @@ public class Teller extends BaseEntity {
     @Column(columnDefinition = "BINARY(16)", name = "teller_id")
     private UUID id;
 
-    //TODO: 이 부분 논의. 기존은 OneToOne 이었음
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "code_id")
     private Code code;
@@ -36,15 +35,12 @@ public class Teller extends BaseEntity {
     @Column(nullable = false)
     private String password;
 
-    @Column(nullable = false)
-    private int amount;
 
     @Builder
-    public Teller(Code code, String email, String password, int amount) {
+    public Teller(Code code, String email, String password) {
         this.code = code;
         this.email = email;
         this.password = password;
-        this.amount = amount;
     }
 
     public void updatePassword(String password) {

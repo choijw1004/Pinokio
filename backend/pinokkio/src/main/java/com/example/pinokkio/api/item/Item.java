@@ -64,6 +64,10 @@ public class Item extends BaseEntity {
         this.itemImage = itemImage;
     }
 
+    public void updateCategory(Category category) {
+        this.category = category;
+    }
+
     public void updatePrice(int price) {
         this.price = price;
     }
@@ -80,9 +84,19 @@ public class Item extends BaseEntity {
         this.detail = detail;
     }
 
+
     public void updateItemImage(String itemImage) {
         this.itemImage = itemImage;
     }
+
+    public void updateIsScreen(IsScreen isScreen) {
+        this.isScreen = isScreen;
+    }
+
+    public void updateIsSoldOut(IsSoldOut isSoldOut) {
+        this.isSoldOut = isSoldOut;
+    }
+
 
     public void toggleIsScreen() {
         if (this.isScreen.equals(IsScreen.NO)) {
