@@ -8,6 +8,7 @@ import MenuModal from '../../../components/kiosk/modal/MenuModal';
 import { useSelector } from 'react-redux';
 import { getCategories } from '../../../apis/Category';
 import { getItemsByCategoryId } from '../../../apis/Item';
+import { useNavigate } from 'react-router-dom';
 
 const MenuPageStyle = styled.div`
   display: flex;
@@ -32,6 +33,7 @@ const Logo = styled.div`
   font-style: normal;
   padding-left: 1vw;
   padding-top: 1vh;
+  cursor: pointer;
 `;
 
 const KioskBody = styled.div`
@@ -48,18 +50,16 @@ const KioskBody = styled.div`
 
 function MenuPage() {
   const [categories, setCategories] = useState([]);
-  const categoriesMounted = useRef(false);
-
   const [menus, setMenus] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState(null);
-  const selectedCategoryMounted = useRef(false);
   const [selectedMenu, setSelectedMenu] = useState(null);
-
   const [cartItems, setCartItems] = useState([]);
-
-  const userData = useSelector((store) => store.user);
-
   const [modal, setModal] = useState(false);
+
+  const categoriesMounted = useRef(false);
+  const selectedCategoryMounted = useRef(false);
+  const userData = useSelector((store) => store.user);
+  const navigate = useNavigate();
 
   useEffect(() => {
     console.log('first rendering');
@@ -112,10 +112,20 @@ function MenuPage() {
     }
   };
 
+  const handleClick = () => {
+    navigate('/kiosk/menu');
+  };
+
   return (
     <MenuPageStyle>
       <KioskHeader>
-        <Logo>Pinokio</Logo>
+        <Logo
+          onClick={() => {
+            handleClick();
+          }}
+        >
+          Pinokio
+        </Logo>
         {categories.length > 0 && selectedCategory && (
           <MenuCategory
             categories={categories}

@@ -15,6 +15,8 @@ import {
 } from '../../features/advisor/AdvisorSlice';
 import UpDownButtons from '../../components/common/UpDownButtons';
 import Toast from '../../components/common/Toast';
+import { clearUser } from '../../features/user/userSlice';
+import Cookies from 'js-cookie';
 
 import { Resizable } from 'react-resizable';
 
@@ -99,6 +101,21 @@ const Box = styled.div`
   width: 100px;
   height: 100px;
   background-color: white;
+`;
+
+const LogOut = styled.button`
+  box-shadow: 1px 2px 0 rgb(0 0 0 / 0.25);
+  background-color: white;
+  border: 1px solid black;
+  &:hover {
+    background-color: #ededed;
+  }
+  margin-left: 2rem;
+`;
+
+const HeaderLeft = styled.div`
+  display: flex;
+  padding: 1rem;
 `;
 
 function AdvMainPage() {
@@ -193,10 +210,29 @@ function AdvMainPage() {
     console.log(customerId, roomId);
   };
 
+  const handleOnclick = () => {
+    // User 정보 초기화
+    dispatch(clearUser());
+
+    // Token들 초기화.
+    localStorage.setItem('accessToken', '');
+    localStorage.setItem('refreshToken', '');
+    Cookies.set('refreshToken', '');
+  };
+
   return (
     <AdvMainPageWrapper>
       <AdvHeader>
-        <Logo size={'2.5rem'} />
+        <HeaderLeft>
+          <Logo size={'2.5rem'} />
+          <LogOut
+            onClick={() => {
+              handleOnclick();
+            }}
+          >
+            로그아웃
+          </LogOut>
+        </HeaderLeft>
         <HeaderRight>
           <MaxButtonContainer>
             <HeaderRightText>최대 상담 인원 수</HeaderRightText>

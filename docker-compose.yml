@@ -2,16 +2,20 @@ version: '3'
 
 services:
   backend:
+    container_name: pinokkio-backend
     build:
       context: ./backend/pinokkio
       dockerfile: Dockerfile
     ports:
       - "8080:8080"
+      - "3333:3333"
+      - "3334:3334"
+        
     environment:
       - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/pinokkio?serverTimezone=Asia/Seoul
       - SPRING_DATASOURCE_USERNAME=root
       - SPRING_DATASOURCE_PASSWORD=ssafy
-      - SPRING_JPA_HIBERNATE_DDL_AUTO=create
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
       - SPRING_REDIS_HOST=redis
       - SPRING_REDIS_PORT=6379
       - SPRING_MAIL_USERNAME=${EMAIL}
@@ -49,6 +53,8 @@ services:
             - "443:443"
     volumes:
             - /etc/letsencrypt:/etc/letsencrypt:ro
+    depends_on:
+      - backend
 
   mysql:
     image: mysql:8.0

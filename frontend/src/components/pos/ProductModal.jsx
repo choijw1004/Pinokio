@@ -24,7 +24,7 @@ const TextArea = styled.textarea`
   margin-bottom: 10px;
 `;
 
-const ProductModal = ({ categories, onClose }) => {
+const ProductModal = ({ product, categories, onClose }) => {
   const [name, setName] = useState('');
   const [price, setPrice] = useState('');
   const [amount, setAmount] = useState('');

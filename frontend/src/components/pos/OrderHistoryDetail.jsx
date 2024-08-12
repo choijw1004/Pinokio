@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
 import { putOrderStatus } from '../../apis/Order';
-import Logo from '../common/Logo';
 
 const ModalBg = styled.div`
   background-color: rgba(0, 0, 0, 0.5);

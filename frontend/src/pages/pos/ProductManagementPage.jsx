@@ -100,7 +100,6 @@ const ProductManagementPage = () => {
   const handleEditCategory = (category) => {
     setSelectedCategory(category);
     console.log(`category : ${category}`);
-    setIsCategoryModalOpen(true);
   };
 
   const handleDeleteCategory = (categoryId) => {
@@ -124,10 +123,10 @@ const ProductManagementPage = () => {
     e.preventDefault();
     try {
       const result = await getItemsByKeyword(searchKeyword);
-      console.log(`result : ${result}`);
-      console.log(`searchKeyword : ${searchKeyword}`);
-      console.log(`result.name: ${result.name}`);
-      console.log(result);
+      // console.log(`result : ${result}`);
+      // console.log(`searchKeyword : ${searchKeyword}`);
+      // console.log(`result.name: ${result.name}`);
+      // console.log(result);
       setProducts(result.responseList);
     } catch (error) {
       setToastMessage('상품 검색에 실패했습니다.');
@@ -195,6 +194,7 @@ const ProductManagementPage = () => {
           <CategoryTabStyle>
             <button onClick={handleAddCategory}>카테고리 추가</button>
             <CategoryList
+              products={products}
               categories={categories}
               onEdit={handleEditCategory}
               onDelete={handleDeleteCategory}
@@ -202,6 +202,7 @@ const ProductManagementPage = () => {
             {isCategoryModalOpen && (
               <CategoryModal
                 category={selectedCategory}
+                categories={categories}
                 onSave={handleSaveCategory}
                 onClose={() => setIsCategoryModalOpen(false)}
               />

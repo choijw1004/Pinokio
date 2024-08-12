@@ -13,7 +13,14 @@ const CustomKeyboard = ({ text, setText }) => {
       const res = text.slice(0, -1);
       setText(res);
     } else if (key === '{shift}') {
-      setLayoutName((prev) => (prev === 'default' ? 'shift' : 'default'));
+      setLayoutName((prev) => {
+        if (prev === 'default') return 'shift';
+        else if (prev === 'shift') return 'default';
+        else if (prev === 'lan') return 'shiftLan';
+        else if (prev === 'shiftLan') return 'lan';
+      });
+    } else if (key === '{lan}') {
+      setLayoutName((prev) => (prev === 'default' || prev === 'shift' ? 'lan' : 'default'));
     } else if (key === '{enterNum}' || key === '{enterText}') {
       console.log('enter clicked!');
     } else if (key === '{dot}') {
@@ -35,9 +42,10 @@ const CustomKeyboard = ({ text, setText }) => {
           '{enterText}': 'Enter',
           '{shift}': '↑',
           '{.}': '.',
-          '{space}': ' ',
+          '{space}': 'spacebar',
           '{dot}': '.',
           '{pre}': '←',
+          '{lan}': '언어',
         }}
       />
     </KeyboardWrapper>
@@ -45,7 +53,6 @@ const CustomKeyboard = ({ text, setText }) => {
 };
 
 const KeyboardWrapper = styled.div`
-  width: 100%;
+  width: 800px;
 `;
-
 export default CustomKeyboard;
