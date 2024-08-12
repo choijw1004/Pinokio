@@ -9,19 +9,20 @@ const CustomerWaitingSection = styled.div`
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 `;
 
-function CustomerWaiting({ connectedKiosks, setRooms }) {
-  // 대기 중인 인원 수 계산
-  const people = connectedKiosks.filter(
-    (connectedKiosks) => connectedKiosks.status === 'waiting'
-  ).length;
+function CustomerWaiting({ connectedKiosks, subscribers, onDisconnect, activeKiosk }) {
+  const waitingKiosks = connectedKiosks.filter(
+    (kiosk) => kiosk.status === 'connected' && kiosk.connectionId !== activeKiosk
+  );
 
   return (
-    <div>
-      <CustomerWaitingSection>
-        <p>대기 인원 ({people}/3)</p>
-        <CustomerWaitingRooms connectedKiosks={connectedKiosks} setRooms={setRooms} />
-      </CustomerWaitingSection>
-    </div>
+    <CustomerWaitingSection>
+      <p>대기 인원 ({waitingKiosks.length}/2)</p>
+      <CustomerWaitingRooms
+        connectedKiosks={waitingKiosks}
+        subscribers={subscribers}
+        onDisconnect={onDisconnect}
+      />
+    </CustomerWaitingSection>
   );
 }
 

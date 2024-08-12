@@ -7,17 +7,18 @@ import CustomerVideo from '../../components/advisor/CustomerVideo';
 import CustomerKiosk from '../../components/advisor/CustomerKiosk';
 import CustomerWaiting from '../../components/advisor/CustomerWaiting';
 import Toggle from '../../components/common/Toggle';
-import UpDownButtons from '../../components/common/UpDownButtons';
 import useWebSocket from '../../hooks/useWebSocket';
 import { makeMeetingRoom, acceptMeeting, deleteMeetingRoom, rejectMeeting } from '../../apis/Room';
 import {
   setAvailability,
   setRoomInfo,
   connectKiosk,
+  updateKiosk,
   disconnectKiosk,
   resetAdvisor,
 } from '../../features/advisor/AdvisorSlice';
 import { OpenVidu } from 'openvidu-browser';
+Modal.setAppElement('#root');
 
 // 스타일 컴포넌트 정의
 const AdvMainPageWrapper = styled.div`
@@ -85,6 +86,7 @@ const AdvMainPage = () => {
   const [publisher, setPublisher] = useState(null);
   const [subscribers, setSubscribers] = useState([]);
   const [isInitialized, setIsInitialized] = useState(false);
+  const [activeKiosk, setActiveKiosk] = useState(null);
 
   const initializeAdvisor = useCallback(async () => {
     if (!isConnected) {
@@ -109,6 +111,21 @@ const AdvMainPage = () => {
     [dispatch]
   );
 
+  const handleCustomerConnect = useCallback(
+    (connectionId) => {
+      dispatch(
+        updateKiosk({
+          connectionId,
+        })
+      );
+      console.log(`Attempting to update kiosk with connectionId: ${connectionId}`);
+      if (!activeKiosk) {
+        setActiveKiosk(connectionId);
+      }
+    },
+    [dispatch, setActiveKiosk]
+  );
+
   const initializeSession = useCallback(
     async (roomId, token) => {
       const ov = new OpenVidu();
@@ -120,8 +137,10 @@ const AdvMainPage = () => {
       session.on('streamCreated', (event) => {
         const subscriber = session.subscribe(event.stream, undefined);
         setSubscribers((prevSubscribers) => [...prevSubscribers, subscriber]);
-        const kioskId = event.stream.connection.connectionId;
-        dispatch(connectKiosk({ id: kioskId, kioskId: kioskId }));
+        console.log(subscriber);
+        const connectionId = event.stream.connection.connectionId;
+        handleCustomerConnect(connectionId);
+        console.log(`New subscriber added: ${connectionId}`);
       });
 
       session.on('streamDestroyed', (event) => {
@@ -151,7 +170,7 @@ const AdvMainPage = () => {
         console.error('세션 연결 또는 스트림 발행 오류:', error);
       }
     },
-    [userData.email, dispatch, handleCustomerDisconnect]
+    [userData.email, dispatch, handleCustomerDisconnect, handleCustomerConnect]
   );
 
   useEffect(() => {
@@ -192,6 +211,25 @@ const AdvMainPage = () => {
     }
   }, [lastMessage]);
 
+  useEffect(() => {
+    console.log('Updated connectedKiosks:', connectedKiosks);
+  }, [connectedKiosks]);
+
+  useEffect(() => {
+    const updatedKiosk = connectedKiosks.find(
+      (kiosk) => kiosk.status === 'connected' && kiosk.connectionId && kiosk.kioskId
+    );
+    if (updatedKiosk) {
+      console.log(
+        `Kiosk ${updatedKiosk.kioskId} connected with connectionId ${updatedKiosk.connectionId}`
+      );
+      if (!activeKiosk) {
+        setActiveKiosk(updatedKiosk.connectionId);
+        console.log('Active kiosk set:', activeKiosk);
+      }
+    }
+  }, [connectedKiosks, activeKiosk]);
+
   const handleConsultationRequest = (data) => {
     console.log('상담 요청 받음:', data);
     console.log(isAvailable, currentConnections, maxConnections);
@@ -204,10 +242,19 @@ const AdvMainPage = () => {
   const handleAcceptMeeting = async () => {
     try {
       await acceptMeeting(roomId, consultationRequest.kioskId);
-      dispatch(
-        connectKiosk({ id: consultationRequest.kioskId, kioskId: consultationRequest.kioskId })
-      );
-      console.log(connectedKiosks);
+      const availableRoom = connectedKiosks.find((kiosk) => kiosk.status === 'waiting');
+      if (availableRoom) {
+        dispatch(
+          connectKiosk({
+            id: availableRoom.id,
+            kioskId: consultationRequest.kioskId,
+            status: 'connected',
+          })
+        );
+        console.log('Updated connectedKiosks:', connectedKiosks);
+      } else {
+        console.log('No available room for new kiosk');
+      }
       setShowModal(false);
       setConsultationRequest(null);
     } catch (error) {
@@ -245,12 +292,19 @@ const AdvMainPage = () => {
       <AdvBody>
         <LeftSection>
           <LeftTopSection>
-            <CustomerVideo streamManager={subscribers.length > 0 ? subscribers[0] : null} />
+            <CustomerVideo
+              streamManager={
+                subscribers.find((sub) => sub.stream.connection.connectionId === activeKiosk) ||
+                null
+              }
+            />
           </LeftTopSection>
           <LeftBottomSection>
             <CustomerWaiting
               connectedKiosks={connectedKiosks}
+              subscribers={subscribers}
               onDisconnect={handleCustomerDisconnect}
+              activeKiosk={activeKiosk}
             />
           </LeftBottomSection>
         </LeftSection>

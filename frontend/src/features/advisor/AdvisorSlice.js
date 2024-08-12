@@ -1,6 +1,11 @@
 import { createSlice } from '@reduxjs/toolkit';
 
-const createInitialKioskState = (id) => ({ id, status: 'waiting', kioskId: null });
+const createInitialKioskState = (id) => ({
+  id,
+  status: 'waiting',
+  kioskId: null,
+  connectionId: null,
+});
 
 const advisorSlice = createSlice({
   name: 'advisor',
@@ -26,15 +31,26 @@ const advisorSlice = createSlice({
       state.roomId = roomId;
     },
     connectKiosk: (state, action) => {
-      const { id, kioskId } = action.payload;
-      const availableSlot = state.connectedKiosks.find((kiosk) => kiosk.status === 'waiting');
-      if (availableSlot && state.currentConnections < state.maxConnections) {
-        availableSlot.kioskId = kioskId;
-        availableSlot.status = 'connected';
-        state.currentConnections += 1;
-        if (state.currentConnections === state.maxConnections) {
-          state.isAvailable = false;
+      const { kioskId } = action.payload;
+      const targetKiosk = state.connectedKiosks.find((kiosk) => kiosk.status === 'waiting');
+      if (targetKiosk) {
+        targetKiosk.kioskId = kioskId;
+        targetKiosk.status = 'connected';
+        if (state.currentConnections < state.maxConnections) {
+          state.currentConnections += 1;
+          if (state.currentConnections === state.maxConnections) {
+            state.isAvailable = false;
+          }
         }
+      }
+    },
+    updateKiosk: (state, action) => {
+      const { connectionId } = action.payload;
+      const targetKiosk = state.connectedKiosks.find(
+        (kiosk) => kiosk.status === 'connected' && !kiosk.connectionId
+      );
+      if (targetKiosk) {
+        targetKiosk.connectionId = connectionId;
       }
     },
     disconnectKiosk: (state, action) => {
@@ -43,6 +59,7 @@ const advisorSlice = createSlice({
       if (connectedKiosk) {
         connectedKiosk.status = 'waiting';
         connectedKiosk.kioskId = null;
+        connectedKiosk.connectionId = null;
         state.currentConnections -= 1;
         if (state.currentConnections < state.maxConnections) {
           state.isAvailable = true;
@@ -61,7 +78,13 @@ const advisorSlice = createSlice({
   },
 });
 
-export const { setAvailability, setRoomInfo, connectKiosk, disconnectKiosk, resetAdvisor } =
-  advisorSlice.actions;
+export const {
+  setAvailability,
+  setRoomInfo,
+  connectKiosk,
+  updateKiosk,
+  disconnectKiosk,
+  resetAdvisor,
+} = advisorSlice.actions;
 
 export default advisorSlice.reducer;
