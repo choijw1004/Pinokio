@@ -171,7 +171,7 @@ function SignUp() {
           const response =
             position === 'pos' ? await posDuplicateEmail(email) : await tellerDuplicateEmail(email);
           if (response.duplicate) {
-            setErrorMessage('사용할 수 없는 이메일입니다.');
+            setErrorMessage('이미 가입된 이메일 입니다.');
           } else if (email.match(emailRegEx) === null) {
             setErrorMessage('이메일 형식에 맞지 않습니다.');
           } else {
@@ -202,7 +202,7 @@ function SignUp() {
       return;
     }
     try {
-      await sendEmail({ email: id });
+      await sendEmail(id);
       setEmailSent(true);
       setVerificationMessage('인증 코드가 이메일로 전송되었습니다.');
     } catch (error) {
@@ -212,7 +212,7 @@ function SignUp() {
 
   const handleVerifyCode = async () => {
     try {
-      const response = await checkAuth({ authNum: verificationCode });
+      const response = await checkAuth(verificationCode);
       if (response.success) {
         setVerificationMessage('이메일 인증이 완료되었습니다.');
       } else {
