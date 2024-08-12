@@ -3,7 +3,7 @@ import axios from './Axios';
 // 인증 메일 전송
 export const sendEmail = async (email) => {
   try {
-    const response = await axios.post(`/api/mail/send`, email);
+    const response = await axios.post(`/api/mail/send`, { email: email });
     return response.data;
   } catch (error) {
     console.error('Failed to send email:', error);
@@ -14,7 +14,7 @@ export const sendEmail = async (email) => {
 // 인증 번호 확인
 export const checkAuth = async (authNum) => {
   try {
-    const response = await axios.post('/api/mail/check-auth', authNum);
+    const response = await axios.post('/api/mail/check-auth', { authNum: authNum });
     return response.data;
   } catch (error) {
     throw error;

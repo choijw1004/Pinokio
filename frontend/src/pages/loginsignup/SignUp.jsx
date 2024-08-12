@@ -187,7 +187,7 @@ function SignUp() {
       return;
     }
     try {
-      await sendEmail({ email: id });
+      await sendEmail(id);
       setEmailSent(true);
       setVerificationMessage('인증 코드가 이메일로 전송되었습니다.');
     } catch (error) {
@@ -197,12 +197,13 @@ function SignUp() {
 
   const handleVerifyCode = async () => {
     try {
-      const response = await checkAuth({ authNum: verificationCode });
+      const response = await checkAuth(verificationCode);
       if (response.success) {
         setVerificationMessage('이메일 인증이 완료되었습니다.');
       } else {
         setVerificationMessage('인증 코드가 올바르지 않습니다.');
       }
+    } catch (error) {
       setVerificationMessage('인증 코드 확인 중 오류가 발생했습니다.');
     }
   };
