@@ -197,7 +197,7 @@ function SignUp() {
 
   const handleVerifyCode = async () => {
     try {
-      const response = await checkAuth({ authNum: verificationCode });
+const response = await checkAuth({ authNum: verificationCode });
       if (response.success) {
         setVerificationMessage('이메일 인증이 완료되었습니다.');
       } else {
