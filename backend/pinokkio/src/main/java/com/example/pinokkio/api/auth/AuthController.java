@@ -30,10 +30,6 @@ public class AuthController {
     private final AuthService authService;
 
     @Operation(summary = "POS 회원가입", description = "POS 사용자를 위한 회원가입을 처리")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "201", description = "회원가입 성공"),
-            @ApiResponse(responseCode = "400", description = "잘못된 요청")
-    })
     @PostMapping("/register/pos")
     public ResponseEntity<?> registerPos(@Validated @RequestBody SignUpPosRequest signUpPosRequest) {
         authService.registerPos(signUpPosRequest);
@@ -41,10 +37,6 @@ public class AuthController {
     }
 
     @Operation(summary = "상담원 회원가입", description = "상담원을 위한 회원가입을 처리")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "201", description = "회원가입 성공"),
-            @ApiResponse(responseCode = "400", description = "잘못된 요청")
-    })
     @PostMapping("/register/teller")
     public ResponseEntity<?> registerTeller(@Validated @RequestBody SignUpTellerRequest signUpTellerRequest) {
         authService.registerTeller(signUpTellerRequest);
@@ -52,13 +44,6 @@ public class AuthController {
     }
 
     @Operation(summary = "POS 로그인", description = "POS 사용자 로그인을 처리")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "OK",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = AuthToken.class))
-            ),
-            @ApiResponse(responseCode = "401", description = "UNAUTHORIZED",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
-    })
     @PostMapping("/login/pos")
     public ResponseEntity<?> loginPos(@Validated @RequestBody LoginRequest loginRequest) {
         AuthToken authToken = authService.loginPos(loginRequest);
@@ -68,13 +53,6 @@ public class AuthController {
     }
 
     @Operation(summary = "상담원 로그인", description = "상담원 로그인을 처리")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "OK",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = AuthToken.class))
-            ),
-            @ApiResponse(responseCode = "401", description = "UNAUTHORIZED",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
-    })
     @PostMapping("/login/teller")
     public ResponseEntity<?> loginTeller(@Validated @RequestBody LoginRequest loginRequest) {
         AuthToken authToken = authService.loginTeller(loginRequest);
@@ -84,13 +62,6 @@ public class AuthController {
     }
 
     @Operation(summary = "키오스크 로그인", description = "키오스크 로그인을 처리")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "OK",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = AuthToken.class))
-            ),
-            @ApiResponse(responseCode = "401", description = "UNAUTHORIZED",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
-    })
     @PostMapping("/login/kiosk")
     public ResponseEntity<?> loginKiosk(@Validated @RequestBody LoginRequest loginRequest) {
         KioskLoginResponse loginResponse = authService.loginKiosk(loginRequest);
@@ -100,13 +71,6 @@ public class AuthController {
     }
 
     @Operation(summary = "토큰 재발급", description = "refresh 토큰을 이용한 토큰 재발급")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "OK",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = AuthToken.class))
-            ),
-            @ApiResponse(responseCode = "401", description = "UNAUTHORIZED",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
-    })
     @GetMapping("/refresh")
     public ResponseEntity<?> tokenReissue(HttpServletRequest request) {
         String refresh = request.getHeader("refresh");
