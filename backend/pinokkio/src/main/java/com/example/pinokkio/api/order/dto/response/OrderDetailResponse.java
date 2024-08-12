@@ -2,6 +2,7 @@ package com.example.pinokkio.api.order.dto.response;
 
 import com.example.pinokkio.api.order.Order;
 import com.example.pinokkio.common.type.OrderStatus;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 
 import java.time.LocalDateTime;

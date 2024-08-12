@@ -53,7 +53,7 @@ public class PosService {
     }
 
     public List<KioskInfoResponse> getKioskInfosByPosId(UUID posId) {
-        List<Kiosk> kiosks = kioskRepository.findAllByPosId(posId);
+        List<Kiosk> kiosks = kioskRepository.findAllByPosIdOrderByCreatedDateAsc(posId);
         return kiosks.stream()
                 .map(kiosk -> new KioskInfoResponse(kiosk.getId(), kiosk.getEmail(), kiosk.getPassword()))
                 .collect(Collectors.toList());

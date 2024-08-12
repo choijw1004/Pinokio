@@ -33,11 +33,6 @@ public class MailController {
 
 
     @Operation(summary = "인증 메일 전송", description = "이메일로 인증 번호를 전송.")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "메일 전송 성공"),
-            @ApiResponse(responseCode = "500", description = "메일 전송 실패",
-                    content = @Content(schema = @Schema(implementation = String.class)))
-    })
     @PostMapping("/send")
     public ResponseEntity<?> sendMail(@RequestBody MailRequest mailRequest) {
         try {
@@ -51,11 +46,6 @@ public class MailController {
 
 
     @Operation(summary = "포스 새로운 비밀번호 전송", description = "포스 이메일로 새로운 비밀번호를 전송.")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "메일 전송 성공"),
-            @ApiResponse(responseCode = "500", description = "메일 전송 실패",
-                    content = @Content(schema = @Schema(implementation = String.class)))
-    })
     @PostMapping("/send/pos/new-password")
     public ResponseEntity<?> sendPosPasswordUpdateMail(@RequestBody MailRequest mailRequest) {
         try {
@@ -68,11 +58,6 @@ public class MailController {
 
 
     @Operation(summary = "상담원 새로운 비밀번호 전송", description = "상담원 이메일로 새로운 비밀번호를 전송.")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "메일 전송 성공"),
-            @ApiResponse(responseCode = "500", description = "메일 전송 실패",
-                    content = @Content(schema = @Schema(implementation = String.class)))
-    })
     @PostMapping("/send/teller/new-password")
     public ResponseEntity<?> sendTellerPasswordUpdateMail(@RequestBody MailRequest mailRequest) {
         try {
@@ -85,10 +70,6 @@ public class MailController {
 
 
     @Operation(summary = "인증 번호 확인", description = "인증 번호의 유효성을 확인합니다.")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "인증 번호 확인 완료",
-                    content = @Content(schema = @Schema(implementation = MailAuthResponse.class)))
-    })
     @PostMapping("/check-auth")
     public ResponseEntity<MailAuthResponse> checkAuth(
             @RequestBody MailAuthRequest mailAuthRequest) {
