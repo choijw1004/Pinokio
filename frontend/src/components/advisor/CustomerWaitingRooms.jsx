@@ -32,6 +32,15 @@ const VideoContainer = styled.div`
   width: 100%;
   height: 100px;
   overflow: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
 `;
 
 const DisconnectButton = styled.button`
@@ -48,24 +57,32 @@ const DisconnectButton = styled.button`
   }
 `;
 
-function CustomerWaitingRooms({ connectedKiosks, subscribers, onDisconnect }) {
+function CustomerWaitingRooms({ connectedKiosks, subscribers, onDisconnect, onSetActiveKiosk }) {
   return (
     <RoomsContainer>
       {connectedKiosks.map((kiosk) => {
         const subscriber = subscribers.find(
           (sub) => sub.stream.connection.connectionId === kiosk.connectionId
         );
+        console.log('Subscriber for kiosk', kiosk.id, ':', subscriber);
         return (
-          <Room key={kiosk.id} $status={kiosk.status}>
+          <Room
+            key={kiosk.id}
+            $status={kiosk.status}
+            onClick={() => onSetActiveKiosk(kiosk.connectionId)}
+          >
             <p>Room {kiosk.id}</p>
             <VideoContainer>
               {subscriber && <OpenViduVideoComponent streamManager={subscriber} />}
             </VideoContainer>
-            {kiosk.status === 'connected' && (
-              <DisconnectButton onClick={() => onDisconnect(kiosk.connectionId)}>
-                Disconnect
-              </DisconnectButton>
-            )}
+            <DisconnectButton
+              onClick={(e) => {
+                e.stopPropagation();
+                onDisconnect(kiosk.connectionId);
+              }}
+            >
+              Disconnect
+            </DisconnectButton>
           </Room>
         );
       })}

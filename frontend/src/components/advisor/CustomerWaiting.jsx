@@ -9,7 +9,13 @@ const CustomerWaitingSection = styled.div`
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 `;
 
-function CustomerWaiting({ connectedKiosks, subscribers, onDisconnect, activeKiosk }) {
+function CustomerWaiting({
+  connectedKiosks,
+  subscribers,
+  onDisconnect,
+  activeKiosk,
+  onSetActiveKiosk,
+}) {
   const waitingKiosks = connectedKiosks.filter(
     (kiosk) => kiosk.status === 'connected' && kiosk.connectionId !== activeKiosk
   );
@@ -21,6 +27,7 @@ function CustomerWaiting({ connectedKiosks, subscribers, onDisconnect, activeKio
         connectedKiosks={waitingKiosks}
         subscribers={subscribers}
         onDisconnect={onDisconnect}
+        onSetActiveKiosk={onSetActiveKiosk}
       />
     </CustomerWaitingSection>
   );

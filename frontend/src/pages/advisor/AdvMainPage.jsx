@@ -102,10 +102,10 @@ const AdvMainPage = () => {
   }, [dispatch, connect, isConnected]);
 
   const handleCustomerDisconnect = useCallback(
-    (kioskId) => {
-      dispatch(disconnectKiosk(kioskId));
+    (connectionId) => {
+      dispatch(disconnectKiosk(connectionId));
       setSubscribers((prevSubscribers) =>
-        prevSubscribers.filter((sub) => sub.stream.connection.connectionId !== kioskId)
+        prevSubscribers.filter((sub) => sub.stream.connection.connectionId !== connectionId)
       );
     },
     [dispatch]
@@ -144,8 +144,8 @@ const AdvMainPage = () => {
       });
 
       session.on('streamDestroyed', (event) => {
-        const kioskId = event.stream.connection.connectionId;
-        handleCustomerDisconnect(kioskId);
+        const connectionId = event.stream.connection.connectionId;
+        handleCustomerDisconnect(connectionId);
       });
 
       try {
@@ -176,9 +176,9 @@ const AdvMainPage = () => {
   useEffect(() => {
     setSubscribers((prevSubscribers) => {
       const newSubscribers = prevSubscribers.filter((sub) => {
-        const kioskId = sub.stream.connection.connectionId;
+        const connectionId = sub.stream.connection.connectionId;
         return connectedKiosks.some(
-          (kiosk) => kiosk.kioskId === kioskId && kiosk.status === 'connected'
+          (kiosk) => kiosk.connectionId === connectionId && kiosk.status === 'connected'
         );
       });
       return newSubscribers;
@@ -225,7 +225,6 @@ const AdvMainPage = () => {
       );
       if (!activeKiosk) {
         setActiveKiosk(updatedKiosk.connectionId);
-        console.log('Active kiosk set:', activeKiosk);
       }
     }
   }, [connectedKiosks, activeKiosk]);
