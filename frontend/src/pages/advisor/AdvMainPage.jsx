@@ -128,8 +128,6 @@ const AdvMainPage = () => {
   */
   const { isAvailable, currentConnections, maxConnections, roomToken, roomId, connectedKiosks } =
     advisorData;
-  // maxAvailable : 최대 연결 가능 인원 수
-  const [maxAvailable, setMaxAvailable] = useState(1);
 
   // deltaY : 가운데 Bar의 y축 이동 거리 (개발 예쩡)
   const [deltaY, setDeltaY] = useState(0);
@@ -202,6 +200,7 @@ const AdvMainPage = () => {
   const handleOnclick = () => {
     // User 정보 초기화
     dispatch(clearUser());
+    dispatch(resetAdvisor());
 
     // Token들 초기화.
     localStorage.setItem('accessToken', '');
@@ -384,7 +383,7 @@ const AdvMainPage = () => {
             <HeaderRightText>최대 상담 인원 수</HeaderRightText>
             <UpDownButtons
               value={maxConnections}
-              setValue={setMaxAvailable}
+              setValue={maxConnections}
               color={'#7392ff'}
               size={'2rem'}
             />
@@ -392,8 +391,8 @@ const AdvMainPage = () => {
           <ToggleContainer>
             <HeaderRightText>거절 모드</HeaderRightText>
             <Toggle
-              value={isAvailable}
-              setValue={(value) => dispatch(setAvailability(value))}
+              value={!isAvailable}
+              setValue={(value) => dispatch(setAvailability(!value))}
               size={'3rem'}
             />
             <p>
