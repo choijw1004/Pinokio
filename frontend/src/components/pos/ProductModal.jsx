@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import styled from 'styled-components';
 import ToggleButton from '../common/Toggle';
+import { postItem } from '../../apis/Item';
 
 const Modal = styled.div`
   position: fixed;
@@ -23,42 +24,55 @@ const TextArea = styled.textarea`
   margin-bottom: 10px;
 `;
 
-const ProductModal = ({ product, categories, onSave, onClose }) => {
+const ProductModal = ({ categories, onClose }) => {
   const [name, setName] = useState('');
   const [price, setPrice] = useState('');
-  const [image, setImage] = useState('');
+  const [amount, setAmount] = useState('');
+  const [image, setImage] = useState(null);
   const [detail, setDetail] = useState('');
   const [isScreen, setIsScreen] = useState(false);
   const [isSoldout, setIsSoldout] = useState(false);
   const [category, setCategory] = useState('');
 
-  useEffect(() => {
-    if (product) {
-      setName(product.name);
-      setPrice(product.price.toString());
-      setImage(product.image);
-      setDetail(product.detail);
-      setIsScreen(product.isScreen);
-      setIsSoldout(product.isSoldout);
-      setCategory(product.category || '');
-    }
-  }, [product]);
-
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!name.trim() || !detail.trim() || !price || price === '0') {
       alert('필수 항목을 모두 입력해주세요.');
       return;
     }
-    onSave({
-      id: product?.id,
+
+    const categoryId = categories.find((cat) => cat.name === category)?.id;
+
+    const itemRequest = {
+      categoryId,
       name,
       price: parseInt(price),
-      image,
+      amount: parseInt(amount),
       detail,
-      isScreen,
-      isSoldout,
-      category,
-    });
+      // isScreen,
+      // isSoldout,
+    };
+
+    const formData = new FormData();
+    formData.append(
+      'itemRequest',
+      new Blob([JSON.stringify(itemRequest)], { type: 'application/json' })
+    );
+    if (image) {
+      formData.append('file', image);
+    }
+
+    try {
+      console.log(itemRequest);
+      console.log(image);
+      await postItem(formData);
+      onClose(); // Close the modal and trigger screen update
+    } catch (error) {
+      console.error('Error adding product:', error);
+    }
+  };
+
+  const handleFileChange = (e) => {
+    setImage(e.target.files[0]);
   };
 
   return (
@@ -71,7 +85,14 @@ const ProductModal = ({ product, categories, onSave, onClose }) => {
         type="number"
         required
       />
-      <Input value={image} onChange={(e) => setImage(e.target.value)} placeholder="이미지 URL" />
+      <Input
+        value={amount}
+        onChange={(e) => setAmount(e.target.value)}
+        placeholder="재고"
+        type="number"
+        required
+      />
+      <Input type="file" onChange={handleFileChange} />
       <TextArea
         value={detail}
         onChange={(e) => setDetail(e.target.value)}
@@ -88,11 +109,11 @@ const ProductModal = ({ product, categories, onSave, onClose }) => {
       </select>
       <div>
         <span>키오스크 노출</span>
-        <ToggleButton toggled={isScreen} onClick={() => setIsScreen(!isScreen)} />
+        <ToggleButton value={isScreen} setValue={setIsScreen} />
       </div>
       <div>
         <span>품절</span>
-        <ToggleButton toggled={isSoldout} onClick={() => setIsSoldout(!isSoldout)} />
+        <ToggleButton value={isSoldout} setValue={setIsSoldout} />
       </div>
       <button onClick={handleSave}>확인</button>
       <button onClick={onClose}>취소</button>

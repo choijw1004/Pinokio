@@ -4,11 +4,24 @@ import ProductList from '../../components/pos/ProductList';
 import ProductModal from '../../components/pos/ProductModal';
 import CategoryList from '../../components/pos/CategoryList';
 import CategoryModal from '../../components/pos/CategoryModal';
-import Button from '../../components/common/Button';
 import Toast from '../../components/common/Toast';
-import { getItems, itemScreenToggle, itemSoldOutToggle } from '../../apis/Item'; // Import the API functions
+import { getItems, getItemsByKeyword } from '../../apis/Item'; // Import the API functions
 import { getCategories } from '../../apis/Category'; // Import the API function
 import { useSelector } from 'react-redux'; // Assuming you use Redux to get posId
+import Navbar from '../../components/pos/Navbar';
+
+const ProductManagementPageStyle = styled.div`
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+`;
+
+const ProductManagementBodyStyle = styled.div`
+  width: 80%;
+`;
+
+const CategoryTabStyle = styled.div``;
 
 const TabContainer = styled.div`
   display: flex;
@@ -23,6 +36,7 @@ const Tab = styled.div`
 `;
 
 const ProductManagementPage = () => {
+  const [isNavbarOpen, setIsNavbarOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('상품');
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
@@ -32,6 +46,7 @@ const ProductManagementPage = () => {
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [toastMessage, setToastMessage] = useState('');
   const [selectedCategoryFilter, setSelectedCategoryFilter] = useState('전체');
+  const [searchKeyword, setSearchKeyword] = useState(''); // Search keyword state
 
   const userData = useSelector((store) => store.user);
 
@@ -39,12 +54,8 @@ const ProductManagementPage = () => {
     const fetchItems = async () => {
       try {
         const data = await getItems(userData.typeInfo.posId);
-        // console.log(data.responseList);
         setProducts(data.responseList);
-        console.log('pos아이디는!!');
-        console.log(userData.typeInfo.posId);
         const categoryList = await getCategories();
-        console.log(categoryList);
         setCategories(categoryList.responseList);
       } catch (error) {
         setToastMessage('상품 및 카테고리 데이터를 가져오는 데 실패했습니다.');
@@ -52,7 +63,7 @@ const ProductManagementPage = () => {
     };
 
     fetchItems();
-  }, [userData.typeInfo.posId]);
+  }, [userData.typeInfo.posId, isProductModalOpen, isCategoryModalOpen, selectedCategory]);
 
   const handleAddProduct = () => {
     setSelectedProduct(null);
@@ -62,21 +73,6 @@ const ProductManagementPage = () => {
   const handleEditProduct = (product) => {
     setSelectedProduct(product);
     setIsProductModalOpen(true);
-  };
-
-  const handleToggleProduct = async (product) => {
-    try {
-      if (product.hasOwnProperty('isScreen')) {
-        await itemScreenToggle(product.itemId);
-      }
-      if (product.hasOwnProperty('isSoldOut')) {
-        await itemSoldOutToggle(product.itemId);
-      }
-      setProducts(products.map((p) => (p.itemId === product.itemId ? product : p)));
-      setToastMessage(`${product.name} 상품 정보가 업데이트되었습니다.`);
-    } catch (error) {
-      setToastMessage('상품 정보를 업데이트하는 데 실패했습니다.');
-    }
   };
 
   const handleDeleteProduct = (productId) => {
@@ -103,6 +99,7 @@ const ProductManagementPage = () => {
 
   const handleEditCategory = (category) => {
     setSelectedCategory(category);
+    console.log(`category : ${category}`);
     setIsCategoryModalOpen(true);
   };
 
@@ -123,73 +120,97 @@ const ProductManagementPage = () => {
     setIsCategoryModalOpen(false);
   };
 
+  const handleSearch = async (e) => {
+    e.preventDefault();
+    try {
+      const result = await getItemsByKeyword(searchKeyword);
+      console.log(`result : ${result}`);
+      console.log(`searchKeyword : ${searchKeyword}`);
+      console.log(`result.name: ${result.name}`);
+      console.log(result);
+      setProducts(result.responseList);
+    } catch (error) {
+      setToastMessage('상품 검색에 실패했습니다.');
+    }
+  };
+
   const filteredProducts =
     selectedCategoryFilter === '전체'
       ? products
       : products.filter((product) => product.categoryId === selectedCategoryFilter);
 
   return (
-    <div>
-      <TabContainer>
-        <Tab isActive={activeTab === '상품'} onClick={() => setActiveTab('상품')}>
-          상품
-        </Tab>
-        <Tab isActive={activeTab === '카테고리'} onClick={() => setActiveTab('카테고리')}>
-          카테고리
-        </Tab>
-      </TabContainer>
-
-      {activeTab === '상품' && (
-        <>
-          <Button onClick={handleAddProduct} text="상품 추가" />
-          <select
-            value={selectedCategoryFilter}
-            onChange={(e) => setSelectedCategoryFilter(e.target.value)}
-          >
-            <option value="전체">전체</option>
-            {categories.map((category) => (
-              <option key={category.id} value={category.id}>
-                {category.name}
-              </option>
-            ))}
-          </select>
-          <ProductList
-            products={filteredProducts}
-            onEdit={handleEditProduct}
-            onDelete={handleDeleteProduct}
-            onToggle={handleToggleProduct}
-          />
-          {isProductModalOpen && (
-            <ProductModal
-              product={selectedProduct}
+    <ProductManagementPageStyle>
+      <Navbar isOpen={isNavbarOpen} toggleNavbar={() => setIsNavbarOpen(!isNavbarOpen)} />
+      <ProductManagementBodyStyle>
+        <TabContainer>
+          <Tab isActive={activeTab === '상품'} onClick={() => setActiveTab('상품')}>
+            상품
+          </Tab>
+          <Tab isActive={activeTab === '카테고리'} onClick={() => setActiveTab('카테고리')}>
+            카테고리
+          </Tab>
+        </TabContainer>
+        {activeTab === '상품' && (
+          <>
+            <button onClick={handleAddProduct}>상품 추가</button>
+            <select
+              value={selectedCategoryFilter}
+              onChange={(e) => setSelectedCategoryFilter(e.target.value)}
+            >
+              <option value="전체">전체</option>
+              {categories.map((category) => (
+                <option key={category.id} value={category.id}>
+                  {category.name}
+                </option>
+              ))}
+            </select>
+            <form onSubmit={handleSearch} style={{ display: 'inline' }}>
+              <input
+                type="text"
+                value={searchKeyword}
+                onChange={(e) => setSearchKeyword(e.target.value)}
+                placeholder="상품 검색"
+              />
+              <button type="submit">검색</button>
+            </form>
+            <ProductList
+              products={filteredProducts}
+              onEdit={handleEditProduct}
+              onDelete={handleDeleteProduct}
+              setToastMessage={setToastMessage}
+              setProducts={setProducts}
+            />
+            {isProductModalOpen && (
+              <ProductModal
+                product={selectedProduct}
+                categories={categories}
+                onSave={handleSaveProduct}
+                onClose={() => setIsProductModalOpen(false)}
+              />
+            )}
+          </>
+        )}
+        {activeTab === '카테고리' && (
+          <CategoryTabStyle>
+            <button onClick={handleAddCategory}>카테고리 추가</button>
+            <CategoryList
               categories={categories}
-              onSave={handleSaveProduct}
-              onClose={() => setIsProductModalOpen(false)}
+              onEdit={handleEditCategory}
+              onDelete={handleDeleteCategory}
             />
-          )}
-        </>
-      )}
-
-      {activeTab === '카테고리' && (
-        <>
-          <Button onClick={handleAddCategory} text="카테고리 추가" />
-          <CategoryList
-            categories={categories}
-            onEdit={handleEditCategory}
-            onDelete={handleDeleteCategory}
-          />
-          {isCategoryModalOpen && (
-            <CategoryModal
-              category={selectedCategory}
-              onSave={handleSaveCategory}
-              onClose={() => setIsCategoryModalOpen(false)}
-            />
-          )}
-        </>
-      )}
-
-      {toastMessage && <Toast message={toastMessage} onClose={() => setToastMessage('')} />}
-    </div>
+            {isCategoryModalOpen && (
+              <CategoryModal
+                category={selectedCategory}
+                onSave={handleSaveCategory}
+                onClose={() => setIsCategoryModalOpen(false)}
+              />
+            )}
+          </CategoryTabStyle>
+        )}
+        {toastMessage && <Toast message={toastMessage} onClose={() => setToastMessage('')} />}
+      </ProductManagementBodyStyle>
+    </ProductManagementPageStyle>
   );
 };
 

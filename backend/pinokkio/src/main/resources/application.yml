@@ -57,12 +57,11 @@ openvidu:
   secret: MY_SECRET
 
 encryption:
-  key:
-    ${ENCRYPTION_KEY}
-
+          key: ${ENCRYPTION_KEY}
 
 fastapi:
-  url: http://localhost:8000
+  # 수정 유의
+  url: https://i11a601.p.ssafy.io
   timeout: 10000
 
 grpc:

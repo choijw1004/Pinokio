@@ -15,15 +15,16 @@ import {
 } from '../../apis/Auth';
 import axios from '../../apis/Axios';
 import Cookies from 'js-cookie';
+import LogoWithSymbol from '../../components/common/LogoWithSymbol';
+import Symbol from '../../components/common/Symbol';
 
 const LoginWrapper = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  height: 100vh;
   background-color: #f4f4f9;
-  padding: 20px;
+  height: 100vh;
 `;
 
 const LoginForm = styled.form`
@@ -53,6 +54,20 @@ const Input = styled.input`
   }
 `;
 
+const SelectBox = styled.select`
+  width: 100%;
+  padding: 10px;
+  margin: 10px 0;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 16px;
+  box-sizing: border-box;
+  color: #333;
+  &:focus {
+    outline: 1px solid #7392ff;
+  }
+`;
+
 const StyledButton = styled.button`
   width: 100%;
   padding: 10px;
@@ -69,7 +84,7 @@ const StyledButton = styled.button`
     transform: translateY(-2px);
   }
   &:active {
-    background-color: #d8ff75;
+    background-color: #c383d9;
   }
 `;
 
@@ -86,7 +101,7 @@ const ButtonWrapper = styled.div`
     margin: 0 3px;
 
     &:hover {
-      color: #d8ff75;
+      color: #c383d9;
     }
   }
 `;
@@ -200,7 +215,8 @@ function Login() {
 
   return (
     <LoginWrapper>
-      <LOGO />
+      <img src="/PSymbol.svg" width="400rem" />
+      {/* <LogoWithSymbol size="2rem" /> */}
       <LoginForm id="login-form" onSubmit={handleLogin}>
         <Input
           type="text"
@@ -214,14 +230,14 @@ function Login() {
           placeholder="패스워드"
           onChange={(e) => setPassword(e.target.value)}
         />
-        <select value={usertype} onChange={handleUserType}>
+        <SelectBox value={usertype} onChange={handleUserType}>
           <option value="" disabled>
             선택하세요
           </option>
           <option value="kiosk">키오스크</option>
           <option value="pos">포스</option>
           <option value="advisor">상담원</option>
-        </select>
+        </SelectBox>
         <StyledButton type="submit">로그인</StyledButton>
       </LoginForm>
       <ButtonWrapper>

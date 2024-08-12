@@ -11,39 +11,29 @@ import axios from './Axios'; // 인스턴스와 구분하기 위해 대문자 �
 5. 다른 변수가 여러 개라면 그냥 붙여서 쓴다.
 */
 
-export const deleteItem = (posId, itemId) => {
-  axios
-    .delete('/api/pos/:posId/items/:itemId', { params: { posId: posId, itemId: itemId } })
-    .then((response) => {
-      // response
-
-      return response;
-    })
-    .catch((error) => {
-      // 오류발생시 실행
-    })
-    .then(() => {
-      // 항상 실행
-    });
+// 아이템 삭제
+export const deleteItem = async (itemId) => {
+  try {
+    const response = await axios.delete(`/api/pos/items/${itemId}`);
+    return response.data;
+  } catch (error) {
+    console.error('Delete items fail');
+    throw error;
+  }
 };
 
-export const getItemByItemId = (posId, itemId) => {
-  axios
-    .get('/api/pos/:posId/items/:itemId', { params: { posId: posId, itemId: itemId } })
-    .then((response) => {
-      // response
-
-      return response;
-    })
-    .catch((error) => {
-      // 오류발생시 실행
-    })
-    .then(() => {
-      // 항상 실행
-    });
+// 아이템 상세 조회
+export const getItemByItemId = async (itemId) => {
+  try {
+    const response = await axios.get(`/api/pos/items/${itemId}`);
+    return response.data;
+  } catch (error) {
+    console.error('Fetch item detail fail');
+    throw error;
+  }
 };
 
-export const getItems = async (posId) => {
+export const getItems = async () => {
   try {
     const response = await axios.get(`/api/pos/items`); // Adjust endpoint as needed
     console.log(response.data);
@@ -54,33 +44,19 @@ export const getItems = async (posId) => {
   }
 };
 
-export const getItemsByKeyword = (posId, keyword) => {
-  axios
-    .get('/api/pos/:posId/items/search', {
-      params: {
-        posId: posId,
-        searchItemRequest: {
-          keyword: keyword,
-        },
-      },
-    })
-    .then((response) => {
-      // response
-
-      return response;
-    })
-    .catch((error) => {
-      // 오류발생시 실행
-    })
-    .then(() => {
-      // 항상 실행
+export const getItemsByKeyword = async (keyWord) => {
+  try {
+    const response = await axios.get('/api/pos/items/search', {
+      params: { keyWord: keyWord },
     });
+    console.log(`keyWord : ${keyWord}`);
+    return response.data;
+  } catch (error) {
+    console.error('Cannot get items by keyword');
+  }
 };
 
 export const getItemsByCategoryId = async (categoryId) => {
-  console.log('axios');
-  console.log(axios.defaults.headers.common['Authorization']);
-  console.log(categoryId);
   try {
     const response = await axios.get(`/api/pos/items/categories/${categoryId}`);
     return response.data;
@@ -90,44 +66,32 @@ export const getItemsByCategoryId = async (categoryId) => {
   }
 };
 
-export const postItem = (itemData) => {
-  axios
-    .post('/api/pos/items', {
-      itemData,
-    })
-    .then((response) => {
-      // response
-
-      return response;
-    })
-    .catch((error) => {
-      // 오류발생시 실행
-    })
-    .then(() => {
-      // 항상 실행
+// 아이템 추가
+export const postItem = async (formData) => {
+  try {
+    console.log(formData);
+    const response = await axios.post('/api/pos/items', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
     });
+    console.log('Product added:', response.data);
+    return response.data;
+  } catch (error) {
+    alert('사진을 넣어주세요.');
+    throw error; // 에러를 호출한 곳에서 처리할 수 있도록 던집니다.
+  }
 };
 
-export const putItem = (itemId, posId, itemData) => {
-  axios
-    .post('/api/pos/:posId/items/:itemId', {
-      params: {
-        itemId: itemId,
-        posId: posId,
-      },
-      itemData,
-    })
-    .then((response) => {
-      // response
-
-      return response;
-    })
-    .catch((error) => {
-      // 오류발생시 실행
-    })
-    .then(() => {
-      // 항상 실행
-    });
+// 아이템 수정
+export const putItem = async (itemId, itemData) => {
+  try {
+    const response = await axios.put(`/api/pos/items/${itemId}`, { itemData });
+    return response.data;
+  } catch (error) {
+    console.error('Post Item fail');
+    throw error;
+  }
 };
 
 // 키오스크에 특정 아이템 표출 여부

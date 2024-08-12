@@ -9,7 +9,7 @@
     { "name_kr": "카라멜 마키아토", "name_en": "Caramel Macchiato", "price": 5500 },
     { "name_kr": "모카", "name_en": "Mocha", "price": 5500 },
     { "name_kr": "화이트 초콜릿 모카", "name_en": "White Chocolate Mocha", "price": 6000 },
-    { "name_kr": "플랫 화이트", "name_en": "Flat White", "price": 5500 }
+    { "name_kr": "플랫 화이트", "name_en": "Flat White", "price": 5800 }
   ],
   "콜드 브루": [
     { "name_kr": "콜드 브루", "name_en": "Cold Brew", "price": 4500 },

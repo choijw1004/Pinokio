@@ -2,39 +2,41 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import MenuButton from '../../assets/images/MenuButton.png'; // 메뉴 버튼 이미지 경로
 import CloseButton from '../../assets/images/CloseButton.png'; // 닫기 버튼 이미지 경로
-import LOGO from './Logo';
+import LOGO from '../common/Logo';
 import styled from 'styled-components';
+import ToggleIcon from './ToggleIcon';
 
 const NavbarContainer = styled.nav`
-  position: fixed;
-  top: 0;
-  left: 0;
   width: 100%;
   background-color: white;
-  z-index: 1000;
   display: flex;
   align-items: center;
-  padding: 1rem;
-  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+  width: 94%;
+  height: 4rem;
+  margin: 1rem;
+  border-radius: 1rem;
+  box-shadow: 2px 4px 0 rgba(0, 0, 0, 0.25);
+  padding: 0 1rem;
 `;
 
 const NavbarToggle = styled.img`
-  width: 24px;
-  height: 24px;
+  width: 2rem;
+  height: 2rem;
   cursor: pointer;
 `;
 
 const NavbarMenu = styled.ul`
-  list-style: none;
-  padding: 0;
   margin: 0;
+  margin-left: 2vw;
+  padding: 0;
   position: fixed;
-  top: 60px;
-  left: ${(props) => (props.isOpen ? '0' : '-250px')};
-  width: 250px;
-  height: 100%;
+  top: 6rem;
+  left: ${(props) => (props.isOpen ? '0' : '-21vw')};
+  width: 18vw;
+  height: 85%;
+  border-radius: 1vw;
   background-color: white;
-  box-shadow: 2px 0 0 rgba(0, 0, 0, 0.1);
+  box-shadow: 2px 4px rgb(0, 0, 0, 0.25);
   display: flex;
   flex-direction: column;
   transition: left 0.3s ease-in-out;
@@ -55,7 +57,7 @@ const LogoLocation = styled.div`
   transform: translateX(-50%);
 `;
 
-function Navbar({ items, isOpen, toggleNavbar }) {
+function Navbar({ isOpen, toggleNavbar }) {
   // 메뉴 아이템 클릭 시 NavbarMenu를 닫기 위한 핸들러
   const handleItemClick = () => {
     if (isOpen) {
@@ -63,13 +65,17 @@ function Navbar({ items, isOpen, toggleNavbar }) {
     }
   };
 
+  const items = [
+    { path: '/pos', text: '주문 홈' },
+    { path: '/pos/order-list', text: '주문 내역' },
+    { path: '/pos/kiosk-management', text: '키오스크 관리' },
+    { path: '/pos/product-management', text: '상품 관리' },
+    { path: '/pos/sales-report', text: '매출 리포트' },
+  ];
+
   return (
     <NavbarContainer>
-      <NavbarToggle
-        src={isOpen ? CloseButton : MenuButton}
-        alt={isOpen ? '닫기' : '메뉴'}
-        onClick={toggleNavbar}
-      />
+      <ToggleIcon isOn={isOpen} setIsOn={toggleNavbar} />
       <NavbarMenu isOpen={isOpen}>
         {items.map((item, index) => (
           <NavbarItem key={index} onClick={handleItemClick}>

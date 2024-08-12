@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React from 'react';
 import ElderMenuCategoryCard from './ElderMenuCategoryCard';
 import styled from 'styled-components';
 
@@ -7,13 +7,13 @@ const EMC = styled.div`
   flex-direction: column;
   justify-content: space-between;
   width: 100%;
-  height: 100%;
+  /* height: 100%; */
   background-color: #d9d9d9;
 `;
 
 const MenuCategoryCards = styled.div`
   width: 100%;
-  height: 100%;
+  /* height: 100%; */
   display: flex;
   flex-direction: column;
 `;

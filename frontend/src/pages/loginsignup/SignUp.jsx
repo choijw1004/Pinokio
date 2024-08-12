@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import Logo from '../../components/common/Logo';
 import styled from 'styled-components';
 import { useNavigate } from 'react-router-dom';
@@ -9,6 +9,7 @@ import {
   postRegisterPos,
 } from '../../apis/Auth';
 import { sendEmail, checkAuth } from '../../apis/Mail';
+import { debounce } from 'lodash';
 
 const SignUpWrapper = styled.div`
   display: flex;
@@ -145,28 +146,39 @@ function SignUp() {
   const [verificationMessage, setVerificationMessage] = useState('');
 
   const navigate = useNavigate();
+  const emailRegEx =
+    /^[A-Za-z0-9]([-_.]?[A-Za-z0-9])*@[A-Za-z0-9]([-_.]?[A-Za-z0-9])*\.[A-Za-z]{2,3}$/;
 
-  const checkIdDuplicated = async (e) => {
+  const checkIdDuplicated = useCallback(
+    debounce(async (email) => {
+      if (position) {
+        try {
+          const response =
+            position === 'pos' ? await posDuplicateEmail(email) : await tellerDuplicateEmail(email);
+          if (response.duplicate) {
+            setErrorMessage('사용할 수 없는 이메일입니다.');
+          } else if (email.match(emailRegEx) === null) {
+            setErrorMessage('이메일 형식에 맞지 않습니다.');
+          } else {
+            setIsUsableId(true);
+            setErrorMessage('');
+          }
+        } catch (error) {
+          setErrorMessage('이메일 중복 검사 중 오류가 발생했습니다.');
+        }
+      } else {
+        setErrorMessage('직책을 먼저 선택해주세요.');
+      }
+    }, 500),
+    [position]
+  );
+
+  const handleEmailChange = (e) => {
     const email = e.target.value;
     setId(email);
     setIsUsableId(false);
     setErrorMessage('');
-
-    if (position) {
-      try {
-        const response =
-          position === 'pos' ? await posDuplicateEmail(email) : await tellerDuplicateEmail(email);
-        if (response.duplicate) {
-          setErrorMessage('사용할 수 없는 이메일입니다.');
-        } else {
-          setIsUsableId(true);
-        }
-      } catch (error) {
-        setErrorMessage('이메일 중복 검사 중 오류가 발생했습니다.');
-      }
-    } else {
-      setErrorMessage('직책을 먼저 선택해주세요.');
-    }
+    checkIdDuplicated(email);
   };
 
   const handleEmailSend = async () => {
@@ -251,7 +263,7 @@ function SignUp() {
             type="text"
             className="Email"
             placeholder="이메일"
-            onChange={(e) => checkIdDuplicated(e)}
+            onChange={handleEmailChange}
             disabled={!position}
           />
           {errorMessage && <AddedMessage>{errorMessage}</AddedMessage>}

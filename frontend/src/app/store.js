@@ -14,10 +14,12 @@ import storage from 'redux-persist/lib/storage'; // defaults to localStorage for
 
 import userReducer from '../features/user/userSlice';
 import advisorReducer from '../features/advisor/AdvisorSlice';
+import customerReducer from '../features/kiosk/CustomerSlice';
 
 const rootReducer = {
   user: userReducer,
   advisor: advisorReducer,
+  customer: customerReducer,
 };
 
 const persistConfig = {
