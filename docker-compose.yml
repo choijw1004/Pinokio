@@ -1,6 +1,16 @@
 version: '3'
 
 services:
+  openvidu:
+    image: openvidu/openvidu-server-kms:2.30.0
+    container_name: openvidu
+    environment:
+      - OPENVIDU_SECRET=MY_SECRET
+      - OPENVIDU_CDR=true
+      - OPENVIDU_RECORDING=true
+    ports:
+      - "4443:4443"
+      -
   backend:
     container_name: pinokkio-backend
     build:
@@ -10,7 +20,7 @@ services:
       - "8080:8080"
       - "3333:3333"
       - "3334:3334"
-        
+
     environment:
       - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/pinokkio?serverTimezone=Asia/Seoul
       - SPRING_DATASOURCE_USERNAME=root
