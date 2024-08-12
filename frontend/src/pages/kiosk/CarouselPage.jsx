@@ -5,7 +5,6 @@ import styled from 'styled-components';
 import carouselimage from '../../assets/images/carouselimage.jpg';
 import carouselimage2 from '../../assets/images/carouselimage2.jpg';
 import carouselimage3 from '../../assets/images/carouselimage3.jpg';
-import menudata from '../../data/MenuData.json';
 import NumberModal from '../../components/kiosk/modal/NumberModal';
 import axios from 'axios';
 
@@ -99,6 +98,8 @@ function CarouselPage() {
     carouselimage,
   ]);
 
+  const [customer, setCustomer] = useState({ customerId: null, gender: null, age: null });
+
   const startKiosk = async (kioskId) => {
     try {
       const response = await axios.post(`http://localhost:5001/start`, { kiosk_id: kioskId });
@@ -167,6 +168,12 @@ function CarouselPage() {
       isFirstRender.current = false;
       return;
     }
+
+    setCustomer({
+      customerId: 'a97804be-a882-48d9-bff4-be27f7b043df',
+      gender: null,
+      age: null,
+    });
   }, []);
 
   // const connectEventSource = () => {
@@ -219,11 +226,15 @@ function CarouselPage() {
   // };
 
   const havingHere = () => {
-    navigate('/kiosk/menu', { state: { where: 'having here' } });
+    navigate('/kiosk/menu', {
+      state: { where: 'having here', customer: customer, orderList: null },
+    });
   };
 
   const takeAway = () => {
-    navigate('/kiosk/elder-menu', { state: { where: 'take away' } });
+    navigate('/kiosk/elder-menu', {
+      state: { where: 'take away', customer: customer, orderList: null },
+    });
   };
 
   // const slideAutoPlay = () => {
