@@ -30,6 +30,7 @@ spring:
     properties:
       mail.smtp.auth: true
       mail.smtp.ssl.enable: true
+      mail.smtp.starttls.enable: false
       mail.smtp.ssl.trust: smtp.naver.com
   jwt:
     secret: ${JWT_SECRET}
