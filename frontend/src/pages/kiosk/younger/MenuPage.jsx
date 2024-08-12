@@ -7,11 +7,8 @@ import MenuModal from '../../../components/kiosk/modal/MenuModal';
 import { useSelector } from 'react-redux';
 import { getCategories } from '../../../apis/Category';
 import { getItemsByCategoryId } from '../../../apis/Item';
-<<<<<<< HEAD
 import { useNavigate } from 'react-router-dom';
-=======
 import { useLocation } from 'react-router-dom';
->>>>>>> develop
 
 const MenuPageStyle = styled.div`
   display: flex;
@@ -52,7 +49,6 @@ const KioskBody = styled.div`
 `;
 
 function MenuPage({ isElder }) {
-function MenuPage({ isElder }) {
   const [categories, setCategories] = useState([]);
   const [menus, setMenus] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState(null);
@@ -60,15 +56,12 @@ function MenuPage({ isElder }) {
   const [cartItems, setCartItems] = useState([]);
   const [modal, setModal] = useState(false);
 
-<<<<<<< HEAD
   const categoriesMounted = useRef(false);
   const selectedCategoryMounted = useRef(false);
   const userData = useSelector((store) => store.user);
   const navigate = useNavigate();
-=======
   const { state } = useLocation();
   // const {  } = state;
->>>>>>> develop
 
   useEffect(() => {
     console.log('first rendering');
@@ -155,7 +148,6 @@ function MenuPage({ isElder }) {
           />
         )}
       </KioskBody>
-      <Cart cartItems={cartItems} setCartItems={setCartItems} isElder={false} state={state} />
       <Cart cartItems={cartItems} setCartItems={setCartItems} isElder={false} state={state} />
 
       {modal && (
