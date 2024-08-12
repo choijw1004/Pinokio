@@ -1,19 +1,26 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
+import styled from 'styled-components';
+import Modal from 'react-modal';
 import Logo from '../../components/common/Logo';
 import CustomerVideo from '../../components/advisor/CustomerVideo';
 import CustomerKiosk from '../../components/advisor/CustomerKiosk';
 import CustomerWaiting from '../../components/advisor/CustomerWaiting';
 import Toggle from '../../components/common/Toggle';
-import styled from 'styled-components';
-import { makeMeetingRoom } from '../../apis/Room';
-import { useDispatch, useSelector } from 'react-redux';
+import useWebSocket from '../../hooks/useWebSocket';
+import { makeMeetingRoom, acceptMeeting, deleteMeetingRoom, rejectMeeting } from '../../apis/Room';
 import {
   setAvailability,
   setRoomInfo,
   connectKiosk,
+  updateKiosk,
   disconnectKiosk,
+  setActiveKiosk,
+  resetAdvisor,
 } from '../../features/advisor/AdvisorSlice';
-import UpDownButtons from '../../components/common/UpDownButtons';
+import { OpenVidu } from 'openvidu-browser';
+
+Modal.setAppElement('#root');
 import Toast from '../../components/common/Toast';
 import { clearUser } from '../../features/user/userSlice';
 import Cookies from 'js-cookie';
@@ -97,28 +104,8 @@ const MaxButtonContainer = styled.div`
 const ToggleContainer = styled.div`
   display: flex;
 `;
-const Box = styled.div`
-  width: 100px;
-  height: 100px;
-  background-color: white;
-`;
 
-const LogOut = styled.button`
-  box-shadow: 1px 2px 0 rgb(0 0 0 / 0.25);
-  background-color: white;
-  border: 1px solid black;
-  &:hover {
-    background-color: #ededed;
-  }
-  margin-left: 2rem;
-`;
-
-const HeaderLeft = styled.div`
-  display: flex;
-  padding: 1rem;
-`;
-
-function AdvMainPage() {
+const AdvMainPage = () => {
   const advisorData = useSelector((state) => state.advisor);
   const userData = useSelector((state) => state.user);
   /*
@@ -153,11 +140,113 @@ function AdvMainPage() {
   const [isAccept, setIsAccept] = useState('waiting');
 
   const dispatch = useDispatch();
+  const [showModal, setShowModal] = useState(false);
+  const [consultationRequest, setConsultationRequest] = useState(null);
+  const { sendMessage, lastMessage, isConnected, connect } = useWebSocket(userData.token);
+
+  const [OV, setOV] = useState(null);
+  const [session, setSession] = useState(null);
+  const [publisher, setPublisher] = useState(null);
+  const [subscribers, setSubscribers] = useState([]);
+  const [isInitialized, setIsInitialized] = useState(false);
+
+  const initializeAdvisor = useCallback(async () => {
+    if (!isConnected) {
+      try {
+        const response = await makeMeetingRoom();
+        console.log(`방 생성 응답:`, response);
+        dispatch(setRoomInfo(response));
+        connect();
+      } catch (error) {
+        console.error(`방 생성 오류:`, error);
+      }
+    }
+  }, [dispatch, connect, isConnected]);
+
+  const handleCustomerDisconnect = useCallback(
+    (connectionId) => {
+      dispatch(disconnectKiosk(connectionId));
+      setSubscribers((prevSubscribers) =>
+        prevSubscribers.filter((sub) => sub.stream.connection.connectionId !== connectionId)
+      );
+    },
+    [dispatch]
+  );
+
+  const handleCustomerConnect = useCallback(
+    (connectionId) => {
+      dispatch(
+        updateKiosk({
+          connectionId,
+        })
+      );
+      console.log(`Attempting to update kiosk with connectionId: ${connectionId}`);
+    },
+    [dispatch]
+  );
+
+  const initializeSession = useCallback(
+    async (roomId, token) => {
+      const ov = new OpenVidu();
+      setOV(ov);
+
+      const session = ov.initSession();
+      setSession(session);
+
+      session.on('streamCreated', (event) => {
+        const subscriber = session.subscribe(event.stream, undefined);
+        setSubscribers((prevSubscribers) => [...prevSubscribers, subscriber]);
+        console.log(subscriber);
+        const connectionId = event.stream.connection.connectionId;
+        handleCustomerConnect(connectionId);
+        console.log(`New subscriber added: ${connectionId}`);
+      });
+
+      session.on('streamDestroyed', (event) => {
+        const connectionId = event.stream.connection.connectionId;
+        handleCustomerDisconnect(connectionId);
+      });
+
+      try {
+        await session.connect(token, { clientData: userData.email });
+        console.log('OpenVidu 세션 연결 성공');
+
+        const publisher = await ov.initPublisherAsync(undefined, {
+          audioSource: undefined,
+          videoSource: undefined,
+          publishAudio: true,
+          publishVideo: true,
+          resolution: '640x480',
+          frameRate: 30,
+          insertMode: 'APPEND',
+          mirror: false,
+        });
+
+        await session.publish(publisher);
+        setPublisher(publisher);
+        console.log('상담원 스트림 발행 성공');
+      } catch (error) {
+        console.error('세션 연결 또는 스트림 발행 오류:', error);
+      }
+    },
+    [userData.email, handleCustomerConnect, handleCustomerDisconnect]
+  );
 
   useEffect(() => {
-    console.log(userData);
-    createRoom();
-  }, []);
+    if (userData.token && !isConnected) {
+      initializeAdvisor();
+    }
+    return () => {
+      dispatch(resetAdvisor());
+    };
+  }, [initializeAdvisor, userData.token, dispatch, isConnected]);
+
+  useEffect(() => {
+    if (roomId && roomToken && !isInitialized) {
+      initializeSession(roomId, roomToken);
+      setIsInitialized(true);
+    }
+  }, [roomId, roomToken, initializeSession, isInitialized]);
 
   useEffect(() => {
     middlebarRef.current.addEventListener('drag', (e) => {
@@ -169,8 +258,14 @@ function AdvMainPage() {
   }, []);
 
   useEffect(() => {
-    console.log('Updated advisorData:', advisorData);
-  }, [advisorData]);
+    if (lastMessage) {
+      const data = JSON.parse(lastMessage.data);
+      console.log('WebSocket 메시지 수신:', data);
+      if (data.type === 'consultationRequest') {
+        handleConsultationRequest(data);
+      }
+    }
+  }, [lastMessage]);
 
   useEffect(() => {
     if (isAccept === 'accept') {
@@ -186,39 +281,66 @@ function AdvMainPage() {
 
   useEffect(() => {}, []);
 
-  const createRoom = async () => {
-    try {
-      // const response = await makeMeetingRoom(userData.user.id);
-      // console.log(`Room creation response:`, response);
-      // dispatch(setRoomInfo(response));
-      console.log(advisorData);
-    } catch (error) {
-      console.error(`Error creating room :`, error);
+  const handleConsultationRequest = (data) => {
+    console.log('상담 요청 받음:', data);
+    console.log(isAvailable, currentConnections, maxConnections);
+    if (isAvailable && currentConnections < maxConnections) {
+      setConsultationRequest(data);
+      setShowModal(true);
     }
   };
 
-  const checkCanReceiveRequest = () => {
-    // 현재 요청을 받을 수 있는 상태인지를 반환해준다.
-    return isAccept === 'no request' && isAvailable && currentConnections < maxConnections;
+  const handleAcceptMeeting = async () => {
+    try {
+      await acceptMeeting(roomId, consultationRequest.kioskId);
+      const availableRoom = connectedKiosks.find((kiosk) => kiosk.status === 'waiting');
+      if (availableRoom) {
+        dispatch(
+          connectKiosk({
+            id: availableRoom.id,
+            kioskId: consultationRequest.kioskId,
+            status: 'connected',
+          })
+        );
+        console.log('Updated connectedKiosks:', connectedKiosks);
+      } else {
+        console.log('No available room for new kiosk');
+      }
+      setShowModal(false);
+      setConsultationRequest(null);
+    } catch (error) {
+      console.error('상담 수락 오류:', error);
+    }
   };
 
-  const handleCustomerConnect = (customerId, roomId) => {
-    console.log(customerId, roomId);
+  const handleRejectMeeting = async () => {
+    try {
+      await rejectMeeting();
+    } catch (error) {
+      console.error('상담 거절 오류:', error);
+    }
+    setShowModal(false);
+    setConsultationRequest(null);
   };
 
-  const handleCustomerDisconnect = (customerId, roomId) => {
-    console.log(customerId, roomId);
-  };
+  const handleSetActiveKiosk = useCallback(
+    (connectionId) => {
+      dispatch(setActiveKiosk(connectionId));
+      subscribers.forEach((subscriber) => {
+        if (subscriber.stream.connection.connectionId === connectionId) {
+          subscriber.subscribeToAudio(true);
+        } else {
+          subscriber.subscribeToAudio(false);
+        }
+      });
+    },
+    [dispatch, subscribers]
+  );
 
-  const handleOnclick = () => {
-    // User 정보 초기화
-    dispatch(clearUser());
-
-    // Token들 초기화.
-    localStorage.setItem('accessToken', '');
-    localStorage.setItem('refreshToken', '');
-    Cookies.set('refreshToken', '');
-  };
+  const activeKiosk = connectedKiosks.find((kiosk) => kiosk.isActive);
+  const activeSubscriber = subscribers.find(
+    (sub) => activeKiosk && sub.stream.connection.connectionId === activeKiosk.connectionId
+  );
 
   return (
     <AdvMainPageWrapper>
@@ -250,22 +372,24 @@ function AdvMainPage() {
               setValue={(value) => dispatch(setAvailability(value))}
               size={'3rem'}
             />
+            <p>
+              연결 거절모드 토글 (현재 연결: {currentConnections}/{maxConnections})
+            </p>
           </ToggleContainer>
         </HeaderRight>
       </AdvHeader>
       <AdvBody onScroll={handleScroll}>
         <LeftSection>
           <LeftTopSection>
-            <CustomerVideo />
+            <CustomerVideo streamManager={activeSubscriber || null} />
           </LeftTopSection>
           <LeftMiddleBarRef ref={leftmiddlebarRef} />
           <LeftBottomSection>
             <CustomerWaiting
               connectedKiosks={connectedKiosks}
-              onConnect={handleCustomerConnect}
+              subscribers={subscribers}
               onDisconnect={handleCustomerDisconnect}
-              currentConnections={currentConnections}
-              maxAvailable={maxConnections}
+              onSetActiveKiosk={handleSetActiveKiosk}
             />
           </LeftBottomSection>
         </LeftSection>
@@ -281,8 +405,14 @@ function AdvMainPage() {
           ></Toast>
         )}
       </AdvBody>
+      <Modal isOpen={showModal} onRequestClose={handleRejectMeeting} contentLabel="상담 요청">
+        <h2>상담 요청이 왔습니다</h2>
+        <p>수락하시겠습니까?</p>
+        <button onClick={handleAcceptMeeting}>수락</button>
+        <button onClick={handleRejectMeeting}>거절</button>
+      </Modal>
     </AdvMainPageWrapper>
   );
-}
+};
 
 export default AdvMainPage;

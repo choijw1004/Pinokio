@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { useSelector } from 'react-redux';
 import styled from 'styled-components';
 import { getCategories } from '../../../apis/Category';
@@ -7,7 +7,11 @@ import ElderMenuCategory from '../../../components/kiosk/ElderMenuCategory';
 import MenuMain from '../../../components/kiosk/MenuMain';
 import Cart from '../../../components/kiosk/Cart';
 import MenuModal from '../../../components/kiosk/modal/MenuModal';
-import { requestMeeting } from '../../../apis/Room';
+import { requestMeeting, enterRoom, leaveRoom } from '../../../apis/Room';
+import useWebSocket from '../../../hooks/useWebSocket';
+import { OpenVidu } from 'openvidu-browser';
+import OpenViduVideoComponent from '../../../components/kiosk/OpenViduComponent';
+import Button from '../../../components/common/Button';
 import { useNavigate } from 'react-router-dom';
 
 const ElderMenuPageStyle = styled.div`
@@ -26,16 +30,19 @@ const KioskHeader = styled.div`
   width: 100%;
   height: 13rem;
 `;
+
 const KioskLeftHeader = styled.div`
   width: 30%;
   height: 100%;
 `;
+
 const KioskRightHeader = styled.div`
   display: flex;
   flex-direction: column;
   justify-content: center;
   width: 70%;
 `;
+
 const ScreenStyle = styled.div`
   background-color: #222222;
   width: 90%;
@@ -89,37 +96,37 @@ const KioskCategoriesStyle = styled.div`
 
 function ElderMenuPage() {
   const [categories, setCategories] = useState([]);
-  const categoriesMounted = useRef(false);
-
   const [menus, setMenus] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState(null);
-  const selectedCategoryMounted = useRef(false);
   const [selectedMenu, setSelectedMenu] = useState(null);
-
   const [cartItems, setCartItems] = useState([]);
+  const [modal, setModal] = useState(false);
+  const [openViduConnection, setOpenViduConnection] = useState(false);
+  const [roomId, setRoomId] = useState(null);
+  const [OV, setOV] = useState(null);
+  const [session, setSession] = useState(null);
+  const [publisher, setPublisher] = useState(null);
+  const [subscriber, setSubscriber] = useState(null);
 
   const userData = useSelector((store) => store.user);
+  const { sendMessage, lastMessage, isConnected, connect } = useWebSocket(userData.token);
 
-  const [modal, setModal] = useState(false);
-
-  const navigate = useNavigate();
-  // const isFirstRender = useRef(true);
+  const isFirstRender = useRef(true);
 
   useEffect(() => {
-    // if (isFirstRender.current) {
-    //   console.log('first rendering');
-    //   console.log(userData.typeInfo.kioskId);
-    //   requestRoomEnter();
-    //   getCategory();
-    //   isFirstRender.current = false;
-    // }
-    getCategory();
+    if (isFirstRender.current) {
+      console.log('first rendering');
+      console.log(userData.typeInfo.kioskId);
+      requestRoomEnter();
+      getCategory();
+      isFirstRender.current = false;
+    }
   }, []);
 
-  // const requestRoomEnter = async () => {
-  //   const response = await requestMeeting();
-  //   console.log(response);
-  // };
+  const requestRoomEnter = async () => {
+    const response = await requestMeeting();
+    console.log(response);
+  };
 
   const getCategory = async () => {
     /* axios를 이용하여 category를 가져온다. */
@@ -129,23 +136,13 @@ function ElderMenuPage() {
   };
 
   useEffect(() => {
-    if (!categoriesMounted.current) {
-      console.log('categories mounted : ');
-      categoriesMounted.current = true;
-    } else {
-      console.log('categories updated');
-      console.log(categories);
+    if (categories.length > 0 && !selectedCategory) {
       setSelectedCategory(categories[0]);
     }
-  }, [categories]);
+  }, [categories, selectedCategory]);
 
   useEffect(() => {
-    if (!selectedCategoryMounted.current) {
-      console.log('selectedCategory mounted : ');
-      selectedCategoryMounted.current = true;
-    } else {
-      console.log('selectedCategory updated');
-      console.log(selectedCategory);
+    if (selectedCategory) {
       getMenu();
     }
   }, [selectedCategory]);
@@ -154,14 +151,10 @@ function ElderMenuPage() {
     if (selectedCategory && userData) {
       const menu_data = await getItemsByCategoryId(selectedCategory.id);
       console.log('received menus datas : ', menu_data);
-      // 화면에 보여줄 데이터만 필터링 (isScreen이 YES인 경우)
-      const filteredMenus = menu_data.responseList
-        .filter((menu) => menu.isScreen === 'YES')
-        .map((menu) => {
-          menu['count'] = 0; // count 초기화
-          return menu;
-        });
-      setMenus(filteredMenus);
+      menu_data.responseList.map((menu) => {
+        menu['count'] = 0;
+      });
+      setMenus(menu_data.responseList);
     }
   };
 
@@ -182,8 +175,10 @@ function ElderMenuPage() {
           </Logo>
         </KioskLeftHeader>
         <KioskRightHeader>
-          <ScreenStyle>Screen for advisor</ScreenStyle>
-          <p>{userData.typeInfo.KioskId}</p>
+          <ScreenStyle>
+            {subscriber && <OpenViduVideoComponent streamManager={subscriber} />}
+          </ScreenStyle>
+          {session && <Button onClick={handleLeaveRoom}>상담 종료</Button>}
         </KioskRightHeader>
       </KioskHeader>
       <KioskBody>
