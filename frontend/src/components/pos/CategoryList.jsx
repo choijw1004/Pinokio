@@ -118,7 +118,9 @@ const CategoryList = ({ categories, onEdit, onDelete }) => {
 
   const calculateItemCount = async (categoryId) => {
     try {
+      console.log(categoryId);
       const data = await getItemsByCategoryId(categoryId);
+      console.log(data);
     } catch (error) {
       // setToastMessage('상품 및 카테고리 데이터를 가져오는 데 실패했습니다.');
     }
@@ -138,7 +140,7 @@ const CategoryList = ({ categories, onEdit, onDelete }) => {
           {categories.map((category) => (
             <CategoryRow key={category.id}>
               <CategoryCell>{category.name}</CategoryCell>
-              <CategoryCell>{calculateItemCount()}</CategoryCell>
+              <CategoryCell>{calculateItemCount(category.id)}</CategoryCell>
               <DeleteCell>
                 <EditButton onClick={() => handleEditClick(category)}>수정</EditButton>
                 <DeleteButton className="delete-button" onClick={() => handleDeleteClick(category)}>
