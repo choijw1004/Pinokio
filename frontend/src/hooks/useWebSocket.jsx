@@ -11,7 +11,7 @@ const useWebSocket = (token) => {
     if (socketRef.current || isConnectingRef.current) return;
 
     isConnectingRef.current = true;
-    const ws = new WebSocket('ws://i11a601.p.ssafy.io/ws');
+    const ws = new WebSocket('wss://i11a601.p.ssafy.io/ws');
     socketRef.current = ws;
 
     ws.onopen = () => {
