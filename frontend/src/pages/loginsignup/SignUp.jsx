@@ -325,7 +325,7 @@ function SignUp() {
             type="text"
             className="code"
             placeholder={
-              position === 'pos' ? '매장 코드를 입력해주세요.' : '포스 코드를 입력해주세요.'
+              position === 'pos' ? '매장 코드를 입력해주세요.' : '매장 코드를 입력해주세요.'
             }
             onChange={(e) => setCode(e.target.value)}
             disabled={!position}
