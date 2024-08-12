@@ -100,7 +100,6 @@ const ProductManagementPage = () => {
   const handleEditCategory = (category) => {
     setSelectedCategory(category);
     console.log(`category : ${category}`);
-    setIsCategoryModalOpen(true);
   };
 
   const handleDeleteCategory = (categoryId) => {
@@ -195,6 +194,7 @@ const ProductManagementPage = () => {
           <CategoryTabStyle>
             <button onClick={handleAddCategory}>카테고리 추가</button>
             <CategoryList
+              products={products}
               categories={categories}
               onEdit={handleEditCategory}
               onDelete={handleDeleteCategory}
@@ -202,6 +202,7 @@ const ProductManagementPage = () => {
             {isCategoryModalOpen && (
               <CategoryModal
                 category={selectedCategory}
+                categories={categories}
                 onSave={handleSaveCategory}
                 onClose={() => setIsCategoryModalOpen(false)}
               />

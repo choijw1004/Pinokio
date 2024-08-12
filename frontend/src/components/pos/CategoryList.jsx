@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
 import { deleteCategory, modifyCategory } from '../../apis/Category'; // API 함수 import
-import { getItemsByCategoryId } from '../../apis/Item';
 
 const CategoryTable = styled.table`
   width: 100%;
@@ -74,7 +73,7 @@ const ModalButton = styled.button`
   }
 `;
 
-const CategoryList = ({ categories, onEdit, onDelete }) => {
+const CategoryList = ({ products, categories, onEdit, onDelete }) => {
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [categoryToDelete, setCategoryToDelete] = useState(null);
@@ -105,9 +104,8 @@ const CategoryList = ({ categories, onEdit, onDelete }) => {
 
   const confirmEdit = async () => {
     try {
-      console.log(categoryToEdit.id);
-      console.log(editName);
       await modifyCategory(categoryToEdit.id, editName);
+      console.log(categoryCounts);
       onEdit(editName); // 부모 컴포넌트에 수정 알림
       setShowEditModal(false);
     } catch (error) {
@@ -116,16 +114,12 @@ const CategoryList = ({ categories, onEdit, onDelete }) => {
     }
   };
 
-  const calculateItemCount = async (categoryId) => {
-    try {
-      console.log(categoryId);
-      const data = await getItemsByCategoryId(categoryId);
-      console.log(data);
-    } catch (error) {
-      // setToastMessage('상품 및 카테고리 데이터를 가져오는 데 실패했습니다.');
-    }
-    return 1;
-  };
+  const categoryCounts = categories.map((category) => {
+    const count = products.filter((product) => product.categoryId === category.id).length;
+    return {
+      productCount: count,
+    };
+  });
 
   return (
     <>
@@ -137,10 +131,10 @@ const CategoryList = ({ categories, onEdit, onDelete }) => {
           </CategoryRow>
         </thead>
         <tbody>
-          {categories.map((category) => (
+          {categories.map((category, index) => (
             <CategoryRow key={category.id}>
               <CategoryCell>{category.name}</CategoryCell>
-              <CategoryCell>{calculateItemCount(category.id)}</CategoryCell>
+              <CategoryCell>{categoryCounts[index].productCount}</CategoryCell>
               <DeleteCell>
                 <EditButton onClick={() => handleEditClick(category)}>수정</EditButton>
                 <DeleteButton className="delete-button" onClick={() => handleDeleteClick(category)}>
