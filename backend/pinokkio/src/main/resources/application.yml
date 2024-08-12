@@ -24,13 +24,14 @@ spring:
 
   mail:
     host: smtp.naver.com
-    port: 465
+    port: 587
     username: ${EMAIL}
     password: ${EMAIL_PW}
     properties:
       mail.smtp.auth: true
-      mail.smtp.ssl.enable: true
-      mail.smtp.ssl.trust: smtp.naver.com
+      #mail.smtp.ssl.enable: true
+      mail.smtp.starttls.enable: true
+      #mail.smtp.ssl.trust: smtp.naver.com
   jwt:
     secret: ${JWT_SECRET}
 
