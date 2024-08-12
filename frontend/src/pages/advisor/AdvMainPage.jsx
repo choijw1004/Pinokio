@@ -15,9 +15,11 @@ import {
   connectKiosk,
   updateKiosk,
   disconnectKiosk,
+  setActiveKiosk,
   resetAdvisor,
 } from '../../features/advisor/AdvisorSlice';
 import { OpenVidu } from 'openvidu-browser';
+
 Modal.setAppElement('#root');
 
 // 스타일 컴포넌트 정의
@@ -86,7 +88,6 @@ const AdvMainPage = () => {
   const [publisher, setPublisher] = useState(null);
   const [subscribers, setSubscribers] = useState([]);
   const [isInitialized, setIsInitialized] = useState(false);
-  const [activeKiosk, setActiveKiosk] = useState(null);
 
   const initializeAdvisor = useCallback(async () => {
     if (!isConnected) {
@@ -119,11 +120,8 @@ const AdvMainPage = () => {
         })
       );
       console.log(`Attempting to update kiosk with connectionId: ${connectionId}`);
-      if (!activeKiosk) {
-        setActiveKiosk(connectionId);
-      }
     },
-    [dispatch, setActiveKiosk]
+    [dispatch]
   );
 
   const initializeSession = useCallback(
@@ -170,20 +168,8 @@ const AdvMainPage = () => {
         console.error('세션 연결 또는 스트림 발행 오류:', error);
       }
     },
-    [userData.email, dispatch, handleCustomerDisconnect, handleCustomerConnect]
+    [userData.email, handleCustomerConnect, handleCustomerDisconnect]
   );
-
-  useEffect(() => {
-    setSubscribers((prevSubscribers) => {
-      const newSubscribers = prevSubscribers.filter((sub) => {
-        const connectionId = sub.stream.connection.connectionId;
-        return connectedKiosks.some(
-          (kiosk) => kiosk.connectionId === connectionId && kiosk.status === 'connected'
-        );
-      });
-      return newSubscribers;
-    });
-  }, [connectedKiosks]);
 
   useEffect(() => {
     if (userData.token && !isConnected) {
@@ -210,24 +196,6 @@ const AdvMainPage = () => {
       }
     }
   }, [lastMessage]);
-
-  useEffect(() => {
-    console.log('Updated connectedKiosks:', connectedKiosks);
-  }, [connectedKiosks]);
-
-  useEffect(() => {
-    const updatedKiosk = connectedKiosks.find(
-      (kiosk) => kiosk.status === 'connected' && kiosk.connectionId && kiosk.kioskId
-    );
-    if (updatedKiosk) {
-      console.log(
-        `Kiosk ${updatedKiosk.kioskId} connected with connectionId ${updatedKiosk.connectionId}`
-      );
-      if (!activeKiosk) {
-        setActiveKiosk(updatedKiosk.connectionId);
-      }
-    }
-  }, [connectedKiosks, activeKiosk]);
 
   const handleConsultationRequest = (data) => {
     console.log('상담 요청 받음:', data);
@@ -273,7 +241,7 @@ const AdvMainPage = () => {
 
   const handleSetActiveKiosk = useCallback(
     (connectionId) => {
-      setActiveKiosk(connectionId);
+      dispatch(setActiveKiosk(connectionId));
       subscribers.forEach((subscriber) => {
         if (subscriber.stream.connection.connectionId === connectionId) {
           subscriber.subscribeToAudio(true);
@@ -282,7 +250,12 @@ const AdvMainPage = () => {
         }
       });
     },
-    [subscribers]
+    [dispatch, subscribers]
+  );
+
+  const activeKiosk = connectedKiosks.find((kiosk) => kiosk.isActive);
+  const activeSubscriber = subscribers.find(
+    (sub) => activeKiosk && sub.stream.connection.connectionId === activeKiosk.connectionId
   );
 
   return (
@@ -293,7 +266,7 @@ const AdvMainPage = () => {
           <ToggleContainer>
             <Toggle
               value={!isAvailable}
-              setValue={(value) => dispatch(setAvailability(value))}
+              setValue={(value) => dispatch(setAvailability(!value))}
               size={'5rem'}
             />
             <p>
@@ -305,20 +278,13 @@ const AdvMainPage = () => {
       <AdvBody>
         <LeftSection>
           <LeftTopSection>
-            <CustomerVideo
-              key={activeKiosk}
-              streamManager={
-                subscribers.find((sub) => sub.stream.connection.connectionId === activeKiosk) ||
-                null
-              }
-            />
+            <CustomerVideo streamManager={activeSubscriber || null} />
           </LeftTopSection>
           <LeftBottomSection>
             <CustomerWaiting
               connectedKiosks={connectedKiosks}
               subscribers={subscribers}
               onDisconnect={handleCustomerDisconnect}
-              activeKiosk={activeKiosk}
               onSetActiveKiosk={handleSetActiveKiosk}
             />
           </LeftBottomSection>

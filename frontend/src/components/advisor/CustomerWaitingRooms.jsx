@@ -26,6 +26,7 @@ const Room = styled.div`
       ? '#c8e6c9'
       : 'white'};
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
 `;
 
 const VideoContainer = styled.div`
@@ -57,34 +58,40 @@ const DisconnectButton = styled.button`
   }
 `;
 
-function CustomerWaitingRooms({
-  connectedKiosks,
-  subscribers,
-  onDisconnect,
-  onSetActiveKiosk,
-  activeKiosk,
-}) {
+const ActiveKioskIndicator = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 255, 0, 0.2);
+  color: green;
+  font-weight: bold;
+`;
+
+function CustomerWaitingRooms({ connectedKiosks, subscribers, onDisconnect, onSetActiveKiosk }) {
   return (
     <RoomsContainer>
       {connectedKiosks.map((kiosk) => {
         const subscriber = subscribers.find(
           (sub) => sub.stream.connection.connectionId === kiosk.connectionId
         );
-        console.log('Subscriber for kiosk', kiosk.id, ':', subscriber);
+
         return (
           <Room
             key={kiosk.id}
             $status={kiosk.status}
-            $isActive={kiosk.connectionId === activeKiosk}
+            $isActive={kiosk.isActive}
             onClick={() => onSetActiveKiosk(kiosk.connectionId)}
           >
-            <p>Room {kiosk.id}</p>
+            <p>
+              Room {kiosk.id} - {kiosk.status}
+            </p>
             <VideoContainer>
-              {subscriber && (
-                <OpenViduVideoComponent
-                  streamManager={subscriber}
-                  muted={kiosk.connectionId !== activeKiosk}
-                />
+              {kiosk.isActive ? (
+                <ActiveKioskIndicator>활성화됨</ActiveKioskIndicator>
+              ) : (
+                subscriber && <OpenViduVideoComponent streamManager={subscriber} muted={true} />
               )}
             </VideoContainer>
             <DisconnectButton

@@ -9,12 +9,14 @@ const StyledOpenViduVideoComponent = styled.div`
   text-align: center;
   line-height: 10rem;
   font-family: 'CafeOhsquareAir';
+  border-radius: 10px;
 `;
 
 const StyledVideo = styled.video`
   width: 100%;
   height: 100%;
   object-fit: cover;
+  border-radius: 10px;
 `;
 
 const OpenViduVideoComponent = ({ streamManager }) => {
