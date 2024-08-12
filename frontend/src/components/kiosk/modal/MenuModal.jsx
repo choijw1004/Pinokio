@@ -153,7 +153,7 @@ function MenuModal({ item, cartItems, setCartItems, setModal, isElder }) {
 
     for (var i = 0; i < cartItems.length; i++) {
       // 만약 이미 Cart에 담겨있는 상품이라면 count 수만 증가시키고,
-      if (cartItems[i].name === item.name) {
+      if (cartItems[i].itemId === item.itemId) {
         const updatedCartItems = [...cartItems];
         updatedCartItems[i].count += count;
         setCartItems(updatedCartItems);

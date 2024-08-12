@@ -4,10 +4,10 @@ import MenuCategory from '../../../components/kiosk/MenuCategory';
 import MenuMain from '../../../components/kiosk/MenuMain';
 import Cart from '../../../components/kiosk/Cart';
 import MenuModal from '../../../components/kiosk/modal/MenuModal';
-// import MenuData from '../../../data/MenuData.json';
 import { useSelector } from 'react-redux';
 import { getCategories } from '../../../apis/Category';
 import { getItemsByCategoryId } from '../../../apis/Item';
+import { useLocation } from 'react-router-dom';
 
 const MenuPageStyle = styled.div`
   display: flex;
@@ -46,7 +46,7 @@ const KioskBody = styled.div`
   }
 `;
 
-function MenuPage() {
+function MenuPage({ isElder }) {
   const [categories, setCategories] = useState([]);
   const categoriesMounted = useRef(false);
 
@@ -61,9 +61,13 @@ function MenuPage() {
 
   const [modal, setModal] = useState(false);
 
+  const { state } = useLocation();
+  // const {  } = state;
+
   useEffect(() => {
     console.log('first rendering');
     getCategory();
+    console.log('THIS IS STATE : ', state);
 
     // 처음 렌더링 했을 때 순서 getCategory ->  useEffect(categories) -> useEffect(selectedCategory)
   }, []);
@@ -134,7 +138,7 @@ function MenuPage() {
           />
         )}
       </KioskBody>
-      <Cart cartItems={cartItems} setCartItems={setCartItems} isElder={false} />
+      <Cart cartItems={cartItems} setCartItems={setCartItems} isElder={false} state={state} />
 
       {modal && (
         <MenuModal
