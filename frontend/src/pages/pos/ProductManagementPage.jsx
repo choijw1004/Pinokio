@@ -53,6 +53,7 @@ const ProductManagementPage = () => {
   useEffect(() => {
     const fetchItems = async () => {
       try {
+        console.log(userData.typeInfo.posId);
         const data = await getItems(userData.typeInfo.posId);
         setProducts(data.responseList);
         const categoryList = await getCategories();

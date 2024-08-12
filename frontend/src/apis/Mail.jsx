@@ -1,9 +1,9 @@
 import axios from './Axios';
 
 // 인증 메일 전송
-export const sendEmail = async () => {
+export const sendEmail = async (email) => {
   try {
-    const response = await axios.post(`/api/mail/send`);
+    const response = await axios.post(`/api/mail/send`, email);
     return response.data;
   } catch (error) {
     console.error('Failed to send email:', error);
