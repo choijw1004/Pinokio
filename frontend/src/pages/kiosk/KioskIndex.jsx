@@ -82,11 +82,11 @@ function KioskIndex() {
       setWarning(true); // 20초 후 경고 표시
 
       const navigateTimer = setTimeout(() => {
-        navigate('/kiosk'); // 30초 후 페이지 이동
-      }, 10000); // 10000ms = 10초
+        navigate('/kiosk'); // 60초 후 페이지 이동
+      }, 60000); // 60000ms = 60초
 
       setTimer(navigateTimer); // 새로운 타이머 설정
-    }, 20000); // 20000ms = 20초
+    }, 50000); // 20000ms = 50초
 
     setTimer(newTimer); // 새로운 타이머 설정
   }, [navigate, timer]);

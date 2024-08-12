@@ -50,6 +50,7 @@ function MenuMainCard({ menu, setSelectedMenu, setModal }) {
     if (menu.isSoldOut === 'NO') {
       setModal(true);
       setSelectedMenu(menu);
+      console.log(menu);
     } else {
       setModal(false);
     }
@@ -58,7 +59,7 @@ function MenuMainCard({ menu, setSelectedMenu, setModal }) {
   return (
     <MMC onClick={handleClick} isSoldOut={menu.isSoldOut}>
       <SoldOutText isSoldOut={menu.isSoldOut}>품절</SoldOutText>
-      <Image src={coffeeImage} />
+      <Image src={menu.file} />
       <MenuContents>
         <MenuName>{menu.name}</MenuName>
         <MenuNameEng>{menu.detail}</MenuNameEng>
