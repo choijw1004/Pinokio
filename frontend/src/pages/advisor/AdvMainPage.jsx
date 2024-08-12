@@ -20,12 +20,13 @@ import {
 } from '../../features/advisor/AdvisorSlice';
 import { OpenVidu } from 'openvidu-browser';
 
-Modal.setAppElement('#root');
 import Toast from '../../components/common/Toast';
 import { clearUser } from '../../features/user/userSlice';
 import Cookies from 'js-cookie';
 
 import { Resizable } from 'react-resizable';
+import UpDownButtons from '../../components/common/UpDownButtons';
+Modal.setAppElement('#root');
 
 // 스타일 컴포넌트 정의
 const AdvMainPageWrapper = styled.div`
@@ -104,7 +105,20 @@ const MaxButtonContainer = styled.div`
 const ToggleContainer = styled.div`
   display: flex;
 `;
+const LogOut = styled.button`
+  box-shadow: 1px 2px 0 rgb(0 0 0 / 0.25);
+  background-color: white;
+  border: 1px solid black;
+  &:hover {
+    background-color: #ededed;
+  }
+  margin-left: 2rem;
+`;
 
+const HeaderLeft = styled.div`
+  display: flex;
+  padding: 1rem;
+`;
 const AdvMainPage = () => {
   const advisorData = useSelector((state) => state.advisor);
   const userData = useSelector((state) => state.user);
@@ -184,6 +198,16 @@ const AdvMainPage = () => {
     },
     [dispatch]
   );
+
+  const handleOnclick = () => {
+    // User 정보 초기화
+    dispatch(clearUser());
+
+    // Token들 초기화.
+    localStorage.setItem('accessToken', '');
+    localStorage.setItem('refreshToken', '');
+    Cookies.set('refreshToken', '');
+  };
 
   const initializeSession = useCallback(
     async (roomId, token) => {

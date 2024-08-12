@@ -112,6 +112,7 @@ function ElderMenuPage() {
   const { sendMessage, lastMessage, isConnected, connect } = useWebSocket(userData.token);
 
   const isFirstRender = useRef(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (isFirstRender.current) {
@@ -160,6 +161,18 @@ function ElderMenuPage() {
 
   const handleClick = () => {
     navigate('/elder-menu');
+  };
+
+  const handleLeaveRoom = async () => {
+    try {
+      setRoomId(null);
+      session.disconnect();
+      leaveRoom(roomId);
+      setOpenViduConnection(false);
+      console.log('상담 종료 성공');
+    } catch (error) {
+      console.error('상담 종료 오류:', error);
+    }
   };
 
   return (
