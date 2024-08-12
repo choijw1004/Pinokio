@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Route, Routes, useLocation } from 'react-router-dom';
+import React, { useEffect, useCallback, useState } from 'react';
+import { Route, Routes, useNavigate } from 'react-router-dom';
 import CarouselPage from './CarouselPage';
 import MenuPage from './younger/MenuPage';
 import PaymentPage from './younger/PaymentPage';
@@ -42,11 +42,84 @@ const KioskInline = styled.div`
   // align-items: center;
 `;
 
+const WarningMessage = styled.div`
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 20px 40px;
+  border-radius: 8px;
+  font-size: 18px;
+  font-weight: bold;
+  text-align: center;
+  z-index: 1000;
+  opacity: 0;
+  transition: opacity 0.5s ease-in-out;
+
+  &.visible {
+    opacity: 1;
+  }
+`;
+
 function KioskIndex() {
+  const navigate = useNavigate();
+  const [timer, setTimer] = useState(null);
+  const [warning, setWarning] = useState(false);
+
+  const resetTimer = useCallback(() => {
+    // 경고 메시지 숨김
+    setWarning(false);
+
+    // 기존 타이머 제거
+    if (timer) {
+      clearTimeout(timer);
+    }
+
+    // 새 타이머 설정: 20초 후에 경고를 표시, 30초 후에 페이지 이동
+    const newTimer = setTimeout(() => {
+      setWarning(true); // 20초 후 경고 표시
+
+      const navigateTimer = setTimeout(() => {
+        navigate('/kiosk'); // 30초 후 페이지 이동
+      }, 10000); // 10000ms = 10초
+
+      setTimer(navigateTimer); // 새로운 타이머 설정
+    }, 20000); // 20000ms = 20초
+
+    setTimer(newTimer); // 새로운 타이머 설정
+  }, [navigate, timer]);
+
+  useEffect(() => {
+    // 마운트 시 이벤트 리스너 추가
+    const events = ['click', 'mousemove', 'keydown', 'scroll'];
+
+    events.forEach((event) => {
+      window.addEventListener(event, resetTimer);
+    });
+
+    // 언마운트 시 이벤트 리스너 제거
+    return () => {
+      events.forEach((event) => {
+        window.removeEventListener(event, resetTimer);
+      });
+
+      if (timer) {
+        clearTimeout(timer);
+      }
+    };
+  }, [resetTimer, timer]);
+
   return (
     <KioskForm>
       <KioskOutline>
         <KioskInline>
+          {warning && (
+            <WarningMessage className={warning ? 'visible' : ''}>
+              10초 뒤 아무 입력이 없으면 페이지가 이동됩니다.
+            </WarningMessage>
+          )}
           {/* <div style={{ width: '50%' }}> */}
           <Routes>
             <Route path="/" element={<CarouselPage />} />
