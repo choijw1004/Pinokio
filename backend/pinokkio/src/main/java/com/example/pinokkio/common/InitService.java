@@ -333,7 +333,7 @@ public class InitService implements ApplicationListener<ContextRefreshedEvent> {
     
     private static String encodeFileName(String fileName) {
         try {
-            return URLEncoder.encode(fileName, StandardCharsets.UTF_8.toString()).replace("+", "%20");
+            return BASE_URL + URLEncoder.encode(fileName, StandardCharsets.UTF_8.toString()).replace("+", "%20") + FILE_EXTENSION;
         } catch (Exception e) {
             throw new RuntimeException("Error encoding file name: " + fileName, e);
         }
