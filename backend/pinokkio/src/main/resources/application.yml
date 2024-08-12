@@ -53,7 +53,7 @@ s3:
     name: https://${BUCKET}.s3.${REGION}.amazonaws.com/
 
 openvidu:
-  url: https://openvidu:4443/
+  url: https://i11a601.p.ssafy.io:4443/
   secret: MY_SECRET
 
 encryption:
