@@ -38,12 +38,11 @@ public class OrderController {
 
 
     @Operation(summary = "주문 정보 생성", description = "새로운 주문을 생성")
-    @PreAuthorize("hasRole('ROLE_POS')")
+    @PreAuthorize("hasRole('ROLE_KIOSK')")
     @PostMapping("/orders")
     public ResponseEntity<?> createOrder(
             @RequestBody @Validated GroupOrderItemRequest groupOrderItemRequest) {
         List<OrderItemResponse> orderItemResponses = orderService.createOrder(
-                        posService.getPosByEmail(jwtProvider.getCurrentUserEmail()).getId(),
                         groupOrderItemRequest
                 )
                 .getItems()
