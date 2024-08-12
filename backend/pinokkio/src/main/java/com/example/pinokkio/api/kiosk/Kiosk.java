@@ -6,6 +6,7 @@
 package com.example.pinokkio.api.kiosk;
 
 import com.example.pinokkio.api.pos.Pos;
+import com.example.pinokkio.common.BaseEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -24,7 +25,7 @@ import java.util.UUID;
 @Setter(AccessLevel.PROTECTED)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
-public class Kiosk {
+public class Kiosk extends BaseEntity {
 
     @Id
     @GeneratedValue
