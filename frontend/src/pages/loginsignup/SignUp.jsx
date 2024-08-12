@@ -156,7 +156,7 @@ function SignUp() {
           const response =
             position === 'pos' ? await posDuplicateEmail(email) : await tellerDuplicateEmail(email);
           if (response.duplicate) {
-            setErrorMessage('사용할 수 없는 이메일입니다.');
+            setErrorMessage('이미 등록된 이메일입니다.');
           } else if (email.match(emailRegEx) === null) {
             setErrorMessage('이메일 형식에 맞지 않습니다.');
           } else {
@@ -203,7 +203,6 @@ function SignUp() {
       } else {
         setVerificationMessage('인증 코드가 올바르지 않습니다.');
       }
-    } catch (error) {
       setVerificationMessage('인증 코드 확인 중 오류가 발생했습니다.');
     }
   };
