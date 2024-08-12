@@ -8,6 +8,7 @@ import MenuMain from '../../../components/kiosk/MenuMain';
 import Cart from '../../../components/kiosk/Cart';
 import MenuModal from '../../../components/kiosk/modal/MenuModal';
 import { requestMeeting } from '../../../apis/Room';
+import { useNavigate } from 'react-router-dom';
 
 const ElderMenuPageStyle = styled.div`
   display: flex;
@@ -53,6 +54,7 @@ const Logo = styled.div`
   font-style: normal;
   padding-left: 1vw;
   padding-top: 1vh;
+  cursor: pointer;
 `;
 
 const KioskBody = styled.div`
@@ -100,6 +102,7 @@ function ElderMenuPage() {
 
   const [modal, setModal] = useState(false);
 
+  const navigate = useNavigate();
   // const isFirstRender = useRef(true);
 
   useEffect(() => {
@@ -162,11 +165,21 @@ function ElderMenuPage() {
     }
   };
 
+  const handleClick = () => {
+    navigate('/elder-menu');
+  };
+
   return (
     <ElderMenuPageStyle>
       <KioskHeader>
         <KioskLeftHeader>
-          <Logo>Pinokio</Logo>
+          <Logo
+            onClick={() => {
+              handleClick();
+            }}
+          >
+            Pinokio
+          </Logo>
         </KioskLeftHeader>
         <KioskRightHeader>
           <ScreenStyle>Screen for advisor</ScreenStyle>
