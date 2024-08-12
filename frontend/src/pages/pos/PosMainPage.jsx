@@ -1,10 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import styled from 'styled-components';
 import OrderList from '../../components/pos/OrderList';
 import OrderDetail from '../../components/pos/OrderDetail';
 import Navbar from '../../components/pos/Navbar';
 const PosMainPageWrapper = styled.div`
-  font-family: 'Arial', sans-serif;
   width: 100%;
 `;
 
@@ -107,6 +106,7 @@ function PosMainPage() {
 
   const [orders, setOrders] = useState(initialOrders);
   const [selectedOrder, setSelectedOrder] = useState(initialOrders[0]);
+  const navbarRef = useRef(null);
 
   const changeOrderStatus = (orderId, newStatus) => {
     setOrders(
@@ -118,9 +118,24 @@ function PosMainPage() {
     setSelectedOrder(order);
   };
 
+  const handleClickOutside = (event) => {
+    if (navbarRef.current && !navbarRef.current.contains(event.target)) {
+      setIsNavbarOpen(false);
+    }
+  };
+
+  useEffect(() => {
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
   return (
     <PosMainPageWrapper>
-      <Navbar isOpen={isNavbarOpen} toggleNavbar={() => setIsNavbarOpen(!isNavbarOpen)} />
+      <div ref={navbarRef}>
+        <Navbar isOpen={isNavbarOpen} toggleNavbar={() => setIsNavbarOpen(!isNavbarOpen)} />
+      </div>
 
       <OrderList
         orders={orders}

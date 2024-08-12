@@ -14,10 +14,10 @@ const Modal = styled.div`
 `;
 
 const Input = styled.input`
-  ${'' /* 입력 필드 스타일 */}
+  /* 입력 필드 스타일 */
 `;
 
-const CategoryModal = ({ category, onSave, onClose }) => {
+const CategoryModal = ({ category, categories, onSave, onClose }) => {
   const [name, setName] = useState('');
 
   useEffect(() => {
@@ -26,12 +26,21 @@ const CategoryModal = ({ category, onSave, onClose }) => {
     }
   }, [category]);
 
-  const handleSave = async (e) => {
+  const handleSave = async () => {
     if (!name.trim()) {
       alert('카테고리 이름을 입력해주세요.');
       return;
     }
-    console.log(e);
+
+    // 중복된 카테고리 체크
+    const isDuplicate = categories.some(
+      (existingCategory) => existingCategory.name === name.trim()
+    );
+
+    if (isDuplicate) {
+      alert('중복된 카테고리입니다.');
+      return;
+    }
 
     if (name.length <= 8) {
       await createCategory(name);

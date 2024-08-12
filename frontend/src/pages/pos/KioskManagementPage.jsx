@@ -96,6 +96,7 @@ const KioskManagementPage = () => {
     try {
       const data = await getKiosks();
       setKiosks(data);
+      console.log(data);
     } catch (error) {
       console.error('키오스크 데이터를 불러오는 데 실패했습니다:', error);
     }

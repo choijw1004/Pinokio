@@ -11,12 +11,13 @@ const PageStyle = styled.div`
 `;
 const Logo = styled.div`
   font-size: 3vh;
-  color: #7392ff;
+  color: #ec7348;
   font-family: 'Alfa Slab One', serif;
   font-weight: 400;
   font-style: normal;
   padding-left: 1vw;
   padding-top: 1vh;
+  cursor: pointer;
 `;
 const BackButton = styled.div`
   font-family: 'CafeOhsquareAir';
@@ -112,10 +113,20 @@ function PaymentPage({ isElder }) {
     navigate('/kiosk/elder-menu');
   };
 
+  const handleClick = () => {
+    navigate('/kiosk/elder-menu');
+  };
+
   return (
     <PageStyle>
       <KioskHeader>
-        <Logo>Pinokio</Logo>
+        <Logo
+          onClick={() => {
+            handleClick();
+          }}
+        >
+          Pinokio
+        </Logo>
         <BackButton>
           <Arrow>{'<'}</Arrow>
           <BackButtonText onClick={goBack}>뒤로가기</BackButtonText>

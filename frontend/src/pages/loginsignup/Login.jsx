@@ -1,9 +1,6 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useState } from 'react';
 import styled from 'styled-components';
-
-import LOGO from '../../components/common/Logo';
 import { useDispatch } from 'react-redux';
 import { setUser, clearUser } from '../../features/user/userSlice';
 import {
@@ -15,8 +12,7 @@ import {
 } from '../../apis/Auth';
 import axios from '../../apis/Axios';
 import Cookies from 'js-cookie';
-import LogoWithSymbol from '../../components/common/LogoWithSymbol';
-import Symbol from '../../components/common/Symbol';
+import CustomKeyboard from '../../components/common/Keyboard/CustomKeyboard';
 
 const LoginWrapper = styled.div`
   display: flex;
@@ -106,10 +102,23 @@ const ButtonWrapper = styled.div`
   }
 `;
 
+const KeyboardContainer = styled.div`
+  position: fixed; /* 화면에 고정 */
+  bottom: 0;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  transition: transform 0.3s ease-in-out;
+  transform: translateY(${({ $showKeyboard }) => ($showKeyboard ? '0' : '100%')});
+  z-index: 1000;
+`;
+
 function Login() {
   const [id, setId] = useState('');
   const [password, setPassword] = useState('');
   const [usertype, setUserType] = useState('');
+  const [showKeyboard, setShowKeyboard] = useState(false); // 상태 추가
+  const [inputFocused, setInputFocused] = useState(''); // 어떤 입력 필드에 포커스가 있는지 추적
 
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -125,6 +134,23 @@ function Login() {
   const handleUserType = (e) => {
     setUserType(e.target.value);
   };
+
+  const handleInputFocus = (inputName) => {
+    setInputFocused(inputName);
+    setShowKeyboard(true);
+  };
+
+  const handleClickOutside = (e) => {
+    if (e.target.closest('.custom-input')) return;
+    if (!e.target.closest('.simple-keyboard')) setShowKeyboard(false);
+  };
+
+  useEffect(() => {
+    document.addEventListener('click', handleClickOutside);
+    return () => {
+      document.removeEventListener('click', handleClickOutside);
+    };
+  }, []);
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -215,19 +241,22 @@ function Login() {
 
   return (
     <LoginWrapper>
-      <img src="/PSymbol.svg" width="400rem" />
-      {/* <LogoWithSymbol size="2rem" /> */}
+      <img src="/PSymbol.svg" width="400rem" alt="symbol" />
       <LoginForm id="login-form" onSubmit={handleLogin}>
         <Input
           type="text"
-          className="id"
+          className="custom-input id"
           placeholder="아이디"
+          value={id}
+          onFocus={() => handleInputFocus('id')} // 포커스 시 키보드 표시
           onChange={(e) => setId(e.target.value)}
         />
         <Input
           type="password"
-          className="password"
+          className="custom-input password"
           placeholder="패스워드"
+          value={password}
+          onFocus={() => handleInputFocus('password')} // 포커스 시 키보드 표시
           onChange={(e) => setPassword(e.target.value)}
         />
         <SelectBox value={usertype} onChange={handleUserType}>
@@ -245,6 +274,13 @@ function Login() {
         <div>|</div>
         <div onClick={signUp}>회원가입</div>
       </ButtonWrapper>
+
+      <KeyboardContainer $showKeyboard={showKeyboard}>
+        <CustomKeyboard
+          text={inputFocused === 'id' ? id : password}
+          setText={(value) => (inputFocused === 'id' ? setId(value) : setPassword(value))}
+        />
+      </KeyboardContainer>
     </LoginWrapper>
   );
 }

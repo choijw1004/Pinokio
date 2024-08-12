@@ -10,6 +10,7 @@ import {
 } from '../../apis/Auth';
 import { sendEmail, checkAuth } from '../../apis/Mail';
 import { debounce } from 'lodash';
+import { AiFillEye, AiFillEyeInvisible } from 'react-icons/ai';
 
 const SignUpWrapper = styled.div`
   display: flex;
@@ -133,6 +134,19 @@ const SelectInput = styled.select`
   }
 `;
 
+const PasswordContainer = styled.div`
+  position: relative;
+  width: 100%;
+`;
+
+const TogglePasswordVisibility = styled.div`
+  position: absolute;
+  top: 50%;
+  right: 10px;
+  transform: translateY(-50%);
+  cursor: pointer;
+`;
+
 function SignUp() {
   const [id, setId] = useState('');
   const [isUsableId, setIsUsableId] = useState(false);
@@ -144,6 +158,7 @@ function SignUp() {
   const [emailSent, setEmailSent] = useState(false);
   const [verificationCode, setVerificationCode] = useState('');
   const [verificationMessage, setVerificationMessage] = useState('');
+  const [passwordVisible, setPasswordVisible] = useState(false); // 비밀번호 표시 여부 상태
 
   const navigate = useNavigate();
   const emailRegEx =
@@ -156,7 +171,7 @@ function SignUp() {
           const response =
             position === 'pos' ? await posDuplicateEmail(email) : await tellerDuplicateEmail(email);
           if (response.duplicate) {
-            setErrorMessage('이미 등록된 이메일입니다.');
+            setErrorMessage('이미 가입된 이메일 입니다.');
           } else if (email.match(emailRegEx) === null) {
             setErrorMessage('이메일 형식에 맞지 않습니다.');
           } else {
@@ -290,23 +305,34 @@ function SignUp() {
           </VerifyLabelContainer>
         )}
 
-        <Input
-          id="password"
-          type="password"
-          className="Password"
-          placeholder="패스워드"
-          onChange={(e) => setPassword(e.target.value)}
-          disabled={!position}
-        />
-        <LabelContainer>
+        <PasswordContainer>
           <Input
-            id="password-checking"
-            type="password"
-            className="has-label"
-            placeholder="패스워드 확인"
-            onChange={(e) => setPasswordChecking(e.target.value)}
+            id="password"
+            type={passwordVisible ? 'text' : 'password'} // 비밀번호 보이기/숨기기
+            className="Password"
+            placeholder="패스워드"
+            onChange={(e) => setPassword(e.target.value)}
             disabled={!position}
           />
+          <TogglePasswordVisibility onClick={() => setPasswordVisible(!passwordVisible)}>
+            {passwordVisible ? <AiFillEyeInvisible /> : <AiFillEye />}
+          </TogglePasswordVisibility>
+        </PasswordContainer>
+
+        <LabelContainer>
+          <PasswordContainer>
+            <Input
+              id="password-checking"
+              type={passwordVisible ? 'text' : 'password'} // 비밀번호 보이기/숨기기
+              className="has-label"
+              placeholder="패스워드 확인"
+              onChange={(e) => setPasswordChecking(e.target.value)}
+              disabled={!position}
+            />
+            <TogglePasswordVisibility onClick={() => setPasswordVisible(!passwordVisible)}>
+              {passwordVisible ? <AiFillEyeInvisible /> : <AiFillEye />}
+            </TogglePasswordVisibility>
+          </PasswordContainer>
           {password.length >= 8 ? (
             password === passwordChecking ? (
               <AddedMessage isCorrect={true} style={{ color: 'green' }}>
@@ -325,7 +351,7 @@ function SignUp() {
             type="text"
             className="code"
             placeholder={
-              position === 'pos' ? '매장 코드를 입력해주세요.' : '포스 코드를 입력해주세요.'
+              position === 'pos' ? '매장 코드를 입력해주세요.' : '매장 코드를 입력해주세요.'
             }
             onChange={(e) => setCode(e.target.value)}
             disabled={!position}

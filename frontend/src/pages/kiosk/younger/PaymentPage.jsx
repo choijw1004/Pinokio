@@ -18,6 +18,7 @@ const Logo = styled.div`
   font-style: normal;
   padding-left: 1vw;
   padding-top: 1vh;
+  cursor: pointer;
 `;
 const BackButton = styled.div`
   font-family: 'CafeOhsquareAir';
@@ -122,10 +123,20 @@ function PaymentPage({ isElder }) {
     navigate('/kiosk/menu');
   };
 
+  const handleClick = () => {
+    navigate('/kiosk/menu');
+  };
+
   return (
     <PageStyle>
       <KioskHeader>
-        <Logo>Pinokio</Logo>
+        <Logo
+          onClick={() => {
+            handleClick();
+          }}
+        >
+          Pinokio
+        </Logo>
         <BackButton>
           <Arrow>{'<'}</Arrow>
           <BackButtonText onClick={goBack}>뒤로가기</BackButtonText>
