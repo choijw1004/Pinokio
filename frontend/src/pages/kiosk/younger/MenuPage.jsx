@@ -52,6 +52,7 @@ const KioskBody = styled.div`
 `;
 
 function MenuPage({ isElder }) {
+function MenuPage({ isElder }) {
   const [categories, setCategories] = useState([]);
   const [menus, setMenus] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState(null);
@@ -72,6 +73,7 @@ function MenuPage({ isElder }) {
   useEffect(() => {
     console.log('first rendering');
     getCategory();
+    console.log('THIS IS STATE : ', state);
     console.log('THIS IS STATE : ', state);
 
     // 처음 렌더링 했을 때 순서 getCategory ->  useEffect(categories) -> useEffect(selectedCategory)
@@ -153,6 +155,7 @@ function MenuPage({ isElder }) {
           />
         )}
       </KioskBody>
+      <Cart cartItems={cartItems} setCartItems={setCartItems} isElder={false} state={state} />
       <Cart cartItems={cartItems} setCartItems={setCartItems} isElder={false} state={state} />
 
       {modal && (
