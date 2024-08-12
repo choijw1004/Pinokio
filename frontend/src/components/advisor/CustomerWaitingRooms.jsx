@@ -57,7 +57,13 @@ const DisconnectButton = styled.button`
   }
 `;
 
-function CustomerWaitingRooms({ connectedKiosks, subscribers, onDisconnect, onSetActiveKiosk }) {
+function CustomerWaitingRooms({
+  connectedKiosks,
+  subscribers,
+  onDisconnect,
+  onSetActiveKiosk,
+  activeKiosk,
+}) {
   return (
     <RoomsContainer>
       {connectedKiosks.map((kiosk) => {
@@ -69,11 +75,17 @@ function CustomerWaitingRooms({ connectedKiosks, subscribers, onDisconnect, onSe
           <Room
             key={kiosk.id}
             $status={kiosk.status}
+            $isActive={kiosk.connectionId === activeKiosk}
             onClick={() => onSetActiveKiosk(kiosk.connectionId)}
           >
             <p>Room {kiosk.id}</p>
             <VideoContainer>
-              {subscriber && <OpenViduVideoComponent streamManager={subscriber} />}
+              {subscriber && (
+                <OpenViduVideoComponent
+                  streamManager={subscriber}
+                  muted={kiosk.connectionId !== activeKiosk}
+                />
+              )}
             </VideoContainer>
             <DisconnectButton
               onClick={(e) => {

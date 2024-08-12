@@ -271,6 +271,20 @@ const AdvMainPage = () => {
     setConsultationRequest(null);
   };
 
+  const handleSetActiveKiosk = useCallback(
+    (connectionId) => {
+      setActiveKiosk(connectionId);
+      subscribers.forEach((subscriber) => {
+        if (subscriber.stream.connection.connectionId === connectionId) {
+          subscriber.subscribeToAudio(true);
+        } else {
+          subscriber.subscribeToAudio(false);
+        }
+      });
+    },
+    [subscribers]
+  );
+
   return (
     <AdvMainPageWrapper>
       <AdvHeader>
@@ -292,6 +306,7 @@ const AdvMainPage = () => {
         <LeftSection>
           <LeftTopSection>
             <CustomerVideo
+              key={activeKiosk}
               streamManager={
                 subscribers.find((sub) => sub.stream.connection.connectionId === activeKiosk) ||
                 null
@@ -304,6 +319,7 @@ const AdvMainPage = () => {
               subscribers={subscribers}
               onDisconnect={handleCustomerDisconnect}
               activeKiosk={activeKiosk}
+              onSetActiveKiosk={handleSetActiveKiosk}
             />
           </LeftBottomSection>
         </LeftSection>

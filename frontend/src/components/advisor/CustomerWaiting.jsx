@@ -16,9 +16,7 @@ function CustomerWaiting({
   activeKiosk,
   onSetActiveKiosk,
 }) {
-  const waitingKiosks = connectedKiosks.filter(
-    (kiosk) => kiosk.status === 'connected' && kiosk.connectionId !== activeKiosk
-  );
+  const waitingKiosks = connectedKiosks.filter((kiosk) => kiosk.status === 'connected');
 
   return (
     <CustomerWaitingSection>
