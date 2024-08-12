@@ -2,7 +2,7 @@ version: '3'
 
 services:
   openvidu:
-    image: openvidu/openvidu-server-kms:2.30.0
+    image: openvidu/openvidu-server-kms:latest
     container_name: openvidu
     environment:
       - OPENVIDU_SECRET=MY_SECRET
