@@ -85,7 +85,8 @@ public class PosService {
      * @return 랜덤 생성된 키오스크 이메일
      */
     public String randomEmail(Pos pos) {
-        String brandName = pos.getEmail().split("@")[0]; // 이메일의 @ 앞부분 추출
+
+        String brandName = pos.getCode().getName();
 
         StringBuilder sb = new StringBuilder();
         String newEmail;

@@ -1,7 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import MenuMainCard from './MenuMainCard';
 import styled from 'styled-components';
-import MenuData from '../../data/MenuData.json';
 
 const MM = styled.div`
   display: flex;

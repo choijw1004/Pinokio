@@ -53,8 +53,8 @@ public class Item extends BaseEntity {
 
     @Builder
     public Item(Pos pos, Category category, int price, int amount, String name, String detail, String itemImage) {
-        this.isScreen = IsScreen.NO;
-        this.isSoldOut = IsSoldOut.YES;
+        this.isScreen = IsScreen.YES;
+        this.isSoldOut = IsSoldOut.NO;
         this.pos = pos;
         this.category = category;
         this.price = price;
