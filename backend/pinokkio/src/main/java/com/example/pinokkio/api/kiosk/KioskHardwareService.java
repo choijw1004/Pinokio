@@ -27,7 +27,7 @@ import java.util.stream.Collectors;
 public class KioskHardwareService extends KioskServiceGrpc.KioskServiceImplBase {
 
     private static final int MAX_BRIGHTNESS = 100;
-    private static final String KIOSK_CONTROLLER_ADDRESS = "70.12.114.81";
+    private static final String KIOSK_CONTROLLER_ADDRESS = "172.20.10.4";
     private static final int KIOSK_CONTROLLER_PORT = 3334;
     private static final int GRPC_SERVER_PORT = 3333;
 
