@@ -10,7 +10,7 @@ services:
       - OPENVIDU_RECORDING=true
     ports:
       - "4443:4443"
-      -
+   
   backend:
     container_name: pinokkio-backend
     build:
