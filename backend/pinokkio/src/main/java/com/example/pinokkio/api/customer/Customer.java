@@ -8,17 +8,12 @@ package com.example.pinokkio.api.customer;
 import com.example.pinokkio.api.pos.Pos;
 import com.example.pinokkio.common.BaseEntity;
 import com.example.pinokkio.common.type.Gender;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
-import lombok.*;
+import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
-import java.util.Arrays;
 import java.util.UUID;
 
 @Entity
@@ -26,6 +21,7 @@ import java.util.UUID;
 @Getter
 @AllArgsConstructor
 @NoArgsConstructor
+@Builder
 public class Customer extends BaseEntity {
 
     @Id
@@ -46,9 +42,12 @@ public class Customer extends BaseEntity {
     @Column(nullable = false)
     private int age;
 
-    @Column(nullable = false, columnDefinition = "BLOB")
+    @Column(nullable = true, columnDefinition = "VARBINARY(8000)")
     private byte[] faceEmbedding;
 
+    /**
+     * 실제 고객 생성자
+     */
     @Builder
     public Customer(Pos pos, Gender gender, String phoneNumber, int age, byte[] faceEmbedding) {
         this.pos = pos;
@@ -58,21 +57,22 @@ public class Customer extends BaseEntity {
         this.faceEmbedding = faceEmbedding;
     }
 
-    //
-    public Customer(Pos pos) {
+    /**
+     * 더미 고객 생성자 : FaceEmbed 정보가 없다
+     * UUID = 00000000-0000-0000-0000-000000000000
+     */
+    @Builder
+    public Customer(UUID id, Pos pos, Gender gender, String phoneNumber, int age) {
+        this.id = new UUID(0L, 0L);
         this.pos = pos;
-        this.gender = Gender.MALE;
-        this.phoneNumber = "010-0000-0000";
-        this.age = 99;
+        this.gender = gender;
+        this.phoneNumber = phoneNumber;
         this.faceEmbedding = null;
+        this.age = age;
     }
 
     public void updateFaceEmbedding(byte[] faceEmbedding) {
         this.faceEmbedding = faceEmbedding;
-    }
-
-    public void setGender(String genderString) {
-        this.gender = Gender.fromString(genderString);
     }
 
     public void updatePos(Pos pos) {

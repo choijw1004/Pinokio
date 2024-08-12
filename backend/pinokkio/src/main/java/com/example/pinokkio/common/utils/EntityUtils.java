@@ -18,9 +18,8 @@ public class EntityUtils {
      * @return 조회된 엔티티
      * @throws RuntimeException 사용자 정의 예외
      */
-    public static <T, ID> T getEntityById(JpaRepository<T, UUID> repository, String id, Function<UUID, RuntimeException> exceptionSupplier) {
-        UUID uuid = UUID.fromString(id);
-        return repository.findById(uuid)
-                .orElseThrow(() -> exceptionSupplier.apply(uuid));
+    public static <T, ID> T getEntityById(JpaRepository<T, UUID> repository, UUID id, Function<UUID, RuntimeException> exceptionSupplier) {
+        return repository.findById(id)
+                .orElseThrow(() -> exceptionSupplier.apply(id));
     }
 }

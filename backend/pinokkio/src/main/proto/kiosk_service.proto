@@ -36,11 +36,13 @@ message BrightnessRequest {
 }
 
 message CaptureImagesRequest {
-  int32 count = 1;
+  string kiosk_id = 1;
+  repeated bytes images = 2;
 }
 
 message CaptureImagesResponse {
-  repeated bytes images = 1;
+  bool success = 1;
+  string message = 2;
 }
 
 message ResetRequest {}

@@ -16,4 +16,11 @@ public class RoomNotFoundException extends NotFoundException {
                 Map.of("roomId", String.valueOf(roomId))
         );
     }
+
+    public RoomNotFoundException(String message) {
+        super(
+                "NOT_FOUND_ROOM_02",
+                message
+        );
+    }
 }

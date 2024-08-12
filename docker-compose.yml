@@ -1,6 +1,16 @@
 version: '3'
 
 services:
+  openvidu:
+    image: openvidu/openvidu-server-kms:latest
+    container_name: openvidu
+    environment:
+      - OPENVIDU_SECRET=MY_SECRET
+      - OPENVIDU_CDR=true
+      - OPENVIDU_RECORDING=true
+    ports:
+      - "4443:4443"
+   
   backend:
     container_name: pinokkio-backend
     build:
@@ -10,12 +20,12 @@ services:
       - "8080:8080"
       - "3333:3333"
       - "3334:3334"
-        
+
     environment:
       - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/pinokkio?serverTimezone=Asia/Seoul
       - SPRING_DATASOURCE_USERNAME=root
       - SPRING_DATASOURCE_PASSWORD=ssafy
-      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=create
       - SPRING_REDIS_HOST=redis
       - SPRING_REDIS_PORT=6379
       - SPRING_MAIL_USERNAME=${EMAIL}
@@ -33,6 +43,7 @@ services:
       - redis
 
   fast_pinokkio:
+    container_name: fast-pinokkio-backend
     build:
       context: ./backend/fast_pinokkio
       dockerfile: Dockerfile
@@ -49,10 +60,10 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
     ports:
-            - "80:80"
-            - "443:443"
+      - "80:80"
+      - "443:443"
     volumes:
-            - /etc/letsencrypt:/etc/letsencrypt:ro
+      - /etc/letsencrypt:/etc/letsencrypt:ro
     depends_on:
       - backend
 
