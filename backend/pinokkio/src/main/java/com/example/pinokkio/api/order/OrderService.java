@@ -4,6 +4,7 @@ import com.example.pinokkio.api.customer.Customer;
 import com.example.pinokkio.api.customer.CustomerRepository;
 import com.example.pinokkio.api.item.Item;
 import com.example.pinokkio.api.item.ItemRepository;
+import com.example.pinokkio.api.kiosk.Kiosk;
 import com.example.pinokkio.api.order.dto.request.GroupOrderItemRequest;
 import com.example.pinokkio.api.order.dto.request.OrderDurationRequest;
 import com.example.pinokkio.api.order.dto.request.OrderItemRequest;
@@ -55,21 +56,19 @@ public class OrderService {
 
     /**
      * 주문 요청정보를 기반으로 주문을 생성한다.
-     * @param posId     포스 식별자
      * @param dtoList   주문 요청정보
      * @return 생성된 주문 정보
      */
-    public Order createOrder(UUID posId, GroupOrderItemRequest dtoList) {
+    public Order createOrder(GroupOrderItemRequest dtoList) {
         // Pos 검증
-        Pos pos = posRepository
-                .findById(posId)
-                .orElseThrow(() -> new PosNotFoundException(posId));
+        Kiosk currentKiosk = userService.getCurrentKiosk();
+        Pos pos = currentKiosk.getPos();
 
         UUID customerId = dtoList.getCustomerId() == null
                 ? pos.getDummyCustomerUUID()
                 : dtoList.getCustomerId();
 
-        validateCustomer(customerId, posId);
+        validateCustomer(customerId, pos.getId());
 
         Customer customer = customerRepository
                 .findById(customerId)
@@ -95,7 +94,7 @@ public class OrderService {
 
         // Order 생성
         long totalPrice = calculateTotalPrice(orderItems);
-        updateSalesInRedis(posId, totalPrice);
+        updateSalesInRedis(pos.getId(), totalPrice);
 
         Order order = Order.builder()
                 .pos(pos)
@@ -111,8 +110,9 @@ public class OrderService {
         });
 
         // Order 저장
+        Order savedOrder = orderRepository.save(order);
         salesStatisticsService.updateSalesStatisticsOnOrderChange(order, order.getTotalPrice());
-        return orderRepository.save(order);
+        return savedOrder;
     }
 
     /**

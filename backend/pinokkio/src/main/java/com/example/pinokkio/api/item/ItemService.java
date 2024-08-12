@@ -16,6 +16,7 @@ import com.example.pinokkio.exception.domain.image.ImageUpdateException;
 import com.example.pinokkio.exception.domain.item.ItemNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -30,6 +31,9 @@ import java.util.UUID;
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class ItemService {
+
+    @Value("${default-image}")
+    private String DEFAULT_IMAGE_URL;
 
     private final ItemRepository itemRepository;
     private final CategoryRepository categoryRepository;
@@ -80,6 +84,10 @@ public class ItemService {
 
         Category findCategory = categoryRepository.findById(itemRequest.getCategoryId())
                 .orElseThrow(() -> new CategoryNotFoundException(itemRequest.getCategoryId()));
+
+        if (imageURL == null || imageURL.isEmpty()) {
+            imageURL = DEFAULT_IMAGE_URL;
+        }
 
         Item item = Item.builder()
                 .pos(pos)
