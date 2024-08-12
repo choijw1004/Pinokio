@@ -11,10 +11,10 @@ const OrderHistoryContainer = styled.div`
   width: 80%;
 `;
 
-const TableHeader = styled.div`
+const TableHeader = styled.tr`
   margin-top: 1rem;
   font-size: 1.5rem;
-  padding-bottom: 0.7rem;
+  padding-bottom: 0.2rem;
   width: 100%;
   display: flex;
   flex-direction: row;
@@ -22,10 +22,11 @@ const TableHeader = styled.div`
   border-bottom: 1px solid black;
 `;
 
-const ColumnTitle = styled.div`
+const ColumnTitle = styled.th`
   width: 20%;
   display: flex;
   justify-content: center;
+  font-size: 1rem;
 `;
 
 const ColumnContent = styled.div`
