@@ -22,6 +22,7 @@ services:
       - "4443:4443"
    
   backend:
+
     container_name: pinokkio-backend
     build:
       context: ./backend/pinokkio
@@ -57,7 +58,6 @@ services:
 
   fast_pinokkio:
     container_name: fast-pinokkio-backend
-    container_name: fast-pinokkio-backend
     build:
       context: ./backend/fast_pinokkio
       dockerfile: Dockerfile
@@ -76,10 +76,7 @@ services:
     ports:
       - "80:80"
       - "443:443"
-      - "80:80"
-      - "443:443"
     volumes:
-      - /etc/letsencrypt:/etc/letsencrypt:ro
       - /etc/letsencrypt:/etc/letsencrypt:ro
     depends_on:
       - backend
