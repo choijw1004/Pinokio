@@ -25,7 +25,7 @@ const GoPaymentButton = styled.div`
   opacity: ${(props) => (props.disabled ? '0.5' : null)};
 `;
 
-function CartTotal({ cartItems, isElder }) {
+function CartTotal({ cartItems, isElder, state }) {
   const navigate = useNavigate();
   const [totalPrice, setTotalPrice] = useState(0);
   useEffect(() => {
@@ -47,10 +47,13 @@ function CartTotal({ cartItems, isElder }) {
 
   const goPayment = () => {
     // 결제 버튼을 누르면 다음 페이지로 이동
+    console.log('This is state : ', state);
+    state['cartItems'] = cartItems;
+
     if (!isElder) {
-      navigate('/kiosk/payment');
+      navigate('/kiosk/payment', { state: state });
     } else {
-      navigate('/kiosk/elder-payment');
+      navigate('/kiosk/elder-payment', { state: state });
     }
   };
   return (

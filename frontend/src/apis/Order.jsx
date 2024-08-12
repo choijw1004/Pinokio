@@ -15,6 +15,22 @@ export const getOrdersByRange = async (startDate, endDate) => {
   }
 };
 
+export const makeOrder = async (customerId, orderList) => {
+  console.log('dedeeddddddddddddddddddddddd');
+  console.log(customerId);
+  console.log(orderList);
+  try {
+    const response = await axios.post(`/api/orders`, {
+      customerId: customerId,
+      orderItems: orderList,
+    });
+    return response.data;
+  } catch (error) {
+    console.error('make order error', error);
+    throw error;
+  }
+};
+
 export const putOrderStatus = async (orderId) => {
   try {
     const response = await axios.put(`/api/orders/${orderId}/status`);

@@ -4,11 +4,11 @@ import MenuCategory from '../../../components/kiosk/MenuCategory';
 import MenuMain from '../../../components/kiosk/MenuMain';
 import Cart from '../../../components/kiosk/Cart';
 import MenuModal from '../../../components/kiosk/modal/MenuModal';
-// import MenuData from '../../../data/MenuData.json';
 import { useSelector } from 'react-redux';
 import { getCategories } from '../../../apis/Category';
 import { getItemsByCategoryId } from '../../../apis/Item';
 import { useNavigate } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 
 const MenuPageStyle = styled.div`
   display: flex;
@@ -48,7 +48,7 @@ const KioskBody = styled.div`
   }
 `;
 
-function MenuPage() {
+function MenuPage({ isElder }) {
   const [categories, setCategories] = useState([]);
   const [menus, setMenus] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState(null);
@@ -60,10 +60,14 @@ function MenuPage() {
   const selectedCategoryMounted = useRef(false);
   const userData = useSelector((store) => store.user);
   const navigate = useNavigate();
+  const { state } = useLocation();
+  // const {  } = state;
 
   useEffect(() => {
     console.log('first rendering');
     getCategory();
+    console.log('THIS IS STATE : ', state);
+    console.log('THIS IS STATE : ', state);
 
     // 처음 렌더링 했을 때 순서 getCategory ->  useEffect(categories) -> useEffect(selectedCategory)
   }, []);
@@ -144,7 +148,7 @@ function MenuPage() {
           />
         )}
       </KioskBody>
-      <Cart cartItems={cartItems} setCartItems={setCartItems} isElder={false} />
+      <Cart cartItems={cartItems} setCartItems={setCartItems} isElder={false} state={state} />
 
       {modal && (
         <MenuModal

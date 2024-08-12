@@ -12,17 +12,17 @@ import { setUser, clearUser } from '../features/user/userSlice';
 import { jwtDecode } from 'jwt-decode'; // Import without destructuring
 import Cookies from 'js-cookie';
 
-const baseURL = 'http://localhost:8080';
-// const baseURL = 'https://i11a601.p.ssafy.io';
+const baseURL = 'https://i11a601.p.ssafy.io';
+const baselocalURL = 'http://localhost:8080';
 
 // 별도의 axios 인스턴스를 사용하여 토큰 갱신 요청
 const refreshInstance = Axios.create({
-  baseURL: baseURL,
+  baseURL: baselocalURL,
 });
 
 // 기존 Axios 인스턴스
 const axios = Axios.create({
-  baseURL: baseURL,
+  baseURL: baselocalURL,
 });
 
 // Helper 함수: 토큰이 만료되었는지 확인

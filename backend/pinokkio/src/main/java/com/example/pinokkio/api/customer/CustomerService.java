@@ -1,11 +1,15 @@
 package com.example.pinokkio.api.customer;
 
 import com.example.pinokkio.api.customer.dto.response.AnalysisResult;
+import com.example.pinokkio.api.customer.dto.response.CustomerResponse;
 import com.example.pinokkio.api.customer.sse.SSEService;
+import com.example.pinokkio.api.kiosk.Kiosk;
+import com.example.pinokkio.api.kiosk.KioskRepository;
 import com.example.pinokkio.api.kiosk.KioskService;
 import com.example.pinokkio.api.kiosk.dto.response.KioskResponse;
 import com.example.pinokkio.api.pos.Pos;
 import com.example.pinokkio.api.pos.PosRepository;
+import com.example.pinokkio.api.user.UserService;
 import com.example.pinokkio.common.type.Gender;
 import com.example.pinokkio.config.jwt.JwtProvider;
 import com.example.pinokkio.exception.domain.customer.CustomerNotFoundException;
@@ -40,9 +44,8 @@ public class CustomerService {
     private final ObjectMapper objectMapper;
     private final JwtProvider jwtProvider;
     private final KioskService kioskService;
-
-    @Value("${encryption.key}")
-    private String encryptionKey;
+    private final UserService userService;
+    private final KioskRepository kioskRepository;
 
     @Value("${redis.cache.ttl}")
     private long redisCacheTTL;
@@ -60,35 +63,10 @@ public class CustomerService {
 
     /**
      * 얼굴 임베딩 정보와 함께 고객을 저장한다.
-     *
-     * @param customer          새롭게 저장할 고객
-     * @param faceEmbeddingData 얼굴 임베딩 정보     * @return
      */
-    public Customer saveCustomer(Customer customer, byte[] faceEmbeddingData) {
-        customer.updateFaceEmbedding(faceEmbeddingData);
-        customer.updatePos(getCurrenetPos());
+    public CustomerResponse saveCustomer(AnalysisResult analysisResult, String phoneNumber) {
+        byte[] faceEmbeddingData = Base64.getDecoder().decode(analysisResult.getEncryptedEmbedding());
 
-        log.info("customer 등록: " + customer);
-        Customer savedCustomer = customerRepository.save(customer);
-        cacheCustomerEmbedding(savedCustomer.getId(), faceEmbeddingData);
-
-        return savedCustomer;
-    }
-
-    // 헤더에 토큰이 있어야 확인 가능
-    private Pos getCurrenetPos() {
-        String kioskEmail = jwtProvider.getCurrentUserEmail();
-        log.info("[getCurrentPos] current Kiosk Email: {}", kioskEmail);
-        KioskResponse kioskInfo = kioskService.getMyKioskInfo(kioskEmail);
-        UUID posId = UUID.fromString(kioskInfo.getPosId());
-
-        return posRepository.findById(posId)
-                .orElseThrow(() -> new PosNotFoundException(posId));
-    }
-
-    // 새로운 고객을 등록하는 메서드
-    // TODO 추후 수정 필
-    private void getFaceEmbedding(AnalysisResult analysisResult) {
         String cacheKey = "analysis_result:" + analysisResult.getEncryptedEmbedding();
 
         AnalysisResult cachedResult;
@@ -100,23 +78,43 @@ public class CustomerService {
                 String jsonString = objectMapper.writeValueAsString(cachedResult);
                 redisTemplate.opsForValue().set(cacheKey, jsonString, 30, TimeUnit.MINUTES);
             } catch (JsonProcessingException e) {
-                return;
+                throw new RuntimeException(e);
             }
         } else {
             try {
                 cachedResult = objectMapper.readValue(cachedString, AnalysisResult.class);
             } catch (JsonProcessingException e) {
-                return;
+                throw new RuntimeException(e);
             }
         }
 
-//        Customer newCustomer = new Customer(cachedResult.getGender(), cachedResult.getAge());
         byte[] embeddingData = Base64.getDecoder().decode(cachedResult.getEncryptedEmbedding());
 
-        CompletableFuture.runAsync(() -> {
-//            Customer savedCustomer = saveCustomer(newCustomer, embeddingData);
-//            sseService.sendAnalysisResult(cachedResult, savedCustomer);
-        });
+        Pos currenetPos = getCurrenetPos();
+        Customer customer = Customer.builder()
+                .pos(currenetPos)
+                .gender(Gender.fromString(cachedResult.getGender()))
+                .phoneNumber(phoneNumber)
+                .age(cachedResult.getAge())
+                .faceEmbedding(embeddingData)
+                .build();
+
+        log.info("customer 등록: " + customer);
+        Customer savedCustomer = customerRepository.save(customer);
+        cacheCustomerEmbedding(savedCustomer.getId(), faceEmbeddingData);
+
+        sseService.sendAnalysisResult(cachedResult, savedCustomer);
+
+        return new CustomerResponse(savedCustomer);
+    }
+
+    // 헤더에 토큰이 있어야 확인 가능
+    private Pos getCurrenetPos() {
+        Kiosk kiosk = userService.getCurrentKiosk();
+        KioskResponse kioskInfo = kioskService.getKioskInfo(kiosk);
+        UUID posId = UUID.fromString(kioskInfo.getPosId());
+        return posRepository.findById(posId)
+                .orElseThrow(() -> new PosNotFoundException(posId));
     }
 
     /**
@@ -137,14 +135,15 @@ public class CustomerService {
      * @param encryptedFaceEmbedding 암호화 상태의 얼굴 임베딩 정보
      * @return 매칭된 고객 정보
      */
-    public Customer findCustomerByFaceEmbedding(int age, String gender, String encryptedFaceEmbedding) {
+    public Customer findCustomerByFaceEmbedding(UUID kioskId, int age, String gender, String encryptedFaceEmbedding) {
         try {
             // Redis 캐시 키를 생성합니다.
             String cacheKey = "face_embedding:" + encryptedFaceEmbedding;
             redisTemplate.opsForValue().set(cacheKey, encryptedFaceEmbedding, redisCacheTTL, TimeUnit.SECONDS);
 
             RealVector inputVector = parseEmbedding(encryptedFaceEmbedding);
-            UUID posId = getCurrenetPos().getId();
+            UUID posId = kioskRepository.findPosIdById(kioskId)
+                    .orElseThrow(() -> new PosNotFoundException(kioskId));
             // 성별과 나이 범위 -> 범위 한정 탐색
             List<Customer> potentialCustomers = customerRepository.findByPosIdAndGenderAndAgeBetween(posId, Gender.valueOf(gender.toUpperCase()), age - 5, age + 5);
             Customer matchedCustomer = findMatchingCustomer(potentialCustomers, inputVector);
@@ -155,10 +154,10 @@ public class CustomerService {
                 matchedCustomer = findMatchingCustomer(allCustomers, inputVector);
             }
 
-//            sseService.sendAnalysisResult(
-//                    new AnalysisResult(age, gender, true, encryptedFaceEmbedding),
-//                    matchedCustomer
-//            );
+            sseService.sendAnalysisResult(
+                    new AnalysisResult(age, gender, true, encryptedFaceEmbedding),
+                    matchedCustomer
+            );
             return matchedCustomer;
 
         } catch (Exception e) {
@@ -293,14 +292,31 @@ public class CustomerService {
     }
 
     // 얼굴 분석 결과를 바탕으로 고객을 찾거나 등록하는 메서드
-    public void findCustomer(AnalysisResult analysisResult) {
+    public void findCustomer(UUID kioskId, AnalysisResult analysisResult) {
         // 얼굴 임베딩을 사용하여 고객을 찾습니다.
         Customer matchedCustomer = findCustomerByFaceEmbedding(
+                kioskId,
                 analysisResult.getAge(),
                 analysisResult.getGender(),
                 analysisResult.getEncryptedEmbedding());
 
         // 분석 결과와 매칭된 고객 정보를 SSE를 통해 전송합니다.
         sseService.sendAnalysisResult(analysisResult, matchedCustomer);
+    }
+
+    /**
+     * 전화번호로 현재 POS 내 고객을 조회하는 메서드
+     *
+     * @param phoneNumber 전화번호 8자리
+     * @return 고객 정보
+     */
+    public CustomerResponse findCustomerByPhoneNumber(String phoneNumber) {
+        Kiosk currentKiosk = userService.getCurrentKiosk();
+        Pos pos = currentKiosk.getPos();
+
+        return customerRepository
+                .findByPosIdAndPhoneNumber(pos.getId(), phoneNumber)
+                .map(CustomerResponse::new)
+                .orElseThrow(() -> new CustomerNotFoundException(phoneNumber));
     }
 }
