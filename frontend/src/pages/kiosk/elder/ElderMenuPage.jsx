@@ -193,7 +193,7 @@ function ElderMenuPage() {
   };
 
   const handleClick = () => {
-    navigate('/elder-menu');
+    navigate('/kiosk/elder-menu');
   };
 
   useEffect(() => {

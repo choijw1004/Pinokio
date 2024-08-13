@@ -7,6 +7,7 @@ import PosMain from '../assets/images/main/posmain.png';
 import LOGO from '../components/common/Logo';
 
 const MainContainer = styled.div`
+  font-family: 'goorm-sans-code';
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -56,18 +57,22 @@ const Carousel = styled.div`
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
 `;
 
+const CarouselHeader = styled.div`
+  font-size: 50px;
+  font-weight: bolder;
+  margin-left: 20px;
+`;
+
+const CarouselBody = styled.div``;
+
 const CarouselTrack = styled.div`
   display: flex;
   transition: transform 0.5s ease-in-out;
 `;
 
-const CarouselItemContainer = styled.div`
-  display: flex;
-  width: 100%;
-`;
-
 const CarouselItem = styled.div`
   min-width: 100%;
+  height: 600px;
   box-sizing: border-box;
   position: relative;
   padding: 20px;
@@ -133,12 +138,12 @@ const Indicator = styled.div`
 `;
 
 const DiscriptionBox = styled.div`
+  position: inherit;
   background-color: #ffc1cc;
   height: 200px;
   padding: 10px;
-  margin-top: 80px;
+  bottom: -160px;
   border-radius: 10px;
-
   h3 {
     margin-top: 20px;
     margin-left: 20px;
@@ -150,6 +155,8 @@ const DiscriptionBox = styled.div`
   }
 `;
 
+const DiscriptionBody = styled.div``;
+
 function MainPage() {
   const navigate = useNavigate();
 
@@ -159,15 +166,19 @@ function MainPage() {
 
   const items = [
     <CarouselItem key="1">
-      <h2>AI 얼굴 인식</h2>
-      <p>고객님의 얼굴을 인식해 나이, 성별을 인식해요.</p>
-      <p>고객님의 얼굴을 인식해 나이, 성별을 인식해요.</p>
-      <p>고객님의 얼굴을 인식해 나이, 성별을 인식해요.</p>
+      <CarouselHeader>AI 얼굴 인식</CarouselHeader>
+      <CarouselBody>
+        <p>고객님의 얼굴을 인식해 나이, 성별을 인식해요.</p>
+        <p>고객님의 얼굴을 인식해 나이, 성별을 인식해요.</p>
+        <p>고객님의 얼굴을 인식해 나이, 성별을 인식해요.</p>
+      </CarouselBody>
       <DiscriptionBox>
-        <h3>어쩌구 저쩌구 엄청난 설명 !</h3>
-        <h5>해당 서비스에 대한 설명입니다.</h5>
-        <h5>해당 서비스에 대한 설명입니다.</h5>
-        <h5>해당 서비스에 대한 설명입니다.</h5>
+        <DiscriptionBody>
+          <h3>어쩌구 저쩌구 엄청난 설명 !</h3>
+          <h5>해당 서비스에 대한 설명입니다.</h5>
+          <h5>해당 서비스에 대한 설명입니다.</h5>
+          <h5>해당 서비스에 대한 설명입니다.</h5>
+        </DiscriptionBody>
       </DiscriptionBox>
       <img className="kioskmain" src={KioskMain} alt="키오스크 메인" />
     </CarouselItem>,
@@ -224,7 +235,7 @@ function MainPage() {
           &lt;
         </CarouselButton>
         <CarouselTrack style={{ transform: `translateX(-${currentIndex * 100}%)` }}>
-          <CarouselItemContainer>{items}</CarouselItemContainer>
+          {items}
         </CarouselTrack>
         <CarouselButton className="next" onClick={goToNext}>
           &gt;

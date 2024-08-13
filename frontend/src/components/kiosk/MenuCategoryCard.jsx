@@ -13,6 +13,7 @@ const MCC = styled.div`
   text-align: center;
   align-items: center;
   justify-content: center;
+  cursor: pointer;
 `;
 
 function MenuCategoryCard({ cat, setselectedcat, selectedcat, showSize }) {
