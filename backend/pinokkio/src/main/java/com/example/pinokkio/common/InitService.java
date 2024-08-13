@@ -18,6 +18,7 @@ import com.example.pinokkio.api.pos.code.CodeRepository;
 import com.example.pinokkio.api.teller.Teller;
 import com.example.pinokkio.api.teller.TellerRepository;
 import com.example.pinokkio.common.type.Gender;
+import com.example.pinokkio.common.type.OrderStatus;
 import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -32,6 +33,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -459,7 +461,7 @@ public class InitService implements ApplicationListener<ContextRefreshedEvent> {
                         .setParameter("posId", pos.getId())
                         .getResultList();
 
-                List<OrderItem> orderItems = createRandomOrderItems(pos, customer.getId(), posItems);
+                List<OrderItem> orderItems = createRandomOrderItems(customer.getId(), posItems);
                 long totalPrice = orderItems.stream()
                         .mapToLong(item -> (long) item.getItem().getPrice() * item.getQuantity())
                         .sum();
@@ -471,9 +473,21 @@ public class InitService implements ApplicationListener<ContextRefreshedEvent> {
                         .totalPrice(totalPrice)
                         .build();
 
+                // 주문 상태 결정 (80% ACTIVE, 20% CANCELLED)
+                boolean isCancelled = random.nextDouble() < 0.2;
+                if (isCancelled) {
+                    order.toggleOrderStatus();
+                }
+
                 // 생성 날짜와 수정 날짜 설정
                 LocalDateTime orderDateTime = generateRandomDateTime(date);
-                LocalDateTime modifiedDateTime = generateRandomModifiedDateTime(orderDateTime, endDate);
+                LocalDateTime modifiedDateTime;
+
+                if (order.getStatus() == OrderStatus.ACTIVE) {
+                    modifiedDateTime = orderDateTime; // 활성 상태일 경우 생성일자와 수정일자 동일
+                } else {
+                    modifiedDateTime = generateRandomModifiedDateTime(orderDateTime, endDate); // 취소 상태일 경우 수정일자를 다르게 설정
+                }
 
                 // JPA Auditing을 우회하고 직접 날짜 설정
                 entityManager.persist(order);
@@ -489,16 +503,17 @@ public class InitService implements ApplicationListener<ContextRefreshedEvent> {
     }
 
     private LocalDateTime generateRandomDateTime(LocalDate date) {
-        LocalTime time = LocalTime.of(8 + random.nextInt(14), random.nextInt(60), random.nextInt(60));
-        return LocalDateTime.of(date, time);
+        return date.atTime(random.nextInt(24), random.nextInt(60), random.nextInt(60));
     }
 
     private LocalDateTime generateRandomModifiedDateTime(LocalDateTime createdDateTime, LocalDate endDate) {
-        LocalDateTime modifiedDateTime = createdDateTime.plusMinutes(random.nextInt(60 * 24 * 7)); // Up to a week later
-        return modifiedDateTime.isAfter(endDate.atTime(LocalTime.MAX)) ? endDate.atTime(LocalTime.MAX) : modifiedDateTime;
+        long minMinutes = 1;
+        long maxMinutes = ChronoUnit.MINUTES.between(createdDateTime, endDate.atTime(23, 59, 59));
+        long randomMinutes = minMinutes + (long) (random.nextDouble() * (maxMinutes - minMinutes));
+        return createdDateTime.plusMinutes(randomMinutes);
     }
 
-    private List<OrderItem> createRandomOrderItems(Pos pos, UUID customerId, List<Item> posItems) {
+    private List<OrderItem> createRandomOrderItems(UUID customerId, List<Item> posItems) {
         int itemCount = 1 + random.nextInt(5); // 1 to 5 items per order
         List<OrderItem> orderItems = new ArrayList<>();
 

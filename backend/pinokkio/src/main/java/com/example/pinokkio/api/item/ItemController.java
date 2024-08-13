@@ -46,8 +46,8 @@ public class ItemController {
             @RequestPart(value = "file", required = false) MultipartFile file,
             @Parameter(description = "아이템 정보", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE))
             @RequestPart("itemRequest") @Valid ItemRequest itemRequest) {
-        String imageURL = imageService.uploadImage(file);
-        Item item = itemService.createItem(itemRequest, imageURL);
+
+        Item item = itemService.createItem(itemRequest, file);
         return new ResponseEntity<>(new ItemResponse(item), HttpStatus.CREATED);
     }
 
