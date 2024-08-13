@@ -32,7 +32,6 @@ spring:
       mail.smtp.ssl.enable: true
       mail.smtp.starttls.enable: true
       mail.smtp.ssl.trust: smtp.naver.com
-      mail.transport.protocol: smtp
   jwt:
     secret: ${JWT_SECRET}
 
