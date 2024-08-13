@@ -7,7 +7,7 @@ import lombok.Getter;
 import java.util.UUID;
 
 @Getter
-@Schema(description = "아이템 응답 데이터")
+@Schema(description = "아이템 응답 DTO")
 public class ItemResponse {
 
     @Schema(description = "포스 ID", example = "123e4567-e89b-12d3-a456-426614174000")
