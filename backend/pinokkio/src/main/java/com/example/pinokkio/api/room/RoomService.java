@@ -54,6 +54,7 @@ public class RoomService {
     @PostConstruct
     public void init() {
         this.openvidu = new OpenVidu(OPENVIDU_URL, OPENVIDU_SECRET);
+        log.info("[init] openVidu {}", this.openvidu);
     }
 
     @Transactional

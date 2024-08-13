@@ -1,10 +1,11 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import MenuButton from '../../assets/images/MenuButton.png'; // 메뉴 버튼 이미지 경로
-import CloseButton from '../../assets/images/CloseButton.png'; // 닫기 버튼 이미지 경로
 import LOGO from '../common/Logo';
 import styled from 'styled-components';
 import ToggleIcon from './ToggleIcon';
+import { useDispatch } from 'react-redux';
+import { clearUser } from '../../features/user/userSlice';
+import Cookies from 'js-cookie';
 
 const NavbarContainer = styled.nav`
   width: 100%;
@@ -19,13 +20,7 @@ const NavbarContainer = styled.nav`
   padding: 0 1rem;
 `;
 
-const NavbarToggle = styled.img`
-  width: 2rem;
-  height: 2rem;
-  cursor: pointer;
-`;
-
-const NavbarMenu = styled.ul`
+const NavbarMenu = styled.div`
   margin: 0;
   margin-left: 2vw;
   padding: 0;
@@ -37,13 +32,13 @@ const NavbarMenu = styled.ul`
   border-radius: 1vw;
   background-color: white;
   box-shadow: 2px 4px rgb(0, 0, 0, 0.25);
-  display: flex;
   flex-direction: column;
   transition: left 0.3s ease-in-out;
 `;
 
-const NavbarItem = styled.li`
-  margin: 0.5rem 1rem;
+const NavbarItem = styled.text`
+  margin: 1rem 1rem;
+  display: flex;
 `;
 
 const NavbarLink = styled(Link)`
@@ -57,12 +52,35 @@ const LogoLocation = styled.div`
   transform: translateX(-50%);
 `;
 
+const LogOut = styled.button`
+  margin-top: 25em;
+  margin-left: 10em;
+  box-shadow: 1px 2px 0 rgb(0 0 0 / 0.25);
+  background-color: white;
+  border: 1px solid black;
+  &:hover {
+    background-color: #ededed;
+  }
+`;
+
 function Navbar({ isOpen, toggleNavbar }) {
+  const dispatch = useDispatch();
+
   // 메뉴 아이템 클릭 시 NavbarMenu를 닫기 위한 핸들러
   const handleItemClick = () => {
     if (isOpen) {
       toggleNavbar();
     }
+  };
+
+  const handleOnclick = () => {
+    // User 정보 초기화
+    dispatch(clearUser());
+
+    // Token들 초기화.
+    localStorage.setItem('accessToken', '');
+    localStorage.setItem('refreshToken', '');
+    Cookies.set('refreshToken', '');
   };
 
   const items = [
@@ -82,6 +100,13 @@ function Navbar({ isOpen, toggleNavbar }) {
             <NavbarLink to={item.path}>{item.text}</NavbarLink>
           </NavbarItem>
         ))}
+        <LogOut
+          onClick={() => {
+            handleOnclick();
+          }}
+        >
+          로그아웃
+        </LogOut>
       </NavbarMenu>
       <LogoLocation>
         <LOGO />

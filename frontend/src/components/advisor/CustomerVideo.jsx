@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import styled from 'styled-components';
+import OpenViduVideoComponent from '../advisor/OpenViduComponent';
 
 const VideoSection = styled.div`
   width: auto;
@@ -10,9 +11,17 @@ const VideoSection = styled.div`
   background-color: #efefef;
   font-family: 'CafeOhsquareAir';
   font-size: ${(props) => `calc(${props.height}px / 12)`};
+  display: flex;
+  justify-content: center;
+  align-items: center;
 `;
 
-function CustomerVideo() {
+const VideoContainer = styled.div`
+  width: 100%;
+  height: 100%;
+`;
+
+function CustomerVideo({ streamManager }) {
   const divRef = useRef(null);
   const [thisHeight, setThisHeight] = useState(0);
   const [thisWidth, setThisWidth] = useState(0);
@@ -22,10 +31,17 @@ function CustomerVideo() {
       setThisHeight(divRef.current.offsetHeight);
       setThisWidth(divRef.current.offsetWidth);
     }
-  });
+  }, []);
+
   return (
     <VideoSection ref={divRef} width={thisWidth} height={thisHeight}>
-      연결된 고객이 없습니다.
+      {streamManager ? (
+        <VideoContainer>
+          <OpenViduVideoComponent streamManager={streamManager} />
+        </VideoContainer>
+      ) : (
+        '연결된 고객이 없습니다.'
+      )}
     </VideoSection>
   );
 }

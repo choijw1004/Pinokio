@@ -1,6 +1,7 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import styled from 'styled-components';
+import { makeOrder } from '../../../apis/Order';
 
 const PageStyle = styled.div`
   display: flex;
@@ -17,6 +18,7 @@ const Logo = styled.div`
   font-style: normal;
   padding-left: 1vw;
   padding-top: 1vh;
+  cursor: pointer;
 `;
 const BackButton = styled.div`
   font-family: 'CafeOhsquareAir';
@@ -87,24 +89,33 @@ const KioskCenterCardButton = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
 `;
 
 const KioskInnerCardTitle = styled.div`
   font-family: 'CafeOhsquareAir';
   font-size: 1em;
+  margin-bottom: 0.2rem;
 `;
 const KioskInnerCardSubTitle = styled.div`
   font-family: 'CafeOhsquareAir';
   color: ${(props) => (props.isElder ? '#EC7348' : '#7392ff')};
   font-size: 0.5em;
+  margin-bottom: 1rem;
 `;
 const KioskInnerCardImage = styled.img``;
 
 function PaymentPage({ isElder }) {
   const navigate = useNavigate();
+  const { state } = useLocation();
 
-  const goReceipt = () => {
-    navigate('/kiosk/receipt');
+  const goReceipt = async () => {
+    const orderList = state.cartItems.map((item) => {
+      return { itemId: item.itemId, quantity: item.count };
+    });
+    const res = await makeOrder(state.customer.customerId, orderList);
+
+    navigate('/kiosk/receipt', { state: state });
   };
 
   const goBack = () => {
@@ -112,10 +123,20 @@ function PaymentPage({ isElder }) {
     navigate('/kiosk/menu');
   };
 
+  const handleClick = () => {
+    navigate('/kiosk/menu');
+  };
+
   return (
     <PageStyle>
       <KioskHeader>
-        <Logo>Pinokio</Logo>
+        <Logo
+          onClick={() => {
+            handleClick();
+          }}
+        >
+          Pinokio
+        </Logo>
         <BackButton>
           <Arrow>{'<'}</Arrow>
           <BackButtonText onClick={goBack}>뒤로가기</BackButtonText>
@@ -128,12 +149,12 @@ function PaymentPage({ isElder }) {
             <KioskCenterCardButton onClick={goReceipt}>
               <KioskInnerCardTitle>신용카드</KioskInnerCardTitle>
               <KioskInnerCardSubTitle isElder={isElder}>체크카드 / 삼성페이</KioskInnerCardSubTitle>
-              <KioskInnerCardImage></KioskInnerCardImage>
+              <KioskInnerCardImage src="/CreditCard.svg" width="80rem"></KioskInnerCardImage>
             </KioskCenterCardButton>
             <KioskCenterCardButton onClick={goReceipt}>
               <KioskInnerCardTitle>카카오페이</KioskInnerCardTitle>
               <KioskInnerCardSubTitle isElder={isElder}>앱 전용</KioskInnerCardSubTitle>
-              <KioskInnerCardImage></KioskInnerCardImage>
+              <KioskInnerCardImage src="/KakaoTalk_logo.svg" width="60rem"></KioskInnerCardImage>
             </KioskCenterCardButton>
           </KioskCenterCardContainer>
         </KioskCenterCard>
