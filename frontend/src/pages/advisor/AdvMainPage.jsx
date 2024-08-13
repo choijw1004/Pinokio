@@ -160,6 +160,7 @@ const AdvMainPage = () => {
   const [session, setSession] = useState(null);
   const [publisher, setPublisher] = useState(null);
   const [subscribers, setSubscribers] = useState([]);
+  const [screenSubscriber, setScreenSubscriber] = useState(null);
   const [isInitialized, setIsInitialized] = useState(false);
 
   const initializeAdvisor = useCallback(async () => {
@@ -218,8 +219,43 @@ const AdvMainPage = () => {
 
       session.on('streamCreated', (event) => {
         const subscriber = session.subscribe(event.stream, undefined);
-        setSubscribers((prevSubscribers) => [...prevSubscribers, subscriber]);
-        console.log(subscriber);
+        console.log('subscriber', subscriber);
+        subscriber.on('streamPlaying', (e) => {
+          console.log('Subscriber stream playing');
+        });
+        subscriber.on('error', (error) => {
+          console.error('Subscriber error:', error);
+        });
+
+        let streamType = 'unknown';
+        let userId = '';
+        try {
+          const connectionData = event.stream.connection.data;
+          console.log('Raw connection data:', connectionData);
+
+          const [clientData, roleData] = connectionData.split('%/%');
+          const parsedClientData = JSON.parse(clientData);
+          const parsedRoleData = JSON.parse(roleData);
+
+          streamType = parsedClientData.clientData === 'screen' ? 'screen' : 'camera';
+          userId = parsedRoleData.userId;
+
+          console.log('Parsed client data:', parsedClientData);
+          console.log('Parsed role data:', parsedRoleData);
+        } catch (error) {
+          console.error('Error processing connection data:', error);
+        }
+
+        console.log('Processed stream type:', streamType);
+        console.log('User ID:', userId);
+
+        if (streamType === 'camera') {
+          setSubscribers((prevSubscribers) => [...prevSubscribers, subscriber]);
+        } else if (streamType === 'screen') {
+          setScreenSubscriber(subscriber);
+        }
+
+        console.log('New subscriber:', subscriber);
         const connectionId = event.stream.connection.connectionId;
         handleCustomerConnect(connectionId);
         console.log(`New subscriber added: ${connectionId}`);
@@ -228,6 +264,11 @@ const AdvMainPage = () => {
       session.on('streamDestroyed', (event) => {
         const connectionId = event.stream.connection.connectionId;
         handleCustomerDisconnect(connectionId);
+        console.log(`Subscriber removed: ${connectionId}`);
+      });
+
+      session.on('exception', (exception) => {
+        console.warn('Exception in session:', exception);
       });
 
       try {
@@ -302,7 +343,17 @@ const AdvMainPage = () => {
     }
   }, [isAccept]);
 
-  useEffect(() => {}, []);
+  useEffect(() => {
+    if (isAccept === 'accept') {
+      // 승낙했으니 연결 과정으로 넘어간다.
+      setIsAccept('no request');
+    } else if (isAccept === 'reject') {
+      // 거절에 따른 post를 보낸다.
+      setIsAccept('no request');
+    } else if (isAccept === 'no request') {
+      // waiting request
+    }
+  }, [isAccept]);
 
   const handleConsultationRequest = (data) => {
     console.log('상담 요청 받음:', data);
@@ -418,7 +469,7 @@ const AdvMainPage = () => {
         </LeftSection>
         <MiddleBar ref={middlebarRef} deltaY={deltaY} />
         <RightSection>
-          <CustomerKiosk />
+          <CustomerKiosk streamManager={screenSubscriber || null} />
         </RightSection>
         {isAccept !== 'no request' && (
           <Toast
