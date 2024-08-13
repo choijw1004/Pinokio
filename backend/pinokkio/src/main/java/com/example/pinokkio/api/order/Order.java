@@ -61,4 +61,15 @@ public class Order extends BaseEntity {
         else this.status = OrderStatus.ACTIVE;
     }
 
+    public void updateTotalPrice(long totalPrice) {
+        this.totalPrice = totalPrice;
+    }
+
+    public void initializeItems() {
+        if (this.items == null) {
+            this.items = new ArrayList<>();
+        }
+    }
+
+
 }
