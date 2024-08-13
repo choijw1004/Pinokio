@@ -54,7 +54,7 @@ public class SecurityConfig {
             "/api/face-recognition-events",
             "/api/pos/duplicate/**",
             "/api/teller/duplicate/**",
-            "/wss/**"
+            "/api/ws/**"
     };
 
     private final String[] POST_PERMIT_API_URL = {
@@ -66,7 +66,7 @@ public class SecurityConfig {
             "/api/refresh",
             "/api/users/auth/token/",
             "/api/customer/**", // 추후 수정
-            "/ws/**"
+            "/api/ws/**"
     };
 
     private final String[] POS_API_URL = {
