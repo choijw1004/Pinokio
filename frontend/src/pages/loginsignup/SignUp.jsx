@@ -213,7 +213,7 @@ function SignUp() {
   const handleVerifyCode = async () => {
     try {
       const response = await checkAuth(verificationCode);
-      if (response.success) {
+      if (response) {
         setVerificationMessage('이메일 인증이 완료되었습니다.');
       } else {
         setVerificationMessage('인증 코드가 올바르지 않습니다.');
@@ -301,7 +301,18 @@ function SignUp() {
             <VerifyBtn type="button" onClick={handleVerifyCode}>
               인증 확인
             </VerifyBtn>
-            {verificationMessage && <AddedMessage>{verificationMessage}</AddedMessage>}
+            {verificationMessage && (
+              <AddedMessage
+                style={{
+                  color:
+                    verificationMessage.includes('완료') || verificationMessage.includes('전송')
+                      ? 'limegreen'
+                      : 'red',
+                }}
+              >
+                {verificationMessage}
+              </AddedMessage>
+            )}
           </VerifyLabelContainer>
         )}
 

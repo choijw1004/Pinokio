@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import styled from 'styled-components';
 import ToggleButton from '../common/Toggle';
 import { postItem } from '../../apis/Item';
@@ -33,7 +33,22 @@ const ProductModal = ({ product, categories, onClose }) => {
   const [isScreen, setIsScreen] = useState(false);
   const [isSoldout, setIsSoldout] = useState(false);
   const [category, setCategory] = useState('');
-
+  useEffect(() => {
+    if (product !== null) {
+      console.log(product);
+      setName(product.name);
+      setPrice(product.price);
+      setAmount(product.amount);
+      setImage(product.image);
+      setDetail(product.detail);
+      console.log(categories.filter((category) => category.id === product.categoryId));
+      const categoryName = categories.filter((category) => category.id === product.categoryId)[0]
+        .name;
+      setCategory(categoryName);
+      setIsScreen(product.isScreen);
+      setIsSoldout(product.isSoldout);
+    }
+  }, []);
   const handleSave = async () => {
     if (!name.trim() || !detail.trim() || !price || price === '0') {
       alert('필수 항목을 모두 입력해주세요.');
@@ -59,6 +74,13 @@ const ProductModal = ({ product, categories, onClose }) => {
     );
     if (image) {
       formData.append('file', image);
+      console.log(image);
+    } else {
+      // URL을 Blob 객체로 변환하여 FormData에 추가
+      const blob = new Blob([], { type: 'image/jpeg' }); // 빈 Blob 객체 생성
+      const fileName = ''; // 파일 이름 설정
+      formData.append('file', blob, fileName); // Blob 객체와 파일 이름을 함께 추가
+      console.log(blob); // 이걸로 확인 가능
     }
 
     try {
@@ -100,7 +122,9 @@ const ProductModal = ({ product, categories, onClose }) => {
         required
       />
       <select value={category} onChange={(e) => setCategory(e.target.value)}>
-        <option value="">카테고리 선택</option>
+        <option value="" disabled>
+          카테고리 선택
+        </option>
         {categories.map((cat) => (
           <option key={cat.id} value={cat.name}>
             {cat.name}

@@ -104,9 +104,11 @@ function ElderMenuPage() {
   const [openViduConnection, setOpenViduConnection] = useState(false);
   const [roomId, setRoomId] = useState(null);
   const [OV, setOV] = useState(null);
-  const [session, setSession] = useState(null);
+  const [subscribers, setSubscribers] = useState([]);
+  const [cameraSession, setCameraSession] = useState(null);
+  const [screenSession, setScreenSession] = useState(null);
+  const [isSessionInitialized, setIsSessionInitialized] = useState(false);
   const [publisher, setPublisher] = useState(null);
-  const [subscriber, setSubscriber] = useState(null);
 
   const userData = useSelector((store) => store.user);
   const { sendMessage, lastMessage, isConnected, connect } = useWebSocket(userData.token);
@@ -192,7 +194,7 @@ function ElderMenuPage() {
   };
 
   const handleClick = () => {
-    navigate('/elder-menu');
+    navigate('/kiosk/elder-menu');
   };
 
   useEffect(() => {
@@ -201,7 +203,9 @@ function ElderMenuPage() {
       enterRoom(roomId, userData.typeInfo.kioskId)
         .then((response) => {
           console.log('enterRoom 성공', response);
-          initializeSession(response.token);
+          const videoToken = response.videoToken;
+          const screenToken = response.screenToken;
+          initializeSession(videoToken, screenToken);
           setOpenViduConnection(true);
         })
         .catch((error) => {
@@ -211,27 +215,34 @@ function ElderMenuPage() {
   }, [roomId, userData.typeInfo.kioskId, openViduConnection]);
 
   const initializeSession = useCallback(
-    async (token) => {
-      const ov = new OpenVidu();
-      setOV(ov);
+    async (videoToken, screenToken) => {
+      if (isSessionInitialized) return;
 
-      const session = ov.initSession();
-      setSession(session);
+      setIsSessionInitialized(true);
 
-      session.on('streamCreated', (event) => {
-        const subscriber = session.subscribe(event.stream, undefined);
-        setSubscriber(subscriber);
+      const OV = new OpenVidu();
+      const cameraSessionObj = OV.initSession();
+      const screenSessionObj = OV.initSession();
+
+      setCameraSession(cameraSessionObj);
+      setScreenSession(screenSessionObj);
+
+      cameraSessionObj.on('streamCreated', (event) => {
+        const subscriber = cameraSessionObj.subscribe(event.stream, undefined);
+        setSubscribers((prevSubscribers) => [...prevSubscribers, subscriber]);
       });
 
-      session.on('streamDestroyed', (event) => {
-        setSubscriber(null);
+      cameraSessionObj.on('streamDestroyed', (event) => {
+        setSubscribers((prevSubscribers) =>
+          prevSubscribers.filter((sub) => sub !== event.stream.streamManager)
+        );
       });
 
       try {
-        await session.connect(token, { clientData: userData.typeInfo.kioskId });
-        console.log('OpenVidu 세션 연결 성공');
+        await cameraSessionObj.connect(videoToken, { clientData: userData.typeInfo.kioskId });
+        console.log('카메라 세션 연결 성공');
 
-        const publisher = await ov.initPublisherAsync(undefined, {
+        const publisher = await OV.initPublisherAsync(undefined, {
           audioSource: undefined,
           videoSource: undefined,
           publishAudio: true,
@@ -242,9 +253,37 @@ function ElderMenuPage() {
           mirror: false,
         });
 
-        await session.publish(publisher);
+        await cameraSessionObj.publish(publisher);
         setPublisher(publisher);
-        console.log('키오스크 스트림 발행 성공');
+        console.log('카메라 스트림 발행 성공');
+
+        await screenSessionObj.connect(screenToken, { clientData: 'screen' });
+        console.log('화면 공유 세션 연결 성공');
+
+        const requestScreenShare = async () => {
+          try {
+            const screenPublisher = await OV.initPublisherAsync(undefined, {
+              videoSource: 'screen',
+              publishAudio: false,
+              publishVideo: true,
+              resolution: '1280x720',
+              frameRate: 30,
+              insertMode: 'APPEND',
+              mirror: false,
+            });
+
+            await screenSessionObj.publish(screenPublisher);
+            console.log('화면 공유 스트림 발행 성공');
+          } catch (error) {
+            if (error.name === 'SCREEN_CAPTURE_DENIED') {
+              console.warn('화면 공유가 사용자에 의해 취소되었습니다.');
+            } else {
+              console.error('화면 공유 스트림 발행 오류:', error);
+            }
+          }
+        };
+
+        await requestScreenShare();
       } catch (error) {
         console.error('세션 연결 또는 스트림 발행 오류:', error);
       }
@@ -252,17 +291,28 @@ function ElderMenuPage() {
     [userData.typeInfo.kioskId]
   );
 
-  const handleLeaveRoom = async () => {
+  const handleLeaveRoom = useCallback(async () => {
     try {
       setRoomId(null);
-      session.disconnect();
-      leaveRoom(roomId);
+      if (cameraSession) {
+        cameraSession.disconnect();
+      }
+      if (screenSession) {
+        screenSession.disconnect();
+      }
+      if (publisher) {
+        publisher.stream.disposeWebRtcPeer();
+        publisher.stream.disposeMediaStream();
+      }
+      await leaveRoom(roomId);
       setOpenViduConnection(false);
+      setPublisher(null);
+      setSubscribers([]);
       console.log('상담 종료 성공');
     } catch (error) {
       console.error('상담 종료 오류:', error);
     }
-  };
+  }, [cameraSession, screenSession, roomId, publisher]);
 
   return (
     <ElderMenuPageStyle>
@@ -278,9 +328,9 @@ function ElderMenuPage() {
         </KioskLeftHeader>
         <KioskRightHeader>
           <ScreenStyle>
-            {subscriber && <OpenViduVideoComponent streamManager={subscriber} />}
+            {subscribers.length > 0 && <OpenViduVideoComponent streamManager={subscribers[0]} />}
           </ScreenStyle>
-          {session && <Button onClick={handleLeaveRoom}>상담 종료</Button>}
+          {(cameraSession || screenSession) && <Button onClick={handleLeaveRoom}>상담 종료</Button>}
         </KioskRightHeader>
       </KioskHeader>
       <KioskBody>

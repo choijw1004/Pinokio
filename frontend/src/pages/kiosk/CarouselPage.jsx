@@ -2,9 +2,9 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import styled from 'styled-components';
-import carouselimage from '../../assets/images/carouselimage.jpg';
-import carouselimage2 from '../../assets/images/carouselimage2.jpg';
-import carouselimage3 from '../../assets/images/carouselimage3.jpg';
+import carouselimage from '../../assets/images/carouselimage.webp';
+import carouselimage2 from '../../assets/images/carouselimage2.webp';
+import carouselimage3 from '../../assets/images/carouselimage3.webp';
 import NumberModal from '../../components/kiosk/modal/NumberModal';
 import axios from 'axios';
 
@@ -317,17 +317,17 @@ function CarouselPage() {
           <CarouselMessage>얼굴 인식 결과를 기다리는 중...</CarouselMessage>
         )}
         <ButtonContainer>
-          <CarouselButton onClick={havingHere}>
-            <img src="" alt="" />
-            매장
-          </CarouselButton>
-          <CarouselButton onClick={takeAway}>
-            <img src="" alt="" />
-            포장
-          </CarouselButton>
+          <img
+            src="/HavingHere.svg"
+            alt=""
+            onClick={havingHere}
+            width={'100rem'}
+            style={{ marginRight: '2rem' }}
+          />
+          <img src="/TakeAway.svg" alt="" onClick={takeAway} width={'100rem'} />
         </ButtonContainer>
       </CarouselWindow>
-      <ModalButton onClick={() => setShowModal(true)}>번호 입력 모달 열기</ModalButton>
+      {/* <ModalButton onClick={() => setShowModal(true)}>번호 입력 모달 열기</ModalButton> */}
       {showModal && <NumberModal setModal={setShowModal} onConfirm={handleConfirm} />}
     </CarouselPageStyle>
   );

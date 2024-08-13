@@ -17,6 +17,7 @@ import {
   disconnectKiosk,
   setActiveKiosk,
   resetAdvisor,
+  updateKioskStream,
 } from '../../features/advisor/AdvisorSlice';
 import { OpenVidu } from 'openvidu-browser';
 
@@ -160,6 +161,7 @@ const AdvMainPage = () => {
   const [session, setSession] = useState(null);
   const [publisher, setPublisher] = useState(null);
   const [subscribers, setSubscribers] = useState([]);
+  const [screenSubscriber, setScreenSubscriber] = useState(null);
   const [isInitialized, setIsInitialized] = useState(false);
 
   const initializeAdvisor = useCallback(async () => {
@@ -218,16 +220,67 @@ const AdvMainPage = () => {
 
       session.on('streamCreated', (event) => {
         const subscriber = session.subscribe(event.stream, undefined);
+        console.log('subscriber', subscriber);
+        subscriber.on('streamPlaying', (e) => {
+          console.log('Subscriber stream playing');
+        });
+        subscriber.on('error', (error) => {
+          console.error('Subscriber error:', error);
+        });
+
+        let streamType = 'unknown';
+        let userId = '';
+        try {
+          const connectionData = event.stream.connection.data;
+          console.log('Raw connection data:', connectionData);
+
+          const [clientData, roleData] = connectionData.split('%/%');
+          const parsedClientData = JSON.parse(clientData);
+          const parsedRoleData = JSON.parse(roleData);
+
+          streamType = parsedClientData.clientData === 'screen' ? 'SCREEN' : 'CAMERA';
+          userId = parsedRoleData.userId;
+
+          console.log('Processed stream type:', streamType);
+          console.log('User ID:', userId);
+        } catch (error) {
+          console.error('Error processing connection data:', error);
+        }
+
+        dispatch(
+          updateKiosk({
+            connectionId: event.stream.connection.connectionId,
+            streamType,
+            userId,
+            screenId: streamType === 'SCREEN' ? event.stream.connection.connectionId : undefined,
+          })
+        );
+
         setSubscribers((prevSubscribers) => [...prevSubscribers, subscriber]);
-        console.log(subscriber);
+
+        console.log('New subscriber:', subscriber);
         const connectionId = event.stream.connection.connectionId;
         handleCustomerConnect(connectionId);
         console.log(`New subscriber added: ${connectionId}`);
+
+        if (connectedKiosks.length === 1 && streamType === 'CAMERA') {
+          handleSetActiveKiosk(event.stream.connection.connectionId);
+        }
       });
 
       session.on('streamDestroyed', (event) => {
         const connectionId = event.stream.connection.connectionId;
-        handleCustomerDisconnect(connectionId);
+        const kiosk = connectedKiosks.find(
+          (k) => k.connectionId === connectionId || k.screenId === connectionId
+        );
+        if (kiosk) {
+          handleCustomerDisconnect(kiosk.connectionId);
+          console.log(`Subscriber removed: ${connectionId}`);
+        }
+      });
+
+      session.on('exception', (exception) => {
+        console.warn('Exception in session:', exception);
       });
 
       try {
@@ -252,7 +305,7 @@ const AdvMainPage = () => {
         console.error('세션 연결 또는 스트림 발행 오류:', error);
       }
     },
-    [userData.email, handleCustomerConnect, handleCustomerDisconnect]
+    [userData.email, handleCustomerConnect, handleCustomerDisconnect, connectedKiosks.length]
   );
 
   useEffect(() => {
@@ -302,7 +355,17 @@ const AdvMainPage = () => {
     }
   }, [isAccept]);
 
-  useEffect(() => {}, []);
+  useEffect(() => {
+    if (isAccept === 'accept') {
+      // 승낙했으니 연결 과정으로 넘어간다.
+      setIsAccept('no request');
+    } else if (isAccept === 'reject') {
+      // 거절에 따른 post를 보낸다.
+      setIsAccept('no request');
+    } else if (isAccept === 'no request') {
+      // waiting request
+    }
+  }, [isAccept]);
 
   const handleConsultationRequest = (data) => {
     console.log('상담 요청 받음:', data);
@@ -346,23 +409,55 @@ const AdvMainPage = () => {
     setConsultationRequest(null);
   };
 
+  const [activeSubscriber, setActiveSubscriber] = useState(null);
+  const [activeScreenSubscriber, setActiveScreenSubscriber] = useState(null);
+
+  useEffect(() => {
+    console.log('useEffect triggered: connectedKiosks or subscribers changed');
+    console.log('connectedKiosks:', connectedKiosks);
+    console.log('subscribers:', subscribers);
+
+    const activeKiosk = connectedKiosks.find((kiosk) => kiosk.isActive);
+    console.log('activeKiosk:', activeKiosk);
+
+    if (activeKiosk) {
+      const newActiveSubscriber = subscribers.find(
+        (sub) => sub.stream.connection.connectionId === activeKiosk.connectionId
+      );
+      const newActiveScreenSubscriber = subscribers.find(
+        (sub) => sub.stream.connection.connectionId === activeKiosk.screenId
+      );
+      console.log('newActiveSubscriber:', newActiveSubscriber);
+      console.log('newActiveScreenSubscriber:', newActiveScreenSubscriber);
+      setActiveSubscriber(newActiveSubscriber || null);
+      setActiveScreenSubscriber(newActiveScreenSubscriber || null);
+    } else {
+      console.log('No active kiosk found');
+      setActiveSubscriber(null);
+      setActiveScreenSubscriber(null);
+    }
+  }, [connectedKiosks, subscribers]);
+
   const handleSetActiveKiosk = useCallback(
-    (connectionId) => {
+    (connectionId, screenId) => {
+      console.log('handleSetActiveKiosk called with:', connectionId, screenId);
       dispatch(setActiveKiosk(connectionId));
       subscribers.forEach((subscriber) => {
-        if (subscriber.stream.connection.connectionId === connectionId) {
-          subscriber.subscribeToAudio(true);
-        } else {
-          subscriber.subscribeToAudio(false);
-        }
+        const shouldSubscribe = subscriber.stream.connection.connectionId === connectionId;
+        console.log(
+          'Subscribing to audio:',
+          subscriber.stream.connection.connectionId,
+          shouldSubscribe
+        );
+        subscriber.subscribeToAudio(shouldSubscribe);
       });
+      const activeScreenSubscriber = subscribers.find(
+        (sub) => sub.stream.connection.connectionId === screenId
+      );
+      console.log('Found activeScreenSubscriber:', activeScreenSubscriber);
+      setActiveScreenSubscriber(activeScreenSubscriber || null);
     },
     [dispatch, subscribers]
-  );
-
-  const activeKiosk = connectedKiosks.find((kiosk) => kiosk.isActive);
-  const activeSubscriber = subscribers.find(
-    (sub) => activeKiosk && sub.stream.connection.connectionId === activeKiosk.connectionId
   );
 
   return (
@@ -418,7 +513,7 @@ const AdvMainPage = () => {
         </LeftSection>
         <MiddleBar ref={middlebarRef} deltaY={deltaY} />
         <RightSection>
-          <CustomerKiosk />
+          <CustomerKiosk streamManager={activeScreenSubscriber || null} />
         </RightSection>
         {isAccept !== 'no request' && (
           <Toast

@@ -15,20 +15,25 @@ const MMC = styled.div`
 
 const Image = styled.img`
   width: 100%;
-  height: 100%;
+  height: 7rem;
   object-fit: cover;
 `;
 
 const MenuContents = styled.div`
-  padding-left: 1vw;
+  height: 100%;
+
   font-family: var(--font-CafeOhsquareAir);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 0.5rem 0.5rem;
 `;
 
 const MenuName = styled.div`
   font-size: 0.7rem;
 `;
 
-const MenuNameEng = styled.div`
+const MenuDetail = styled.div`
   font-size: 0.3rem;
 `;
 
@@ -50,6 +55,7 @@ function MenuMainCard({ menu, setSelectedMenu, setModal }) {
     if (menu.isSoldOut === 'NO') {
       setModal(true);
       setSelectedMenu(menu);
+      console.log(menu);
     } else {
       setModal(false);
     }
@@ -58,10 +64,10 @@ function MenuMainCard({ menu, setSelectedMenu, setModal }) {
   return (
     <MMC onClick={handleClick} isSoldOut={menu.isSoldOut}>
       <SoldOutText isSoldOut={menu.isSoldOut}>품절</SoldOutText>
-      <Image src={coffeeImage} />
+      <Image src={menu.file} />
       <MenuContents>
         <MenuName>{menu.name}</MenuName>
-        <MenuNameEng>{menu.detail}</MenuNameEng>
+        {/* <MenuDetail>{menu.detail}</MenuDetail> */}
         <MenuPrice>{menu.price}</MenuPrice>
       </MenuContents>
     </MMC>

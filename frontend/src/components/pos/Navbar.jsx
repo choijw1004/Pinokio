@@ -2,10 +2,10 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import LOGO from '../common/Logo';
 import styled from 'styled-components';
-import ToggleIcon from './ToggleIcon';
 import { useDispatch } from 'react-redux';
 import { clearUser } from '../../features/user/userSlice';
 import Cookies from 'js-cookie';
+import RotatingSquareIcon from './RotatingSquareIcon';
 
 const NavbarContainer = styled.nav`
   width: 100%;
@@ -36,14 +36,45 @@ const NavbarMenu = styled.div`
   transition: left 0.3s ease-in-out;
 `;
 
-const NavbarItem = styled.text`
-  margin: 1rem 1rem;
-  display: flex;
-`;
+const colors = ['#EC7348', '#FFC33F', '#C383D9', '#7392FF']; // 빨강, 노랑, 보라, 파랑
 
 const NavbarLink = styled(Link)`
   text-decoration: none;
-  color: black;
+  /*color: inherit; // 상속받은 색상 사용 */
+  display: flex;
+  align-items: center;
+  margin: 1rem 1rem;
+  padding: 0.5rem 2rem;
+  cursor: pointer;
+  position: relative;
+  background-color: transparent; // 기본 배경색은 투명
+  border-radius: 1rem 0.3rem 0.3rem 1rem;
+  color: black; // 기본 글자색은 검정색
+  transition: background-color 0.3s ease, color 0.3s ease;
+
+  &:hover {
+    background-color: ${({ index }) => colors[index % colors.length]}; // hover 시 배경색
+    color: white; // hover 시 글자색
+  }
+
+  &:before {
+    content: '';
+    display: block;
+    width: 0.5rem; // 점의 크기
+    height: 0.5rem;
+    border-radius: 50%;
+    background-color: ${({ index }) => colors[index % colors.length]}; // 기본 점 색상
+    position: absolute;
+    left: 0.5rem; // 점의 위치 조정
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 1; // 점이 배경보다 위에 표시되도록 설정
+    transition: background-color 0.3s ease;
+  }
+
+  &:hover:before {
+    background-color: white; // hover 시 점의 색상
+  }
 `;
 
 const LogoLocation = styled.div`
@@ -93,12 +124,14 @@ function Navbar({ isOpen, toggleNavbar }) {
 
   return (
     <NavbarContainer>
-      <ToggleIcon isOn={isOpen} setIsOn={toggleNavbar} />
+      <RotatingSquareIcon setIsOn={toggleNavbar} size={0.07} />
       <NavbarMenu isOpen={isOpen}>
         {items.map((item, index) => (
-          <NavbarItem key={index} onClick={handleItemClick}>
-            <NavbarLink to={item.path}>{item.text}</NavbarLink>
-          </NavbarItem>
+          // <NavbarItem key={index} index={index} onClick={handleItemClick}>
+          <NavbarLink to={item.path} key={index} index={index} onClick={handleItemClick}>
+            {item.text}
+          </NavbarLink>
+          // </NavbarItem>
         ))}
         <LogOut
           onClick={() => {

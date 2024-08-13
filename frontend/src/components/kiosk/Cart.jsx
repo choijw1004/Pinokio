@@ -2,6 +2,7 @@ import React from 'react';
 import styled from 'styled-components';
 import CartItem from './CartItem';
 import CartTotal from './CartTotal';
+import { useLocation } from 'react-router-dom';
 
 const CartContainer = styled.div`
   display: flex;
@@ -43,7 +44,9 @@ const ItemContainer = styled.div`
   }
 `;
 
-function Cart({ cartItems, setCartItems, isElder, state }) {
+function Cart({ cartItems, setCartItems, isElder }) {
+  const { state } = useLocation();
+
   const deleteAll = () => {
     setCartItems([]);
   };

@@ -1,33 +1,33 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React from 'react';
 import styled from 'styled-components';
+import OpenViduVideoComponent from './OpenViduVideoComponent';
 
-const CustomerScreen = styled.div`
-  width: auto;
+const CustomerKioskContainer = styled.div`
+  width: 100%;
   height: 100%;
-  border-radius: 1rem;
-  text-align: center;
-  text-align: center;
-  line-height: ${(props) => `${props.height}px`};
-  background-color: #efefef;
-  font-family: 'CafeOhsquareAir';
-  font-size: ${(props) => `calc(${props.height}px / 12)`};
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 `;
 
-function CustomerKiosk() {
-  const divRef = useRef(null);
-  const [thisHeight, setThisHeight] = useState(0);
-  const [thisWidth, setThisWidth] = useState(0);
+const VideoContainer = styled.div`
+  width: 100%;
+  height: 100%;
+  background-color: #f0f0f0;
+`;
 
-  useEffect(() => {
-    if (divRef.current) {
-      setThisHeight(divRef.current.offsetHeight);
-      setThisWidth(divRef.current.offsetWidth);
-    }
-  });
+function CustomerKiosk({ streamManager }) {
+  console.log('CustomerKiosk rendered with streamManager:', streamManager);
   return (
-    <CustomerScreen ref={divRef} width={thisWidth} height={thisHeight}>
-      연결된 고객이 없습니다.
-    </CustomerScreen>
+    <CustomerKioskContainer>
+      <VideoContainer>
+        {streamManager ? (
+          <OpenViduVideoComponent streamManager={streamManager} />
+        ) : (
+          <p>화면 공유가 시작되지 않았습니다.</p>
+        )}
+      </VideoContainer>
+    </CustomerKioskContainer>
   );
 }
 

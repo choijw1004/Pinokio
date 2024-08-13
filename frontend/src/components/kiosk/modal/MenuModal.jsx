@@ -46,19 +46,33 @@ const ModalImage = styled.img`
 const ModalBody = styled.div`
   padding: 0 1rem;
   padding-top: 0.7rem;
+  height: 6rem;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+`;
+const TitleAndDetail = styled.div`
+  display: flex;
+  flex-direction: column;
 `;
 
 const MenuTitleKo = styled.div`
-  font-size: 1.3rem;
+  font-size: 1rem;
 `;
 
-const MenuDetail = styled.div``;
+const MenuDetail = styled.div`
+  font-size: 0.6rem;
+  overflow: auto;
+  max-height: 3.5rem;
+  min-height: 2.5rem;
+`;
 
 const PriceAndButtons = styled.div`
+  position: end;
   display: flex;
   flex-direction: row;
   justify-content: space-between;
-  margin-top: 0.5rem;
 `;
 
 const MenuPrice = styled.div``;
@@ -175,11 +189,13 @@ function MenuModal({ item, cartItems, setCartItems, setModal, isElder }) {
       <Modal>
         <ImageAndContents>
           <ImageContainer>
-            <ModalImage src={coffeeimage} />
+            <ModalImage src={item.file} />
           </ImageContainer>
           <ModalBody>
-            <MenuTitleKo>{item.name}</MenuTitleKo>
-            <MenuDetail>{item.detail}</MenuDetail>
+            <TitleAndDetail>
+              <MenuTitleKo>{item.name}</MenuTitleKo>
+              <MenuDetail>{item.detail}</MenuDetail>
+            </TitleAndDetail>
             <PriceAndButtons>
               <MenuPrice>{item.price}</MenuPrice>
               <UpDownButtons>

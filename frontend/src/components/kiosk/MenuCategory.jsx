@@ -16,6 +16,7 @@ const Arrow = styled.div`
   font-size: 2vh;
   color: #cfcfcf;
   width: 10%;
+  cursor: pointer;
 `;
 const MenuCategoryCards = styled.div`
   width: 80%;

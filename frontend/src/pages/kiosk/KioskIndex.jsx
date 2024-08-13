@@ -1,5 +1,5 @@
-import React, { useEffect, useCallback, useState } from 'react';
-import { Route, Routes, useNavigate } from 'react-router-dom';
+import React, { useEffect, useRef, useState } from 'react';
+import { Route, Routes, useNavigate, useLocation } from 'react-router-dom';
 import CarouselPage from './CarouselPage';
 import MenuPage from './younger/MenuPage';
 import PaymentPage from './younger/PaymentPage';
@@ -9,9 +9,8 @@ import ElderPaymentPage from './elder/ElderPaymentPage';
 import ElderReceiptPage from './elder/ElderReceiptPage';
 import LoadingPage from './elder/LoadingPage';
 import styled from 'styled-components';
+
 const KioskForm = styled.div`
-  /* background-color: white;
-  height: 150vh;*/
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -31,15 +30,10 @@ const KioskOutline = styled.div`
 
 const KioskInline = styled.div`
   background-color: white;
-  /* height: 95vh; */
   height: 47rem;
   max-height: 47rem;
-  /* width: 30vw; */
   width: 27rem;
-  /* max-height: 35rem; */
   display: flex;
-  // flex-direction: column;
-  // align-items: center;
 `;
 
 const WarningMessage = styled.div`
@@ -65,51 +59,85 @@ const WarningMessage = styled.div`
 
 function KioskIndex() {
   const navigate = useNavigate();
-  const [timer, setTimer] = useState(null);
+  const location = useLocation();
   const [warning, setWarning] = useState(false);
+  const warningTimerRef = useRef(null);
+  const navigateTimerRef = useRef(null);
+  const idleTimeRef = useRef(0);
+  const intervalRef = useRef(null);
 
-  const resetTimer = useCallback(() => {
+  const resetTimers = () => {
     // 경고 메시지 숨김
     setWarning(false);
 
-    // 기존 타이머 제거
-    if (timer) {
-      clearTimeout(timer);
+    // 타이머 초기화
+    if (warningTimerRef.current) {
+      clearTimeout(warningTimerRef.current);
+    }
+    if (navigateTimerRef.current) {
+      clearTimeout(navigateTimerRef.current);
     }
 
-    // 새 타이머 설정: 20초 후에 경고를 표시, 30초 후에 페이지 이동
-    const newTimer = setTimeout(() => {
-      setWarning(true); // 20초 후 경고 표시
+    // 현재 페이지가 /kiosk가 아닐 때만 타이머 시작
+    if (location.pathname !== '/kiosk') {
+      // 50초 후 경고 메시지 표시
+      warningTimerRef.current = setTimeout(() => {
+        setWarning(true);
 
-      const navigateTimer = setTimeout(() => {
-        navigate('/kiosk'); // 30초 후 페이지 이동
-      }, 10000); // 10000ms = 10초
+        // 10초 후 페이지 이동
+        navigateTimerRef.current = setTimeout(() => {
+          navigate('/kiosk');
+        }, 5000); // 10000ms = 10초
+      }, 10000); // 50000ms = 50초
 
-      setTimer(navigateTimer); // 새로운 타이머 설정
-    }, 20000); // 20000ms = 20초
-
-    setTimer(newTimer); // 새로운 타이머 설정
-  }, [navigate, timer]);
+      idleTimeRef.current = 0; // idleTimeRef 초기화
+    }
+  };
 
   useEffect(() => {
-    // 마운트 시 이벤트 리스너 추가
+    resetTimers(); // 컴포넌트 마운트 시 타이머 시작
+
     const events = ['click', 'mousemove', 'keydown', 'scroll'];
 
+    // 이벤트 리스너 추가
     events.forEach((event) => {
-      window.addEventListener(event, resetTimer);
+      window.addEventListener(event, resetTimers);
     });
 
-    // 언마운트 시 이벤트 리스너 제거
+    // 타이머 업데이트 인터벌 설정
+    intervalRef.current = setInterval(() => {
+      idleTimeRef.current += 1000; // 1초마다 idleTimeRef 증가
+
+      // 60초 동안 아무 이벤트도 없으면 페이지 이동
+      if (idleTimeRef.current >= 15000 && location.pathname !== '/kiosk') {
+        clearInterval(intervalRef.current);
+        navigate('/kiosk');
+      }
+    }, 1000); // 1000ms = 1초
+
+    // 언마운트 시 이벤트 리스너 및 타이머 해제
     return () => {
       events.forEach((event) => {
-        window.removeEventListener(event, resetTimer);
+        window.removeEventListener(event, resetTimers);
       });
-
-      if (timer) {
-        clearTimeout(timer);
+      if (warningTimerRef.current) {
+        clearTimeout(warningTimerRef.current);
+      }
+      if (navigateTimerRef.current) {
+        clearTimeout(navigateTimerRef.current);
+      }
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
       }
     };
-  }, [resetTimer, timer]);
+  }, [navigate, location.pathname]);
+
+  // /kiosk 경로로 이동할 때 타이머 초기화
+  useEffect(() => {
+    if (location.pathname === '/kiosk') {
+      resetTimers();
+    }
+  }, [location.pathname]);
 
   return (
     <KioskForm>
@@ -117,10 +145,9 @@ function KioskIndex() {
         <KioskInline>
           {warning && (
             <WarningMessage className={warning ? 'visible' : ''}>
-              10초 뒤 아무 입력이 없으면 페이지가 이동됩니다.
+              10초 후에 메인 페이지로 이동됩니다.
             </WarningMessage>
           )}
-          {/* <div style={{ width: '50%' }}> */}
           <Routes>
             <Route path="/" element={<CarouselPage />} />
             <Route path="menu" element={<MenuPage />} />
@@ -131,7 +158,6 @@ function KioskIndex() {
             <Route path="elder-receipt" element={<ElderReceiptPage />} />
             <Route path="loading" element={<LoadingPage />} />
           </Routes>
-          {/* </div> */}
         </KioskInline>
       </KioskOutline>
     </KioskForm>

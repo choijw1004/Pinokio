@@ -78,7 +78,6 @@ export const postItem = async (formData) => {
     console.log('Product added:', response.data);
     return response.data;
   } catch (error) {
-    alert('사진을 넣어주세요.');
     throw error; // 에러를 호출한 곳에서 처리할 수 있도록 던집니다.
   }
 };
