@@ -21,6 +21,7 @@ import com.example.pinokkio.common.type.Gender;
 import com.example.pinokkio.common.type.OrderStatus;
 import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.event.ContextRefreshedEvent;
@@ -39,6 +40,7 @@ import java.util.List;
 import java.util.Random;
 import java.util.UUID;
 
+@Slf4j
 @Service
 @Transactional
 @RequiredArgsConstructor
@@ -461,17 +463,18 @@ public class InitService implements ApplicationListener<ContextRefreshedEvent> {
                         .setParameter("posId", pos.getId())
                         .getResultList();
 
-                List<OrderItem> orderItems = createRandomOrderItems(customer.getId(), posItems);
+                Order order = Order.builder()
+                        .pos(pos)
+                        .customer(customer)
+                        .build();
+                order.initializeItems();
+
+                List<OrderItem> orderItems = createRandomOrderItems(order, customer.getId(), posItems);
                 long totalPrice = orderItems.stream()
                         .mapToLong(item -> (long) item.getItem().getPrice() * item.getQuantity())
                         .sum();
 
-                Order order = Order.builder()
-                        .pos(pos)
-                        .customer(customer)
-                        .items(orderItems)
-                        .totalPrice(totalPrice)
-                        .build();
+                order.updateTotalPrice(totalPrice);
 
                 // 주문 상태 결정 (80% ACTIVE, 20% CANCELLED)
                 boolean isCancelled = random.nextDouble() < 0.2;
@@ -513,14 +516,16 @@ public class InitService implements ApplicationListener<ContextRefreshedEvent> {
         return createdDateTime.plusMinutes(randomMinutes);
     }
 
-    private List<OrderItem> createRandomOrderItems(UUID customerId, List<Item> posItems) {
+    private List<OrderItem> createRandomOrderItems(Order order, UUID customerId, List<Item> posItems) {
         int itemCount = 1 + random.nextInt(5); // 1 to 5 items per order
         List<OrderItem> orderItems = new ArrayList<>();
 
         for (int i = 0; i < itemCount; i++) {
             Item item = posItems.get(random.nextInt(posItems.size()));
             int quantity = 1 + random.nextInt(3); // 1 to 3 quantity for each item
-            orderItems.add(new OrderItem(null, item, customerId, quantity));
+            OrderItem orderItem = new OrderItem(order, item, customerId, quantity);
+            orderItems.add(orderItem);
+            order.getItems().add(orderItem);
         }
 
         return orderItems;
