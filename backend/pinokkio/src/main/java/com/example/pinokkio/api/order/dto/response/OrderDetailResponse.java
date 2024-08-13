@@ -2,6 +2,7 @@ package com.example.pinokkio.api.order.dto.response;
 
 import com.example.pinokkio.api.order.Order;
 import com.example.pinokkio.common.type.OrderStatus;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 
 import java.time.LocalDateTime;
@@ -15,6 +16,7 @@ public class OrderDetailResponse {
     private final UUID customerId;
     private final long totalAmount;
     private final LocalDateTime orderTime;
+    private final LocalDateTime cancelTime;
     private final OrderStatus status;
     private List<OrderItemDetail> items;
 
@@ -24,6 +26,7 @@ public class OrderDetailResponse {
         this.totalAmount = order.getTotalPrice();
         this.orderTime = order.getCreatedDate();
         this.status = order.getStatus();
+        this.cancelTime = order.getModifiedDate();
         this.items = new ArrayList<>();
     }
 

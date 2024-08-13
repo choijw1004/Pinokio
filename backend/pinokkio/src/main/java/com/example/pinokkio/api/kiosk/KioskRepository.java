@@ -25,6 +25,8 @@ public interface KioskRepository extends JpaRepository<Kiosk, UUID> {
 
     List<Kiosk> findAllByPosId(UUID posId);
 
+    List<Kiosk> findAllByPosIdOrderByCreatedDateAsc(UUID posId);
+
     Optional<Kiosk> findByIdAndPosId(UUID id, UUID posId);
 
     @Query("SELECT k.pos.id " +

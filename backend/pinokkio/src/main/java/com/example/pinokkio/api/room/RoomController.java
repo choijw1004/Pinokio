@@ -1,6 +1,7 @@
 package com.example.pinokkio.api.room;
 
 import com.example.pinokkio.api.room.dto.request.RoomEnterRequest;
+import com.example.pinokkio.api.room.dto.response.KioskRoomResponse;
 import com.example.pinokkio.api.room.dto.response.RoomResponse;
 import io.openvidu.java.client.OpenViduHttpException;
 import io.openvidu.java.client.OpenViduJavaClientException;
@@ -28,11 +29,6 @@ public class RoomController {
     private final RoomService roomService;
 
     @Operation(summary = "상담 생성", description = "Teller의 경우 상담방 생성 가능")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "OK",
-                    content = @Content(schema = @Schema(implementation = RoomResponse.class)))
-
-    })
     @PreAuthorize("hasRole('ROLE_TELLER')")
     @GetMapping("/teller/room")
     public ResponseEntity<?> createRoom() {
@@ -41,9 +37,6 @@ public class RoomController {
     }
 
     @Operation(summary = "상담 삭제", description = "Teller의 경우 상담방 삭제 가능")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "204", description = "NO CONTENT")
-    })
     @PreAuthorize("hasRole('ROLE_TELLER')")
     @DeleteMapping("/teller/room")
     public ResponseEntity<?> deleteRoom() {
@@ -52,9 +45,6 @@ public class RoomController {
     }
 
     @Operation(summary = "상담 요청 수락", description = "Teller가 상담 요청을 수락하는 경우 키오스크에 Room ID를 전송")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "204", description = "NO CONTENT")
-    })
     @PreAuthorize("hasRole('ROLE_TELLER')")
     @PostMapping("/teller/accept")
     public ResponseEntity<RoomResponse> acceptInvitation(
@@ -64,9 +54,6 @@ public class RoomController {
     }
 
     @Operation(summary = "상담 요청 거부", description = "Teller가 상담 요청을 거부하는 경우")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "204", description = "NO CONTENT")
-    })
     @PreAuthorize("hasRole('ROLE_KIOSK')")
     @PostMapping("/kiosk/reject")
     public ResponseEntity<RoomResponse> rejectInvitation() {
@@ -75,9 +62,6 @@ public class RoomController {
     }
 
     @Operation(summary = "상담 요청", description = "Kiosk의 경우 생성된 모든 상담방에 상담 요청 전송 가능")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "204", description = "NO CONTENT")
-    })
     @PreAuthorize("hasRole('ROLE_KIOSK')")
     @PostMapping("/kiosk/request-enter")
     public ResponseEntity<RoomResponse> requestEnterRoom() {
@@ -86,22 +70,15 @@ public class RoomController {
     }
 
     @Operation(summary = "상담 입장", description = "Kiosk가 화상 상담에 입장")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "OK",
-                    content = @Content(schema = @Schema(implementation = RoomResponse.class)))
-    })
     @PreAuthorize("hasRole('ROLE_KIOSK')")
     @PutMapping("/kiosk/enter")
-    public ResponseEntity<RoomResponse> enterRoom(
+    public ResponseEntity<?> enterRoom(
             @Validated @RequestBody RoomEnterRequest enterRequest) throws OpenViduJavaClientException, OpenViduHttpException {
-        String roomToken = roomService.enterRoom(enterRequest.getRoomId(), enterRequest.getKioskId());
-        return ResponseEntity.ok(new RoomResponse(enterRequest.getRoomId().toString(), roomToken));
+        KioskRoomResponse roomResponse = roomService.enterRoom(enterRequest.getRoomId(), enterRequest.getKioskId());
+        return ResponseEntity.ok(roomResponse);
     }
 
     @Operation(summary = "상담 퇴장", description = "Kiosk가 화상 상담에서 퇴장")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "204", description = "NO CONTENT")
-    })
     @PreAuthorize("hasRole('ROLE_KIOSK')")
     @PutMapping("/kiosk/{roomId}/leave")
     public ResponseEntity<RoomResponse> leaveRoom(

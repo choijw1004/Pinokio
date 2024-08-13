@@ -2,7 +2,8 @@ package com.example.pinokkio.api.pos;
 
 import com.example.pinokkio.api.kiosk.Kiosk;
 import com.example.pinokkio.api.kiosk.KioskRepository;
-import com.example.pinokkio.api.pos.dto.request.KioskInfoResponse;
+import com.example.pinokkio.api.pos.dto.response.KioskRegisterResponse;
+import com.example.pinokkio.api.pos.dto.response.KioskInfoResponse;
 import com.example.pinokkio.api.pos.dto.response.PosResponse;
 import com.example.pinokkio.api.user.UserService;
 import com.example.pinokkio.exception.domain.kiosk.KioskNotFoundException;
@@ -53,9 +54,9 @@ public class PosService {
     }
 
     public List<KioskInfoResponse> getKioskInfosByPosId(UUID posId) {
-        List<Kiosk> kiosks = kioskRepository.findAllByPosId(posId);
+        List<Kiosk> kiosks = kioskRepository.findAllByPosIdOrderByCreatedDateAsc(posId);
         return kiosks.stream()
-                .map(kiosk -> new KioskInfoResponse(kiosk.getId(), kiosk.getEmail(), kiosk.getPassword()))
+                .map(kiosk -> new KioskInfoResponse(kiosk.getId(), kiosk.getEmail()))
                 .collect(Collectors.toList());
     }
 
@@ -64,7 +65,7 @@ public class PosService {
      * password = 숫자 4자리
      */
     @Transactional
-    public void registerKiosk() {
+    public KioskRegisterResponse registerKiosk() {
         Pos findPos = userService.getCurrentPos();
 
         String randomEmail = randomEmail(findPos);
@@ -76,6 +77,8 @@ public class PosService {
                 .password(passwordEncode(randomPassword))
                 .build();
         kioskRepository.save(kiosk);
+
+        return new KioskRegisterResponse(kiosk.getId(), findPos.getId(), kiosk.getEmail(), randomPassword);
     }
 
     /**
@@ -85,7 +88,8 @@ public class PosService {
      * @return 랜덤 생성된 키오스크 이메일
      */
     public String randomEmail(Pos pos) {
-        String brandName = pos.getEmail().split("@")[0]; // 이메일의 @ 앞부분 추출
+
+        String brandName = pos.getCode().getName();
 
         StringBuilder sb = new StringBuilder();
         String newEmail;

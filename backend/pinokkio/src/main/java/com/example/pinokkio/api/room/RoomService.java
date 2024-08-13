@@ -2,6 +2,7 @@ package com.example.pinokkio.api.room;
 
 import com.example.pinokkio.api.kiosk.Kiosk;
 import com.example.pinokkio.api.kiosk.KioskRepository;
+import com.example.pinokkio.api.room.dto.response.KioskRoomResponse;
 import com.example.pinokkio.api.room.dto.response.RoomResponse;
 import com.example.pinokkio.api.teller.Teller;
 import com.example.pinokkio.api.user.UserService;
@@ -10,6 +11,7 @@ import com.example.pinokkio.exception.domain.kiosk.KioskNotFoundException;
 import com.example.pinokkio.exception.domain.room.RoomAccessRestrictedException;
 import com.example.pinokkio.exception.domain.room.RoomNotAvailableException;
 import com.example.pinokkio.exception.domain.room.RoomNotFoundException;
+import com.example.pinokkio.exception.domain.room.TokenCreateFailException;
 import io.openvidu.java.client.*;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
@@ -91,7 +93,7 @@ public class RoomService {
             return new RoomResponse(session.getSessionId(), token);
         } catch (OpenViduJavaClientException | OpenViduHttpException e) {
             log.error("Error creating new room for teller: {}", teller.getId(), e);
-            throw new RoomAccessRestrictedException("Failed to create new room");
+            throw new TokenCreateFailException();
         }
     }
 
@@ -177,7 +179,7 @@ public class RoomService {
     }
 
     @Transactional
-    public String enterRoom(UUID roomId, UUID kioskId) throws OpenViduJavaClientException, OpenViduHttpException {
+    public KioskRoomResponse enterRoom(UUID roomId, UUID kioskId) throws OpenViduJavaClientException, OpenViduHttpException {
         roomLock.lock();
         try {
             Room room = roomRepository.findById(roomId)
@@ -191,7 +193,11 @@ public class RoomService {
             roomRepository.save(room);
 
             log.info("Kiosk {} entered room {}", kioskId, roomId);
-            return createToken(roomId, kioskId, KIOSK_ROLE);
+
+            String videoToken = createToken(roomId, kioskId, KIOSK_ROLE);
+            String screenToken = createToken(roomId, kioskId, KIOSK_ROLE);
+
+            return new KioskRoomResponse(room.getRoomId().toString(), videoToken, screenToken);
         } finally {
             roomLock.unlock();
         }

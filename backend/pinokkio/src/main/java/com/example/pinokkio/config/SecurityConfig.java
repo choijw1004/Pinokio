@@ -80,7 +80,8 @@ public class SecurityConfig {
 
     private final String[] KIOSK_API_URL = {
             "/api/kiosk/**",
-            "/api/meeting/kiosk"
+            "/api/meeting/kiosk",
+            "/api/orders"
     };
 
 
@@ -97,9 +98,9 @@ public class SecurityConfig {
                 .authorizeRequests(c -> c.requestMatchers(SWAGGER_URL).permitAll()
                         .requestMatchers(HttpMethod.GET, GET_PERMIT_API_URL).permitAll()
                         .requestMatchers(HttpMethod.POST, POST_PERMIT_API_URL).permitAll()
+                        .requestMatchers(KIOSK_API_URL).hasRole("KIOSK")
                         .requestMatchers(POS_API_URL).hasAnyRole("POS", "KIOSK")
                         .requestMatchers(TELLER_API_URL).hasRole("TELLER")
-                        .requestMatchers(KIOSK_API_URL).hasRole("KIOSK")
                         .anyRequest().authenticated()
                 )
 
