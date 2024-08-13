@@ -10,12 +10,12 @@ import java.util.UUID;
 @Repository
 public interface SalesStatisticsRepository extends JpaRepository<SalesStatistics, UUID> {
 
-    List<SalesStatistics> findByPosIdAndPeriodTypeAndYearAndPeriodBetween(
+    List<SalesStatistics> findByPosIdAndPeriodTypeAndYearAndPeriodBetweenOrderByYearAscPeriodAsc(
             UUID posId, PeriodType periodType, int year, int startPeriod, int endPeriod);
 
-    Optional<SalesStatistics> findByPosIdAndPeriodTypeAndYearAndPeriod(
+    Optional<SalesStatistics> findByPosIdAndPeriodTypeAndYearAndPeriodOrderByYearAscPeriodAsc(
             UUID posId, PeriodType periodType, int year, int period);
 
-    List<SalesStatistics> findByPosIdAndPeriodTypeAndYearBetween(
+    List<SalesStatistics> findByPosIdAndPeriodTypeAndYearBetweenOrderByYearAscPeriodAsc(
             UUID posId, PeriodType periodType, int startYear, int endYear);
 }

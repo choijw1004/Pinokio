@@ -74,14 +74,14 @@ public class SalesStatisticsService {
         LocalDateTime start = getStartDateTime(date, periodType);
         LocalDateTime end = getEndDateTime(date, periodType);
 
-        List<Order> orders = orderRepository.findAllByPosIdAndCreatedDateBetween(posId, start, end);
+        List<Order> orders = orderRepository.findAllByPosIdAndCreatedDateBetweenOrderByCreatedDate(posId, start, end);
         log.info("Found {} orders for posId: {}, date: {}, periodType: {}", orders.size(), posId, date, periodType);
 
         long totalSales = orders.stream().mapToLong(Order::getTotalPrice).sum();
         log.info("Total sales for posId: {}, date: {}, periodType: {}: {}", posId, date, periodType, totalSales);
 
         SalesStatistics salesStatistics = salesStatisticsRepository
-                .findByPosIdAndPeriodTypeAndYearAndPeriod(posId, periodType, year, period)
+                .findByPosIdAndPeriodTypeAndYearAndPeriodOrderByYearAscPeriodAsc(posId, periodType, year, period)
                 .orElseGet(() -> new SalesStatistics(posId, year, period, periodType, 0));
 
         salesStatistics.setTotalSales(totalSales);
@@ -115,7 +115,7 @@ public class SalesStatisticsService {
 
         if (periodType == PeriodType.YEARLY) {
             List<SalesStatistics> salesList = salesStatisticsRepository
-                    .findByPosIdAndPeriodTypeAndYearBetween(posId, periodType, startYear, endYear);
+                    .findByPosIdAndPeriodTypeAndYearBetweenOrderByYearAscPeriodAsc(posId, periodType, startYear, endYear);
 
             return salesList.stream()
                     .map(sales -> new SalesStatisticsResponse(
@@ -130,7 +130,7 @@ public class SalesStatisticsService {
         int endPeriod = getPeriod(endDate, periodType);
 
         List<SalesStatistics> salesList = salesStatisticsRepository
-                .findByPosIdAndPeriodTypeAndYearAndPeriodBetween(posId, periodType, startYear, startPeriod, endPeriod);
+                .findByPosIdAndPeriodTypeAndYearAndPeriodBetweenOrderByYearAscPeriodAsc(posId, periodType, startYear, startPeriod, endPeriod);
 
         return salesList.stream()
                 .map(sales -> {
@@ -177,7 +177,7 @@ public class SalesStatisticsService {
         int period = getPeriod(date, periodType);
 
         SalesStatistics salesStatistics = salesStatisticsRepository
-                .findByPosIdAndPeriodTypeAndYearAndPeriod(posId, periodType, year, period)
+                .findByPosIdAndPeriodTypeAndYearAndPeriodOrderByYearAscPeriodAsc(posId, periodType, year, period)
                 .orElseGet(() -> new SalesStatistics(posId, year, period, periodType, 0));
 
         salesStatistics.setTotalSales(salesStatistics.getTotalSales() + priceDifference);
