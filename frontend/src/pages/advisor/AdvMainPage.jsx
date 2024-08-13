@@ -270,8 +270,13 @@ const AdvMainPage = () => {
 
       session.on('streamDestroyed', (event) => {
         const connectionId = event.stream.connection.connectionId;
-        handleCustomerDisconnect(connectionId);
-        console.log(`Subscriber removed: ${connectionId}`);
+        const kiosk = connectedKiosks.find(
+          (k) => k.connectionId === connectionId || k.screenId === connectionId
+        );
+        if (kiosk) {
+          handleCustomerDisconnect(kiosk.connectionId);
+          console.log(`Subscriber removed: ${connectionId}`);
+        }
       });
 
       session.on('exception', (exception) => {

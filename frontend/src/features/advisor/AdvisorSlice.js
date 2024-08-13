@@ -77,7 +77,7 @@ const advisorSlice = createSlice({
     disconnectKiosk: (state, action) => {
       const connectionId = action.payload;
       const connectedKiosk = state.connectedKiosks.find(
-        (kiosk) => kiosk.connectionId === connectionId
+        (kiosk) => kiosk.connectionId === connectionId || kiosk.screenId === connectionId
       );
       if (connectedKiosk) {
         const wasActive = connectedKiosk.isActive;
