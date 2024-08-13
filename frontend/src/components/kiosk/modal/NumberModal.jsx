@@ -78,20 +78,27 @@ const Button = styled.button`
 `;
 
 function NumberModal({ setModal, onConfirm }) {
-  const [number, setNumber] = useState('');
+  const [number, setNumber] = useState('010-');
 
   const handleNumberClick = (num) => {
-    if (number.length < 4) {
-      setNumber(number + num);
+    if (number.length < 13) {
+      if (number.length === 8) {
+        setNumber(number + '-' + num);
+      } else {
+        setNumber(number + num);
+      }
     }
   };
 
   const handleDelete = () => {
     setNumber(number.slice(0, -1));
+    if (number.length === 9) {
+      setNumber(number.slice(0, -1));
+    }
   };
 
   const handleConfirm = () => {
-    if (number.length === 4) {
+    if (number.length === 13) {
       onConfirm(number);
       setModal(false);
     }
@@ -100,7 +107,7 @@ function NumberModal({ setModal, onConfirm }) {
   return (
     <ModalBg>
       <Modal>
-        <Title>전화번호 뒷 4자리를 입력해주세요.</Title>
+        <Title>전화번호 뒷 8자리를 입력해주세요.</Title>
         <InputDisplay>{number}</InputDisplay>
         <NumberPad>
           {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((num) => (

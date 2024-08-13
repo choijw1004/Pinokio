@@ -78,7 +78,7 @@ const ProductModal = ({ product, categories, onClose }) => {
     } else {
       // URL을 Blob 객체로 변환하여 FormData에 추가
       const blob = new Blob([], { type: 'image/jpeg' }); // 빈 Blob 객체 생성
-      const fileName = 'https://pinokkio.s3.ap-northeast-2.amazonaws.com/item/noImage.jpg'; // 파일 이름 설정
+      const fileName = ''; // 파일 이름 설정
       formData.append('file', blob, fileName); // Blob 객체와 파일 이름을 함께 추가
       console.log(blob); // 이걸로 확인 가능
     }

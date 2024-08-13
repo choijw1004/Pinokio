@@ -20,15 +20,20 @@ const Image = styled.img`
 `;
 
 const MenuContents = styled.div`
-  padding-left: 1vw;
+  height: 100%;
+
   font-family: var(--font-CafeOhsquareAir);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 0.5rem 0.5rem;
 `;
 
 const MenuName = styled.div`
   font-size: 0.7rem;
 `;
 
-const MenuNameEng = styled.div`
+const MenuDetail = styled.div`
   font-size: 0.3rem;
 `;
 
@@ -62,7 +67,7 @@ function MenuMainCard({ menu, setSelectedMenu, setModal }) {
       <Image src={menu.file} />
       <MenuContents>
         <MenuName>{menu.name}</MenuName>
-        <MenuNameEng>{menu.detail}</MenuNameEng>
+        {/* <MenuDetail>{menu.detail}</MenuDetail> */}
         <MenuPrice>{menu.price}</MenuPrice>
       </MenuContents>
     </MMC>
