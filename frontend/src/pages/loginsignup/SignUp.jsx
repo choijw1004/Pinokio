@@ -301,7 +301,18 @@ function SignUp() {
             <VerifyBtn type="button" onClick={handleVerifyCode}>
               인증 확인
             </VerifyBtn>
-            {verificationMessage && <AddedMessage>{verificationMessage}</AddedMessage>}
+            {verificationMessage && (
+              <AddedMessage
+                style={{
+                  color:
+                    verificationMessage.includes('완료') || verificationMessage.includes('전송')
+                      ? 'limegreen'
+                      : 'red',
+                }}
+              >
+                {verificationMessage}
+              </AddedMessage>
+            )}
           </VerifyLabelContainer>
         )}
 
