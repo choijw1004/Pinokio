@@ -81,6 +81,7 @@ public class RoomService {
         Room newRoom = Room.builder()
                 .teller(teller)
                 .numberOfCustomers(0)
+                .active(true)
                 .build();
         roomRepository.save(newRoom);
 
@@ -100,6 +101,8 @@ public class RoomService {
     @Transactional
     public void deleteRoom() {
         Teller teller = userService.getCurrentTeller();
+        Room room = roomRepository.findByTeller(teller)
+                .orElseThrow(() -> new RoomNotFoundException("Room not found for teller: " + teller.getId()));
         roomRepository.deleteByTeller(teller);
         log.info("Room deleted for teller: {}", teller.getId());
     }
@@ -139,14 +142,21 @@ public class RoomService {
 
     public void sendRequestToAllActiveTellers() {
         Kiosk curKiosk = userService.getCurrentKiosk();
-        List<Session> activeSessions = openvidu.getActiveSessions();
+        List<Room> activeRooms = roomRepository.findAllByActiveTrue();
 
-        if (activeSessions.isEmpty()) {
-            throw new RoomAccessRestrictedException("No active sessions available");
+        if (activeRooms.isEmpty()) {
+            throw new RoomAccessRestrictedException("No active rooms available");
         }
 
-        for (Session session : activeSessions) {
-            processActiveSession(session, curKiosk);
+        for (Room room : activeRooms) {
+            Session session = openvidu.getActiveSession(room.getRoomId().toString());
+            if (session != null) {
+                processActiveSession(session, curKiosk);
+            } else {
+                // OpenVidu 세션이 없으면 방을 비활성화
+                room.setActive(false);
+                roomRepository.save(room);
+            }
         }
 
         log.info("Consultation request sent to all active tellers for kiosk: {}", curKiosk.getId());

@@ -3,6 +3,7 @@ package com.example.pinokkio.api.room;
 import com.example.pinokkio.api.teller.Teller;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -26,4 +27,6 @@ public interface RoomRepository extends JpaRepository<Room, UUID> {
      * 한 텔러는 최대 하나의 방만 가질 수 있다고 가정합니다.
      */
     Optional<Room> findByTeller(Teller teller);
+
+    List<Room> findAllByActiveTrue();
 }
