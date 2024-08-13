@@ -1,15 +1,7 @@
 version: '3'
 
 services:
-  openvidu:
-    image: openvidu/openvidu-server-kms:latest
-    container_name: openvidu
-    environment:
-      - OPENVIDU_SECRET=MY_SECRET
-      - OPENVIDU_CDR=true
-      - OPENVIDU_RECORDING=true
-    ports:
-      - "4443:4443"
+
   backend:
 
     container_name: pinokkio-backend
@@ -42,6 +34,8 @@ services:
     depends_on:
       - mysql
       - redis
+    networks:
+      - shared_network
 
   fast_pinokkio:
     container_name: fast-pinokkio-backend
@@ -55,6 +49,8 @@ services:
       - REDIS_PORT=6379
     depends_on:
       - redis
+    networks:
+      - shared_network
 
   frontend:
     build:
@@ -67,6 +63,8 @@ services:
       - /etc/letsencrypt:/etc/letsencrypt:ro
     depends_on:
       - backend
+    networks:
+      - shared_network
 
   mysql:
     image: mysql:8.0
@@ -77,12 +75,21 @@ services:
       - "3306:3306"
     volumes:
       - mysql-data:/var/lib/mysql
+    networks:
+      - shared_network
 
   redis:
     image: redis:latest
     ports:
       - "6379:6379"
+    networks:
+      - shared_network
 
 volumes:
   mysql-data:
+
+networks:
+  shared_network:
+      external: true
+
 
