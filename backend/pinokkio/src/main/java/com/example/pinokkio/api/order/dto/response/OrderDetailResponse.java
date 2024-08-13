@@ -16,6 +16,7 @@ public class OrderDetailResponse {
     private final UUID customerId;
     private final long totalAmount;
     private final LocalDateTime orderTime;
+    private final LocalDateTime cancelTime;
     private final OrderStatus status;
     private List<OrderItemDetail> items;
 
@@ -25,6 +26,7 @@ public class OrderDetailResponse {
         this.totalAmount = order.getTotalPrice();
         this.orderTime = order.getCreatedDate();
         this.status = order.getStatus();
+        this.cancelTime = order.getModifiedDate();
         this.items = new ArrayList<>();
     }
 
