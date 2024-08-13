@@ -5,6 +5,7 @@ const createInitialKioskState = (id) => ({
   status: 'waiting',
   kioskId: null,
   connectionId: null,
+  screenId: null,
   isActive: false,
 });
 
@@ -49,24 +50,41 @@ const advisorSlice = createSlice({
       }
     },
     updateKiosk: (state, action) => {
-      const { connectionId } = action.payload;
-      const targetKiosk = state.connectedKiosks.find(
-        (kiosk) => kiosk.status === 'connected' && !kiosk.connectionId
-      );
+      const { connectionId, streamType, userId, screenId } = action.payload;
+      const targetKiosk = state.connectedKiosks.find((kiosk) => kiosk.kioskId === userId);
       if (targetKiosk) {
-        targetKiosk.connectionId = connectionId;
+        if (streamType === 'SCREEN') {
+          targetKiosk.screenId = screenId;
+        } else if (streamType === 'CAMERA') {
+          targetKiosk.connectionId = connectionId;
+        }
+        targetKiosk.status = 'connected';
+      } else {
+        console.error(`Kiosk with userId ${userId} not found`);
+      }
+    },
+    updateKioskStream: (state, action) => {
+      const { connectionId, streamType, screenId } = action.payload;
+      const kiosk = state.connectedKiosks.find((k) => k.connectionId === connectionId);
+      if (kiosk) {
+        if (streamType === 'CAMERA') {
+          kiosk.connectionId = connectionId;
+        } else if (streamType === 'SCREEN') {
+          kiosk.screenId = screenId;
+        }
       }
     },
     disconnectKiosk: (state, action) => {
       const connectionId = action.payload;
       const connectedKiosk = state.connectedKiosks.find(
-        (kiosk) => kiosk.connectionId === connectionId
+        (kiosk) => kiosk.connectionId === connectionId || kiosk.screenId === connectionId
       );
       if (connectedKiosk) {
         const wasActive = connectedKiosk.isActive;
         connectedKiosk.status = 'waiting';
         connectedKiosk.kioskId = null;
         connectedKiosk.connectionId = null;
+        connectedKiosk.screenId = null;
         connectedKiosk.isActive = false;
         state.currentConnections -= 1;
         if (state.currentConnections < state.maxConnections) {
@@ -105,6 +123,7 @@ export const {
   setRoomInfo,
   connectKiosk,
   updateKiosk,
+  updateKioskStream,
   disconnectKiosk,
   setActiveKiosk,
   resetAdvisor,
