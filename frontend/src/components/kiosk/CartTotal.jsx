@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 
 const CT = styled.div`
@@ -25,8 +25,9 @@ const GoPaymentButton = styled.div`
   opacity: ${(props) => (props.disabled ? '0.5' : null)};
 `;
 
-function CartTotal({ cartItems, isElder, state }) {
+function CartTotal({ cartItems, isElder }) {
   const navigate = useNavigate();
+  const { state } = useLocation();
   const [totalPrice, setTotalPrice] = useState(0);
   useEffect(() => {
     calculatePrice();

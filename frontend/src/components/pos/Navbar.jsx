@@ -38,7 +38,9 @@ const NavbarMenu = styled.div`
 
 const colors = ['#EC7348', '#FFC33F', '#C383D9', '#7392FF']; // 빨강, 노랑, 보라, 파랑
 
-const NavbarItem = styled.div`
+const NavbarLink = styled(Link)`
+  text-decoration: none;
+  /*color: inherit; // 상속받은 색상 사용 */
   display: flex;
   align-items: center;
   margin: 1rem 1rem;
@@ -46,6 +48,7 @@ const NavbarItem = styled.div`
   cursor: pointer;
   position: relative;
   background-color: transparent; // 기본 배경색은 투명
+  border-radius: 1rem 0.3rem 0.3rem 1rem;
   color: black; // 기본 글자색은 검정색
   transition: background-color 0.3s ease, color 0.3s ease;
 
@@ -57,8 +60,8 @@ const NavbarItem = styled.div`
   &:before {
     content: '';
     display: block;
-    width: 0.75rem; // 점의 크기 증가
-    height: 0.75rem; // 점의 크기 증가
+    width: 0.5rem; // 점의 크기
+    height: 0.5rem;
     border-radius: 50%;
     background-color: ${({ index }) => colors[index % colors.length]}; // 기본 점 색상
     position: absolute;
@@ -72,11 +75,6 @@ const NavbarItem = styled.div`
   &:hover:before {
     background-color: white; // hover 시 점의 색상
   }
-`;
-
-const NavbarLink = styled(Link)`
-  text-decoration: none;
-  color: inherit; // 상속받은 색상 사용
 `;
 
 const LogoLocation = styled.div`
@@ -129,9 +127,11 @@ function Navbar({ isOpen, toggleNavbar }) {
       <RotatingSquareIcon setIsOn={toggleNavbar} size={0.07} />
       <NavbarMenu isOpen={isOpen}>
         {items.map((item, index) => (
-          <NavbarItem key={index} index={index} onClick={handleItemClick}>
-            <NavbarLink to={item.path}>{item.text}</NavbarLink>
-          </NavbarItem>
+          // <NavbarItem key={index} index={index} onClick={handleItemClick}>
+          <NavbarLink to={item.path} key={index} index={index} onClick={handleItemClick}>
+            {item.text}
+          </NavbarLink>
+          // </NavbarItem>
         ))}
         <LogOut
           onClick={() => {

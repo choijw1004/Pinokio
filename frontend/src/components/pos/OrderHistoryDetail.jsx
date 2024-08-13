@@ -147,7 +147,7 @@ function OrderHistoryDetail({ selectedOrder, setSelectedOrder }) {
             <div>결제 시간 </div>
             <div>{makeTimeFormat(new Date(selectedOrder.orderTime))}</div>
           </div>
-          {isCancelled ? (
+          {!isCancelled ? (
             <>
               <br />
               <br />

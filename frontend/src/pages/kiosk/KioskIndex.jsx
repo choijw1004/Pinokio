@@ -37,11 +37,18 @@ const KioskInline = styled.div`
 `;
 
 const WarningMessage = styled.div`
+  /* background-color: rgba(0, 0, 0, 0.5);
+  position: absolute;
+  display: flex;
+  top: 1rem;
+  width: 27rem;
+  height: 47rem; */
   position: fixed;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
   background-color: rgba(0, 0, 0, 0.8);
+  width: 10%;
   color: white;
   padding: 20px 40px;
   border-radius: 8px;
@@ -67,7 +74,7 @@ function KioskIndex() {
 
   const resetTimers = () => {
     // 경고 메시지 숨김
-    setWarning(false);
+    // setWarning(false);
 
     // 타이머 초기화
     if (warningTimerRef.current) {
@@ -132,7 +139,7 @@ function KioskIndex() {
     <KioskForm>
       <KioskOutline>
         <KioskInline>
-          {warning && (
+          {/* {warning && (
             <WarningMessage className={warning ? 'visible' : ''}>
               10초 후에 메인 페이지로 이동됩니다.
             </WarningMessage>
