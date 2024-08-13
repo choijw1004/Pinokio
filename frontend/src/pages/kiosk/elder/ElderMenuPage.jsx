@@ -106,6 +106,7 @@ function ElderMenuPage() {
   const [OV, setOV] = useState(null);
   const [session, setSession] = useState(null);
   const [publisher, setPublisher] = useState(null);
+  const [subscribers, setSubscribers] = useState([]);
   const [subscriber, setSubscriber] = useState(null);
 
   const userData = useSelector((store) => store.user);
@@ -201,7 +202,9 @@ function ElderMenuPage() {
       enterRoom(roomId, userData.typeInfo.kioskId)
         .then((response) => {
           console.log('enterRoom 성공', response);
-          initializeSession(response.token);
+          const videoToken = response.videoToken;
+          const screenToken = response.screenToken;
+          initializeSession(videoToken, screenToken);
           setOpenViduConnection(true);
         })
         .catch((error) => {
@@ -211,27 +214,29 @@ function ElderMenuPage() {
   }, [roomId, userData.typeInfo.kioskId, openViduConnection]);
 
   const initializeSession = useCallback(
-    async (token) => {
-      const ov = new OpenVidu();
-      setOV(ov);
+    async (videoToken, screenToken) => {
+      const OV = new OpenVidu();
+      const session = OV.initSession();
 
-      const session = ov.initSession();
+      setOV(OV);
       setSession(session);
 
       session.on('streamCreated', (event) => {
         const subscriber = session.subscribe(event.stream, undefined);
-        setSubscriber(subscriber);
+        setSubscribers((prevSubscribers) => [...prevSubscribers, subscriber]);
       });
 
       session.on('streamDestroyed', (event) => {
-        setSubscriber(null);
+        setSubscribers((prevSubscribers) =>
+          prevSubscribers.filter((sub) => sub !== event.stream.streamManager)
+        );
       });
 
       try {
-        await session.connect(token, { clientData: userData.typeInfo.kioskId });
+        await session.connect(videoToken, { clientData: userData.typeInfo.kioskId });
         console.log('OpenVidu 세션 연결 성공');
 
-        const publisher = await ov.initPublisherAsync(undefined, {
+        const publisher = await OV.initPublisherAsync(undefined, {
           audioSource: undefined,
           videoSource: undefined,
           publishAudio: true,
@@ -245,6 +250,35 @@ function ElderMenuPage() {
         await session.publish(publisher);
         setPublisher(publisher);
         console.log('키오스크 스트림 발행 성공');
+
+        // 화면 공유 발행
+        const screenSession = OV.initSession();
+        await screenSession.connect(screenToken, { clientData: 'screen' });
+
+        const screenPublisher = OV.initPublisher(undefined, {
+          videoSource: 'screen',
+          publishAudio: false,
+          publishVideo: true,
+          resolution: '1280x720',
+          frameRate: 30,
+          insertMode: 'APPEND',
+          mirror: false,
+        });
+
+        screenPublisher.once('accessAllowed', async () => {
+          try {
+            await screenSession.publish(screenPublisher);
+            console.log('화면 공유 스트림 발행 성공');
+          } catch (error) {
+            console.error('화면 공유 스트림 발행 오류:', error);
+          }
+        });
+
+        screenPublisher.once('accessDenied', () => {
+          console.warn('ScreenShare: Access Denied');
+        });
+
+        await screenPublisher.initialize();
       } catch (error) {
         console.error('세션 연결 또는 스트림 발행 오류:', error);
       }
@@ -255,8 +289,14 @@ function ElderMenuPage() {
   const handleLeaveRoom = async () => {
     try {
       setRoomId(null);
-      session.disconnect();
-      leaveRoom(roomId);
+      if (session) {
+        session.disconnect();
+      }
+      if (OV) {
+        const screenSession = OV.initSession();
+        screenSession.disconnect();
+      }
+      await leaveRoom(roomId);
       setOpenViduConnection(false);
       console.log('상담 종료 성공');
     } catch (error) {
@@ -278,7 +318,7 @@ function ElderMenuPage() {
         </KioskLeftHeader>
         <KioskRightHeader>
           <ScreenStyle>
-            {subscriber && <OpenViduVideoComponent streamManager={subscriber} />}
+            {subscribers.length > 0 && <OpenViduVideoComponent streamManager={subscribers[0]} />}
           </ScreenStyle>
           {session && <Button onClick={handleLeaveRoom}>상담 종료</Button>}
         </KioskRightHeader>

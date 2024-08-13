@@ -78,6 +78,22 @@ function CustomerWaitingRooms({ connectedKiosks, subscribers, onDisconnect, onSe
           (sub) => sub.stream.connection.connectionId === kiosk.connectionId
         );
 
+        let streamType = 'unknown';
+        let userId = '';
+        if (subscriber) {
+          try {
+            const connectionData = subscriber.stream.connection.data;
+            const [clientData, roleData] = connectionData.split('%/%');
+            const parsedClientData = JSON.parse(clientData);
+            const parsedRoleData = JSON.parse(roleData);
+
+            streamType = parsedClientData.clientData === 'screen' ? 'screen' : 'camera';
+            userId = parsedRoleData.userId;
+          } catch (error) {
+            console.error('Error processing connection data:', error);
+          }
+        }
+
         return (
           <Room
             key={kiosk.id}
@@ -92,7 +108,10 @@ function CustomerWaitingRooms({ connectedKiosks, subscribers, onDisconnect, onSe
               {kiosk.isActive ? (
                 <ActiveKioskIndicator>활성화됨</ActiveKioskIndicator>
               ) : (
-                subscriber && <OpenViduVideoComponent streamManager={subscriber} muted={true} />
+                subscriber &&
+                streamType === 'camera' && (
+                  <OpenViduVideoComponent streamManager={subscriber} muted={true} />
+                )
               )}
             </VideoContainer>
             <DisconnectButton
