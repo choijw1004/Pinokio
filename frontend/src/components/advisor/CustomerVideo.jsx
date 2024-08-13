@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import styled from 'styled-components';
-import OpenViduVideoComponent from '../advisor/OpenViduComponent';
+import OpenViduVideoComponent from './OpenViduVideoComponent';
 
 const VideoSection = styled.div`
   width: auto;

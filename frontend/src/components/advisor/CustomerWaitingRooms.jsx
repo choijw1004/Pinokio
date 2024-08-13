@@ -1,6 +1,6 @@
 import React from 'react';
 import styled from 'styled-components';
-import OpenViduVideoComponent from '../advisor/OpenViduComponent';
+import OpenViduVideoComponent from './OpenViduVideoComponent';
 
 const RoomsContainer = styled.div`
   display: flex;
@@ -99,7 +99,7 @@ function CustomerWaitingRooms({ connectedKiosks, subscribers, onDisconnect, onSe
             key={kiosk.id}
             $status={kiosk.status}
             $isActive={kiosk.isActive}
-            onClick={() => onSetActiveKiosk(kiosk.connectionId)}
+            onClick={() => onSetActiveKiosk(kiosk.connectionId, kiosk.screenId)}
           >
             <p>
               Room {kiosk.id} - {kiosk.status}
