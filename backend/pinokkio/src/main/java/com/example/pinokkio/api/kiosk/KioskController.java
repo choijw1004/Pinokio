@@ -37,7 +37,6 @@ public class KioskController {
         return ResponseEntity.ok(kioskResponse);
     }
 
-
     /**
      * 키오스크 회원탈퇴
      * @return ResponseEntity
@@ -51,6 +50,4 @@ public class KioskController {
         return ResponseEntity.noContent().build();
 
     }
-
-
 }
