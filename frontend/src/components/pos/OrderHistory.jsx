@@ -107,6 +107,7 @@ function OrderHistory({ selectedOrder, setSelectedOrder }) {
   const [startDate, endDate] = dateRange;
 
   useEffect(() => {
+    console.log('orders');
     // console.log('dateRange is changed');
     getOrders();
     // setSelectedOrder(orders[0]);
@@ -169,9 +170,11 @@ function OrderHistory({ selectedOrder, setSelectedOrder }) {
             >
               <>
                 <ColumnContent>{makeDateFormat(new Date(order.orderTime))}</ColumnContent>
-                <ColumnContent>{`${order.items[0].itemName} 외  ${
-                  order.items.length - 1
-                }건`}</ColumnContent>
+                <ColumnContent>
+                  {order.items && order.items.length > 0
+                    ? `${order.items[0].itemName} 외  ${order.items.length - 1}건`
+                    : '상품이 없습니다.'}
+                </ColumnContent>
                 <ColumnContent>{makeTimeFormat(new Date(order.orderTime))}</ColumnContent>
                 <ColumnContent>{changePriceForm(order.totalAmount)}</ColumnContent>
                 <ColumnContent>{order.status}</ColumnContent>

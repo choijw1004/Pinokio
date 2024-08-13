@@ -9,6 +9,7 @@ import { getItems, getItemsByKeyword } from '../../apis/Item'; // Import the API
 import { getCategories } from '../../apis/Category'; // Import the API function
 import { useSelector } from 'react-redux'; // Assuming you use Redux to get posId
 import Navbar from '../../components/pos/Navbar';
+import Select from 'react-select';
 
 const ProductManagementPageStyle = styled.div`
   width: 100%;
@@ -35,6 +36,51 @@ const Tab = styled.div`
   color: ${(props) => (props.isActive ? 'white' : 'black')};
 `;
 
+const TabBelowContainer = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem;
+  height: 2rem;
+  margin-bottom: 1rem;
+`;
+
+const ProductCreateButton = styled.button`
+  width: 5rem;
+  height: 2.2rem;
+  background-color: #007bff;
+  border: none;
+  border-radius: 5px;
+  color: white;
+`;
+
+const StyledSelect = styled(Select)`
+  width: 14rem;
+  margin: 10px 0;
+  margin-right: 32rem;
+`;
+
+const SearchForm = styled.form`
+  display: inline;
+  position: relative;
+`;
+
+const SearchInput = styled.input`
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+`;
+
+const SearchButton = styled.button`
+  margin-left: 8px;
+  padding: 8px 12px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+`;
+
 const ProductManagementPage = () => {
   const [isNavbarOpen, setIsNavbarOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('상품');
@@ -46,14 +92,13 @@ const ProductManagementPage = () => {
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [toastMessage, setToastMessage] = useState('');
   const [selectedCategoryFilter, setSelectedCategoryFilter] = useState('전체');
-  const [searchKeyword, setSearchKeyword] = useState(''); // Search keyword state
+  const [searchKeyword, setSearchKeyword] = useState('');
 
   const userData = useSelector((store) => store.user);
 
   useEffect(() => {
     const fetchItems = async () => {
       try {
-        console.log(userData.typeInfo.posId);
         const data = await getItems(userData.typeInfo.posId);
         setProducts(data.responseList);
         const categoryList = await getCategories();
@@ -65,6 +110,16 @@ const ProductManagementPage = () => {
 
     fetchItems();
   }, [userData.typeInfo.posId, isProductModalOpen, isCategoryModalOpen, selectedCategory]);
+
+  const handleSearch = async (e) => {
+    e.preventDefault(); // This prevents the form from being submitted the traditional way (refreshing the page)
+    try {
+      const result = await getItemsByKeyword(searchKeyword);
+      setProducts(result.responseList);
+    } catch (error) {
+      setToastMessage('상품 검색에 실패했습니다.');
+    }
+  };
 
   const handleAddProduct = () => {
     setSelectedProduct(null);
@@ -120,24 +175,20 @@ const ProductManagementPage = () => {
     setIsCategoryModalOpen(false);
   };
 
-  const handleSearch = async (e) => {
-    e.preventDefault();
-    try {
-      const result = await getItemsByKeyword(searchKeyword);
-      // console.log(`result : ${result}`);
-      // console.log(`searchKeyword : ${searchKeyword}`);
-      // console.log(`result.name: ${result.name}`);
-      // console.log(result);
-      setProducts(result.responseList);
-    } catch (error) {
-      setToastMessage('상품 검색에 실패했습니다.');
-    }
-  };
-
   const filteredProducts =
     selectedCategoryFilter === '전체'
       ? products
       : products.filter((product) => product.categoryId === selectedCategoryFilter);
+
+  const categoryOptions = [
+    { value: '전체', label: '전체' },
+    ...categories.map((category) => ({
+      value: category.id,
+      label: category.name,
+    })),
+  ];
+
+  const selectedOption = categoryOptions.find((option) => option.value === selectedCategoryFilter);
 
   return (
     <ProductManagementPageStyle>
@@ -153,27 +204,23 @@ const ProductManagementPage = () => {
         </TabContainer>
         {activeTab === '상품' && (
           <>
-            <button onClick={handleAddProduct}>상품 추가</button>
-            <select
-              value={selectedCategoryFilter}
-              onChange={(e) => setSelectedCategoryFilter(e.target.value)}
-            >
-              <option value="전체">전체</option>
-              {categories.map((category) => (
-                <option key={category.id} value={category.id}>
-                  {category.name}
-                </option>
-              ))}
-            </select>
-            <form onSubmit={handleSearch} style={{ display: 'inline' }}>
-              <input
-                type="text"
-                value={searchKeyword}
-                onChange={(e) => setSearchKeyword(e.target.value)}
-                placeholder="상품 검색"
+            <TabBelowContainer>
+              <ProductCreateButton onClick={handleAddProduct}>상품 추가</ProductCreateButton>
+              <StyledSelect
+                value={selectedOption}
+                onChange={(selectedOption) => setSelectedCategoryFilter(selectedOption.value)}
+                options={categoryOptions}
               />
-              <button type="submit">검색</button>
-            </form>
+              <SearchForm onSubmit={handleSearch}>
+                <SearchInput
+                  type="text"
+                  value={searchKeyword}
+                  onChange={(e) => setSearchKeyword(e.target.value)}
+                  placeholder="상품 검색"
+                />
+                <SearchButton type="submit">검색</SearchButton>
+              </SearchForm>
+            </TabBelowContainer>
             <ProductList
               products={filteredProducts}
               onEdit={handleEditProduct}

@@ -213,7 +213,7 @@ function SignUp() {
   const handleVerifyCode = async () => {
     try {
       const response = await checkAuth(verificationCode);
-      if (response.success) {
+      if (response) {
         setVerificationMessage('이메일 인증이 완료되었습니다.');
       } else {
         setVerificationMessage('인증 코드가 올바르지 않습니다.');
