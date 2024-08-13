@@ -79,15 +79,16 @@ public class ItemService {
      * 특정 포스의 아이템 생성
      */
     @Transactional
-    public Item createItem(ItemRequest itemRequest, String imageURL) {
+    public Item createItem(ItemRequest itemRequest, MultipartFile file) {
         Pos pos = userService.getCurrentPos();
+
+        String imageURL = DEFAULT_IMAGE_URL;
+        if (file != null) {
+            imageURL = imageService.uploadImage(file);
+        }
 
         Category findCategory = categoryRepository.findById(itemRequest.getCategoryId())
                 .orElseThrow(() -> new CategoryNotFoundException(itemRequest.getCategoryId()));
-
-        if (imageURL == null || imageURL.isEmpty()) {
-            imageURL = DEFAULT_IMAGE_URL;
-        }
 
         Item item = Item.builder()
                 .pos(pos)
