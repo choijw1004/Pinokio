@@ -83,7 +83,7 @@ public class ItemService {
         Pos pos = userService.getCurrentPos();
 
         String imageURL = DEFAULT_IMAGE_URL;
-        if (file != null) {
+        if (file != null && !file.isEmpty()) {
             imageURL = imageService.uploadImage(file);
         }
 
