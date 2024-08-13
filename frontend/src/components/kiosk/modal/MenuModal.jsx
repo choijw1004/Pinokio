@@ -175,7 +175,7 @@ function MenuModal({ item, cartItems, setCartItems, setModal, isElder }) {
       <Modal>
         <ImageAndContents>
           <ImageContainer>
-            <ModalImage src={coffeeimage} />
+            <ModalImage src={item.file} />
           </ImageContainer>
           <ModalBody>
             <MenuTitleKo>{item.name}</MenuTitleKo>

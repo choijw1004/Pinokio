@@ -43,11 +43,18 @@ const KioskInline = styled.div`
 `;
 
 const WarningMessage = styled.div`
+  /* background-color: rgba(0, 0, 0, 0.5);
+  position: absolute;
+  display: flex;
+  top: 1rem;
+  width: 27rem;
+  height: 47rem; */
   position: fixed;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
   background-color: rgba(0, 0, 0, 0.8);
+  width: 10%;
   color: white;
   padding: 20px 40px;
   border-radius: 8px;
@@ -66,11 +73,11 @@ const WarningMessage = styled.div`
 function KioskIndex() {
   const navigate = useNavigate();
   const [timer, setTimer] = useState(null);
-  const [warning, setWarning] = useState(false);
+  // const [warning, setWarning] = useState(false);
 
   const resetTimer = useCallback(() => {
     // 경고 메시지 숨김
-    setWarning(false);
+    // setWarning(false);
 
     // 기존 타이머 제거
     if (timer) {
@@ -79,14 +86,14 @@ function KioskIndex() {
 
     // 새 타이머 설정: 20초 후에 경고를 표시, 30초 후에 페이지 이동
     const newTimer = setTimeout(() => {
-      setWarning(true); // 20초 후 경고 표시
+      // setWarning(true); // 20초 후 경고 표시
 
       const navigateTimer = setTimeout(() => {
         navigate('/kiosk'); // 60초 후 페이지 이동
       }, 60000); // 60000ms = 60초
 
       setTimer(navigateTimer); // 새로운 타이머 설정
-    }, 50000); // 20000ms = 50초
+    }, 50000); // 50000ms = 50초
 
     setTimer(newTimer); // 새로운 타이머 설정
   }, [navigate, timer]);
@@ -115,11 +122,11 @@ function KioskIndex() {
     <KioskForm>
       <KioskOutline>
         <KioskInline>
-          {warning && (
+          {/* {warning && (
             <WarningMessage className={warning ? 'visible' : ''}>
               10초 뒤 아무 입력이 없으면 페이지가 이동됩니다.
             </WarningMessage>
-          )}
+          )} */}
           {/* <div style={{ width: '50%' }}> */}
           <Routes>
             <Route path="/" element={<CarouselPage />} />
