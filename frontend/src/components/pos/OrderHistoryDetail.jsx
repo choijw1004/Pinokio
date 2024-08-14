@@ -10,7 +10,7 @@ const ModalBg = styled.div`
   align-items: center;
   width: 100%;
   height: 100vh;
-  z-index: 11;
+  z-index: 1001;
 `;
 
 const SvgContainer = styled.div`
