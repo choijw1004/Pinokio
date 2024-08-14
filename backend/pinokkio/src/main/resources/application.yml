@@ -20,7 +20,7 @@ spring:
       max-request-size: 20MB
   redis:
     host: localhost
-    port: 6380
+    port: 6379
 
   mail:
     host: smtp.naver.com
