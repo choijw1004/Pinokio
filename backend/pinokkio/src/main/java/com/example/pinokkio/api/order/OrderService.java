@@ -120,8 +120,10 @@ public class OrderService {
      * @param customerId 고객 식별자
      * @return 가장 많이 주문된 아이템 정보를 담은 TopOrderedItemResponse
      */
-    public Optional<TopOrderedItemResponse> getTopOrderedItemByCustomerId(UUID customerId, UUID posId) {
+    public Optional<TopOrderedItemResponse> getTopOrderedItemByCustomerId(UUID customerId) {
         //검증
+        Kiosk currentKiosk = userService.getCurrentKiosk();
+        UUID posId = currentKiosk.getPos().getId();
         validateCustomer(customerId, posId);
         //리스트 생성
         List<Object[]> results = orderItemRepository.findTopOrderedItemsByCustomerId(customerId);
@@ -158,10 +160,12 @@ public class OrderService {
     /**
      * 특정 고객의 최근 주문에서 아이템 리스트를 반환한다.
      * @param customerId 고객 식별자
-     * @param posId      포스 식별자
      * @return 최근 주문의 아이템 리스트
      */
-    public List<OrderItem> getRecentOrderItemsByCustomerId(UUID customerId, UUID posId) {
+    public List<OrderItem> getRecentOrderItemsByCustomerId(UUID customerId) {
+        Kiosk currentKiosk = userService.getCurrentKiosk();
+        UUID posId = currentKiosk.getPos().getId();
+
         validateCustomer(customerId, posId);
         return orderRepository.findByCustomerIdOrderByCreatedDateDesc(customerId)
                 .stream()
