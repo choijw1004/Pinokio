@@ -219,7 +219,8 @@ function ElderMenuPage() {
       if (isSessionInitialized) return;
 
       setIsSessionInitialized(true);
-
+      
+      const OPENVIDU_SERVER_URL = 'https://i11a601.p.ssafy.io:8443';
       const OV = new OpenVidu();
       const cameraSessionObj = OV.initSession();
       const screenSessionObj = OV.initSession();
