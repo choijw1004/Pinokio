@@ -49,14 +49,12 @@ public class RoomController {
     @PostMapping("/teller/accept")
     public ResponseEntity<RoomResponse> acceptInvitation(
             @Validated @RequestBody RoomEnterRequest enterRequest) {
-        log.info("Accepting invitation for room: {}, kiosk: {}", enterRequest.getRoomId(), enterRequest.getKioskId());
         roomService.acceptInvitation(enterRequest.getRoomId(), enterRequest.getKioskId());
-        log.info("Invitation accepted successfully");
         return ResponseEntity.noContent().build();
     }
 
     @Operation(summary = "상담 요청 거부", description = "Teller가 상담 요청을 거부하는 경우")
-    @PreAuthorize("hasRole('ROLE_TELLER')")
+    @PreAuthorize("hasRole('ROLE_KIOSK')")
     @PostMapping("/kiosk/reject")
     public ResponseEntity<RoomResponse> rejectInvitation() {
         roomService.rejectInvitation();
