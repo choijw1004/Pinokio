@@ -237,7 +237,7 @@ public class InitService implements ApplicationListener<ContextRefreshedEvent> {
 
     private void addKiosks(Pos pos) {
         String domain = pos.getCode().getName();
-        for (int i = 1; i <= 3; i++) {
+        for (int i = 1; i <= 20; i++) {
             String email = "kiosk" + i + "@" + domain + ".com";
             kioskRepository.save(new Kiosk(pos, email, passwordEncoder.encode("1234")));
         }
@@ -245,7 +245,7 @@ public class InitService implements ApplicationListener<ContextRefreshedEvent> {
 
     private void addTellers(Pos pos) {
         String domain = pos.getCode().getName();
-        for (int i = 1; i <= 4; i++) {
+        for (int i = 1; i <= 20; i++) {
             String email = "teller" + i + "@" + domain + ".com";
             tellerRepository.save(new Teller(pos.getCode(), email, passwordEncoder.encode("1234")));
         }
