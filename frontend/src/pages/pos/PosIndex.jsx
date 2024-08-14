@@ -22,10 +22,9 @@ function PosIndex() {
   return (
     <PosIndexStyle>
       <Routes>
-        <Route path="/" element={<PosMainPage />} />
+        <Route path="/" element={<ProductManagementPage />} />
         <Route path="order-list" element={<OrderListPage />} />
         <Route path="kiosk-management" element={<KioskManagementPage />} />
-        <Route path="product-management" element={<ProductManagementPage />} />
         <Route path="sales-report" element={<SalesReportPage />} />
       </Routes>
     </PosIndexStyle>
