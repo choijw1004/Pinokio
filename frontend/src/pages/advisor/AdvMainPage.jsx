@@ -128,7 +128,7 @@ const AdvMainPage = () => {
     currentConnections : 현재 연결된 고객 수
   */
   const { isAvailable, currentConnections, maxConnections, roomToken, roomId, connectedKiosks } =
-      advisorData;
+    advisorData;
 
   // deltaY : 가운데 Bar의 y축 이동 거리 (개발 예쩡)
   const [deltaY, setDeltaY] = useState(0);
@@ -142,7 +142,7 @@ const AdvMainPage = () => {
 
   const leftmiddlebarRef = useRef();
 
-  /*  
+  /*
   isAccept : 연결 요청에 대한 답변
   요청이 오지 않아 toast가 뜨지 않은 상태는 "no request",
   요청이 들어왔지만 상담원이 아직 승낙/거절을 하지 않은 상태는 "waiting"
@@ -178,25 +178,25 @@ const AdvMainPage = () => {
   }, [dispatch, connect, isConnected]);
 
   const handleCustomerDisconnect = useCallback(
-      (connectionId) => {
-        dispatch(disconnectKiosk(connectionId));
-        setSubscribers((prevSubscribers) =>
-            prevSubscribers.filter((sub) => sub.stream.connection.connectionId !== connectionId)
-        );
-      },
-      [dispatch]
+    (connectionId) => {
+      dispatch(disconnectKiosk(connectionId));
+      setSubscribers((prevSubscribers) =>
+        prevSubscribers.filter((sub) => sub.stream.connection.connectionId !== connectionId)
+      );
+    },
+    [dispatch]
   );
 
   const handleCustomerConnect = useCallback(
-      (connectionId) => {
-        dispatch(
-            updateKiosk({
-              connectionId,
-            })
-        );
-        console.log(`Attempting to update kiosk with connectionId: ${connectionId}`);
-      },
-      [dispatch]
+    (connectionId) => {
+      dispatch(
+        updateKiosk({
+          connectionId,
+        })
+      );
+      console.log(`Attempting to update kiosk with connectionId: ${connectionId}`);
+    },
+    [dispatch]
   );
 
   const handleOnclick = () => {
@@ -211,110 +211,110 @@ const AdvMainPage = () => {
   };
 
   const initializeSession = useCallback(
-      async (roomId, token) => {
-        const ov = new OpenVidu();
-        setOV(ov);
+    async (roomId, token) => {
+      const ov = new OpenVidu();
+      setOV(ov);
 
-        const session = ov.initSession();
-        setSession(session);
+      const session = ov.initSession();
+      setSession(session);
 
-        // ICE 후보 처리를 위한 이벤트 리스너 추가
-        session.on('iceCandidate', (event) => {
-          session.sendIceCandidate(event.candidate);
+      // ICE 후보 처리를 위한 이벤트 리스너 추가
+      session.on('iceCandidate', (event) => {
+        session.sendIceCandidate(event.candidate);
+      });
+
+      session.on('streamCreated', (event) => {
+        const subscriber = session.subscribe(event.stream, undefined);
+        subscriber.on('streamPlaying', (e) => {
+          console.log('Subscriber stream playing');
+        });
+        subscriber.on('error', (error) => {
+          console.error('Subscriber error:', error);
         });
 
-        session.on('streamCreated', (event) => {
-          const subscriber = session.subscribe(event.stream, undefined);
-          subscriber.on('streamPlaying', (e) => {
-            console.log('Subscriber stream playing');
-          });
-          subscriber.on('error', (error) => {
-            console.error('Subscriber error:', error);
-          });
-
-          let streamType = 'unknown';
-          let userId = '';
-          try {
-            const connectionData = event.stream.connection.data;
-            console.log('Raw connection data:', connectionData);
-
-            const [clientData, roleData] = connectionData.split('%/%');
-            const parsedClientData = JSON.parse(clientData);
-            const parsedRoleData = JSON.parse(roleData);
-
-            streamType = parsedClientData.clientData === 'screen' ? 'SCREEN' : 'CAMERA';
-            userId = parsedRoleData.userId;
-
-            console.log('Processed stream type:', streamType);
-            console.log('User ID:', userId);
-          } catch (error) {
-            console.error('Error processing connection data:', error);
-          }
-
-          dispatch(
-              updateKiosk({
-                connectionId: event.stream.connection.connectionId,
-                streamType,
-                userId,
-                screenId: streamType === 'SCREEN' ? event.stream.connection.connectionId : undefined,
-              })
-          );
-
-          setSubscribers((prevSubscribers) => [...prevSubscribers, subscriber]);
-
-          console.log('New subscriber:', subscriber);
-          const connectionId = event.stream.connection.connectionId;
-          handleCustomerConnect(connectionId);
-          console.log(`New subscriber added: ${connectionId}`);
-
-          if (connectedKiosks.length === 1 && streamType === 'CAMERA') {
-            handleSetActiveKiosk(event.stream.connection.connectionId);
-          }
-        });
-
-        session.on('streamDestroyed', (event) => {
-          const connectionId = event.stream.connection.connectionId;
-          handleCustomerDisconnect(connectionId);
-          console.log(`Subscriber removed: ${connectionId}`);
-        });
-
-        session.on('exception', (exception) => {
-          console.warn('Exception in session:', exception);
-        });
-
-        const connectWithTimeout = (session, token, metadata, timeout = 10000) => {
-          return Promise.race([
-            session.connect(token, metadata),
-            new Promise((_, reject) =>
-                setTimeout(() => reject(new Error('Connection timeout')), timeout)
-            ),
-          ]);
-        };
-
+        let streamType = 'unknown';
+        let userId = '';
         try {
-          await connectWithTimeout(session, token, { clientData: userData.email });
-          console.log('OpenVidu 세션 연결 성공');
+          const connectionData = event.stream.connection.data;
+          console.log('Raw connection data:', connectionData);
 
-          const publisher = await ov.initPublisherAsync(undefined, {
-            audioSource: undefined,
-            videoSource: undefined,
-            publishAudio: true,
-            publishVideo: true,
-            resolution: '640x480',
-            frameRate: 30,
-            insertMode: 'APPEND',
-            mirror: false,
-          });
+          const [clientData, roleData] = connectionData.split('%/%');
+          const parsedClientData = JSON.parse(clientData);
+          const parsedRoleData = JSON.parse(roleData);
 
-          await session.publish(publisher);
-          setPublisher(publisher);
-          console.log('상담원 스트림 발행 성공');
+          streamType = parsedClientData.clientData === 'screen' ? 'SCREEN' : 'CAMERA';
+          userId = parsedRoleData.userId;
+
+          console.log('Processed stream type:', streamType);
+          console.log('User ID:', userId);
         } catch (error) {
-          console.error('세션 연결 또는 스트림 발행 오류:', error.name, error.message);
-          // 여기에 오류 처리 로직 추가 (예: 사용자에게 알림, 재연결 시도 등)
+          console.error('Error processing connection data:', error);
         }
-      },
-      [userData.email, handleCustomerConnect, handleCustomerDisconnect, connectedKiosks.length]
+
+        dispatch(
+          updateKiosk({
+            connectionId: event.stream.connection.connectionId,
+            streamType,
+            userId,
+            screenId: streamType === 'SCREEN' ? event.stream.connection.connectionId : undefined,
+          })
+        );
+
+        setSubscribers((prevSubscribers) => [...prevSubscribers, subscriber]);
+
+        console.log('New subscriber:', subscriber);
+        const connectionId = event.stream.connection.connectionId;
+        handleCustomerConnect(connectionId);
+        console.log(`New subscriber added: ${connectionId}`);
+
+        if (connectedKiosks.length === 1 && streamType === 'CAMERA') {
+          handleSetActiveKiosk(event.stream.connection.connectionId);
+        }
+      });
+
+      session.on('streamDestroyed', (event) => {
+        const connectionId = event.stream.connection.connectionId;
+        handleCustomerDisconnect(connectionId);
+        console.log(`Subscriber removed: ${connectionId}`);
+      });
+
+      session.on('exception', (exception) => {
+        console.warn('Exception in session:', exception);
+      });
+
+      const connectWithTimeout = (session, token, metadata, timeout = 10000) => {
+        return Promise.race([
+          session.connect(token, metadata),
+          new Promise((_, reject) =>
+            setTimeout(() => reject(new Error('Connection timeout')), timeout)
+          ),
+        ]);
+      };
+
+      try {
+        await connectWithTimeout(session, token, { clientData: userData.email });
+        console.log('OpenVidu 세션 연결 성공');
+
+        const publisher = await ov.initPublisherAsync(undefined, {
+          audioSource: undefined,
+          videoSource: undefined,
+          publishAudio: true,
+          publishVideo: true,
+          resolution: '640x480',
+          frameRate: 30,
+          insertMode: 'APPEND',
+          mirror: false,
+        });
+
+        await session.publish(publisher);
+        setPublisher(publisher);
+        console.log('상담원 스트림 발행 성공');
+      } catch (error) {
+        console.error('세션 연결 또는 스트림 발행 오류:', error.name, error.message);
+        // 여기에 오류 처리 로직 추가 (예: 사용자에게 알림, 재연결 시도 등)
+      }
+    },
+    [userData.email, handleCustomerConnect, handleCustomerDisconnect, connectedKiosks.length]
   );
   useEffect(() => {
     if (userData.token && !isConnected) {
@@ -390,11 +390,11 @@ const AdvMainPage = () => {
       const availableRoom = connectedKiosks.find((kiosk) => kiosk.status === 'waiting');
       if (availableRoom) {
         dispatch(
-            connectKiosk({
-              id: availableRoom.id,
-              kioskId: consultationRequest.kioskId,
-              status: 'connected',
-            })
+          connectKiosk({
+            id: availableRoom.id,
+            kioskId: consultationRequest.kioskId,
+            status: 'connected',
+          })
         );
         console.log('Updated connectedKiosks:', connectedKiosks);
       } else {
@@ -430,10 +430,10 @@ const AdvMainPage = () => {
 
     if (activeKiosk) {
       const newActiveSubscriber = subscribers.find(
-          (sub) => sub.stream.connection.connectionId === activeKiosk.connectionId
+        (sub) => sub.stream.connection.connectionId === activeKiosk.connectionId
       );
       const newActiveScreenSubscriber = subscribers.find(
-          (sub) => sub.stream.connection.connectionId === activeKiosk.screenId
+        (sub) => sub.stream.connection.connectionId === activeKiosk.screenId
       );
       console.log('newActiveSubscriber:', newActiveSubscriber);
       console.log('newActiveScreenSubscriber:', newActiveScreenSubscriber);
@@ -447,97 +447,97 @@ const AdvMainPage = () => {
   }, [connectedKiosks, subscribers]);
 
   const handleSetActiveKiosk = useCallback(
-      (connectionId, screenId) => {
-        console.log('handleSetActiveKiosk called with:', connectionId, screenId);
-        dispatch(setActiveKiosk(connectionId));
-        subscribers.forEach((subscriber) => {
-          const shouldSubscribe = subscriber.stream.connection.connectionId === connectionId;
-          console.log(
-              'Subscribing to audio:',
-              subscriber.stream.connection.connectionId,
-              shouldSubscribe
-          );
-          subscriber.subscribeToAudio(shouldSubscribe);
-        });
-        const activeScreenSubscriber = subscribers.find(
-            (sub) => sub.stream.connection.connectionId === screenId
+    (connectionId, screenId) => {
+      console.log('handleSetActiveKiosk called with:', connectionId, screenId);
+      dispatch(setActiveKiosk(connectionId));
+      subscribers.forEach((subscriber) => {
+        const shouldSubscribe = subscriber.stream.connection.connectionId === connectionId;
+        console.log(
+          'Subscribing to audio:',
+          subscriber.stream.connection.connectionId,
+          shouldSubscribe
         );
-        console.log('Found activeScreenSubscriber:', activeScreenSubscriber);
-        setActiveScreenSubscriber(activeScreenSubscriber || null);
-      },
-      [dispatch, subscribers]
+        subscriber.subscribeToAudio(shouldSubscribe);
+      });
+      const activeScreenSubscriber = subscribers.find(
+        (sub) => sub.stream.connection.connectionId === screenId
+      );
+      console.log('Found activeScreenSubscriber:', activeScreenSubscriber);
+      setActiveScreenSubscriber(activeScreenSubscriber || null);
+    },
+    [dispatch, subscribers]
   );
 
   return (
-      <AdvMainPageWrapper>
-        <AdvHeader>
-          <HeaderLeft>
-            <Logo size={'2.5rem'} />
-            <LogOut
-                onClick={() => {
-                  handleOnclick();
-                }}
-            >
-              로그아웃
-            </LogOut>
-          </HeaderLeft>
-          <HeaderRight>
-            <MaxButtonContainer>
-              <HeaderRightText>최대 상담 인원 수</HeaderRightText>
-              <UpDownButtons
-                  value={maxConnections}
-                  setValue={maxConnections}
-                  color={'#7392ff'}
-                  size={'2rem'}
-              />
-            </MaxButtonContainer>
-            <ToggleContainer>
-              <HeaderRightText>거절 모드</HeaderRightText>
-              <Toggle
-                  value={!isAvailable}
-                  setValue={(value) => dispatch(setAvailability(!value))}
-                  size={'3rem'}
-              />
-              <p>
-                연결 거절모드 토글 (현재 연결: {currentConnections}/{maxConnections})
-              </p>
-            </ToggleContainer>
-          </HeaderRight>
-        </AdvHeader>
-        <AdvBody onScroll={handleScroll}>
-          <LeftSection>
-            <LeftTopSection>
-              <CustomerVideo streamManager={activeSubscriber || null} />
-            </LeftTopSection>
-            <LeftMiddleBarRef ref={leftmiddlebarRef} />
-            <LeftBottomSection>
-              <CustomerWaiting
-                  connectedKiosks={connectedKiosks}
-                  subscribers={subscribers}
-                  onDisconnect={handleCustomerDisconnect}
-                  onSetActiveKiosk={handleSetActiveKiosk}
-              />
-            </LeftBottomSection>
-          </LeftSection>
-          <MiddleBar ref={middlebarRef} deltaY={deltaY} />
-          <RightSection>
-            <CustomerKiosk streamManager={activeScreenSubscriber || null} />
-          </RightSection>
-          {isAccept !== 'no request' && (
-              <Toast
-                  message={'서비스 요청이 있습니다. 수락하시겠습니까?'}
-                  setAnswer={setIsAccept}
-                  makeButton={true}
-              ></Toast>
-          )}
-        </AdvBody>
-        <Modal isOpen={showModal} onRequestClose={handleRejectMeeting} contentLabel="상담 요청">
-          <h2>상담 요청이 왔습니다</h2>
-          <p>수락하시겠습니까?</p>
-          <button onClick={handleAcceptMeeting}>수락</button>
-          <button onClick={handleRejectMeeting}>거절</button>
-        </Modal>
-      </AdvMainPageWrapper>
+    <AdvMainPageWrapper>
+      <AdvHeader>
+        <HeaderLeft>
+          <Logo size={'2.5rem'} />
+          <LogOut
+            onClick={() => {
+              handleOnclick();
+            }}
+          >
+            로그아웃
+          </LogOut>
+        </HeaderLeft>
+        <HeaderRight>
+          <MaxButtonContainer>
+            <HeaderRightText>최대 상담 인원 수</HeaderRightText>
+            <UpDownButtons
+              value={maxConnections}
+              setValue={maxConnections}
+              color={'#7392ff'}
+              size={'2rem'}
+            />
+          </MaxButtonContainer>
+          <ToggleContainer>
+            <HeaderRightText>거절 모드</HeaderRightText>
+            <Toggle
+              value={!isAvailable}
+              setValue={(value) => dispatch(setAvailability(!value))}
+              size={'3rem'}
+            />
+            <p>
+              연결 거절모드 토글 (현재 연결: {currentConnections}/{maxConnections})
+            </p>
+          </ToggleContainer>
+        </HeaderRight>
+      </AdvHeader>
+      <AdvBody onScroll={handleScroll}>
+        <LeftSection>
+          <LeftTopSection>
+            <CustomerVideo streamManager={activeSubscriber || null} />
+          </LeftTopSection>
+          <LeftMiddleBarRef ref={leftmiddlebarRef} />
+          <LeftBottomSection>
+            <CustomerWaiting
+              connectedKiosks={connectedKiosks}
+              subscribers={subscribers}
+              onDisconnect={handleCustomerDisconnect}
+              onSetActiveKiosk={handleSetActiveKiosk}
+            />
+          </LeftBottomSection>
+        </LeftSection>
+        <MiddleBar ref={middlebarRef} deltaY={deltaY} />
+        <RightSection>
+          <CustomerKiosk streamManager={activeScreenSubscriber || null} />
+        </RightSection>
+        {isAccept !== 'no request' && (
+          <Toast
+            message={'서비스 요청이 있습니다. 수락하시겠습니까?'}
+            setAnswer={setIsAccept}
+            makeButton={true}
+          ></Toast>
+        )}
+      </AdvBody>
+      <Modal isOpen={showModal} onRequestClose={handleRejectMeeting} contentLabel="상담 요청">
+        <h2>상담 요청이 왔습니다</h2>
+        <p>수락하시겠습니까?</p>
+        <button onClick={handleAcceptMeeting}>수락</button>
+        <button onClick={handleRejectMeeting}>거절</button>
+      </Modal>
+    </AdvMainPageWrapper>
   );
 };
 

@@ -201,94 +201,94 @@ function ElderMenuPage() {
     if (roomId && userData.typeInfo.kioskId && !openViduConnection) {
       console.log('enterRoom 호출:', roomId, userData.typeInfo.kioskId);
       enterRoom(roomId, userData.typeInfo.kioskId)
-          .then((response) => {
-            console.log('enterRoom 성공', response);
-            const videoToken = response.videoToken;
-            const screenToken = response.screenToken;
-            initializeSession(videoToken, screenToken);
-            setOpenViduConnection(true);
-          })
-          .catch((error) => {
-            console.error('enterRoom 오류:', error);
-          });
+        .then((response) => {
+          console.log('enterRoom 성공', response);
+          const videoToken = response.videoToken;
+          const screenToken = response.screenToken;
+          initializeSession(videoToken, screenToken);
+          setOpenViduConnection(true);
+        })
+        .catch((error) => {
+          console.error('enterRoom 오류:', error);
+        });
     }
   }, [roomId, userData.typeInfo.kioskId, openViduConnection]);
 
   const initializeSession = useCallback(
-      async (videoToken, screenToken) => {
-        if (isSessionInitialized) return;
+    async (videoToken, screenToken) => {
+      if (isSessionInitialized) return;
 
-        setIsSessionInitialized(true);
+      setIsSessionInitialized(true);
 
-        const OV = new OpenVidu();
-        const cameraSessionObj = OV.initSession();
-        const screenSessionObj = OV.initSession();
+      const OV = new OpenVidu();
+      const cameraSessionObj = OV.initSession();
+      const screenSessionObj = OV.initSession();
 
-        setCameraSession(cameraSessionObj);
-        setScreenSession(screenSessionObj);
+      setCameraSession(cameraSessionObj);
+      setScreenSession(screenSessionObj);
 
-        cameraSessionObj.on('streamCreated', (event) => {
-          const subscriber = cameraSessionObj.subscribe(event.stream, undefined);
-          setSubscribers((prevSubscribers) => [...prevSubscribers, subscriber]);
+      cameraSessionObj.on('streamCreated', (event) => {
+        const subscriber = cameraSessionObj.subscribe(event.stream, undefined);
+        setSubscribers((prevSubscribers) => [...prevSubscribers, subscriber]);
+      });
+
+      cameraSessionObj.on('streamDestroyed', (event) => {
+        setSubscribers((prevSubscribers) =>
+          prevSubscribers.filter((sub) => sub !== event.stream.streamManager)
+        );
+      });
+
+      try {
+        await cameraSessionObj.connect(videoToken, { clientData: userData.typeInfo.kioskId });
+        console.log('카메라 세션 연결 성공');
+
+        const publisher = await OV.initPublisherAsync(undefined, {
+          audioSource: undefined,
+          videoSource: undefined,
+          publishAudio: true,
+          publishVideo: true,
+          resolution: '640x480',
+          frameRate: 30,
+          insertMode: 'APPEND',
+          mirror: false,
         });
 
-        cameraSessionObj.on('streamDestroyed', (event) => {
-          setSubscribers((prevSubscribers) =>
-              prevSubscribers.filter((sub) => sub !== event.stream.streamManager)
-          );
-        });
+        await cameraSessionObj.publish(publisher);
+        setPublisher(publisher);
+        console.log('카메라 스트림 발행 성공');
 
-        try {
-          await cameraSessionObj.connect(videoToken, { clientData: userData.typeInfo.kioskId });
-          console.log('카메라 세션 연결 성공');
+        await screenSessionObj.connect(screenToken, { clientData: 'screen' });
+        console.log('화면 공유 세션 연결 성공');
 
-          const publisher = await OV.initPublisherAsync(undefined, {
-            audioSource: undefined,
-            videoSource: undefined,
-            publishAudio: true,
-            publishVideo: true,
-            resolution: '640x480',
-            frameRate: 30,
-            insertMode: 'APPEND',
-            mirror: false,
-          });
+        const requestScreenShare = async () => {
+          try {
+            const screenPublisher = await OV.initPublisherAsync(undefined, {
+              videoSource: 'screen',
+              publishAudio: false,
+              publishVideo: true,
+              resolution: '1280x720',
+              frameRate: 30,
+              insertMode: 'APPEND',
+              mirror: false,
+            });
 
-          await cameraSessionObj.publish(publisher);
-          setPublisher(publisher);
-          console.log('카메라 스트림 발행 성공');
-
-          await screenSessionObj.connect(screenToken, { clientData: 'screen' });
-          console.log('화면 공유 세션 연결 성공');
-
-          const requestScreenShare = async () => {
-            try {
-              const screenPublisher = await OV.initPublisherAsync(undefined, {
-                videoSource: 'screen',
-                publishAudio: false,
-                publishVideo: true,
-                resolution: '1280x720',
-                frameRate: 30,
-                insertMode: 'APPEND',
-                mirror: false,
-              });
-
-              await screenSessionObj.publish(screenPublisher);
-              console.log('화면 공유 스트림 발행 성공');
-            } catch (error) {
-              if (error.name === 'SCREEN_CAPTURE_DENIED') {
-                console.warn('화면 공유가 사용자에 의해 취소되었습니다.');
-              } else {
-                console.error('화면 공유 스트림 발행 오류:', error);
-              }
+            await screenSessionObj.publish(screenPublisher);
+            console.log('화면 공유 스트림 발행 성공');
+          } catch (error) {
+            if (error.name === 'SCREEN_CAPTURE_DENIED') {
+              console.warn('화면 공유가 사용자에 의해 취소되었습니다.');
+            } else {
+              console.error('화면 공유 스트림 발행 오류:', error);
             }
-          };
+          }
+        };
 
-          await requestScreenShare();
-        } catch (error) {
-          console.error('세션 연결 또는 스트림 발행 오류:', error);
-        }
-      },
-      [userData.typeInfo.kioskId]
+        await requestScreenShare();
+      } catch (error) {
+        console.error('세션 연결 또는 스트림 발행 오류:', error);
+      }
+    },
+    [userData.typeInfo.kioskId]
   );
 
   const handleLeaveRoom = useCallback(async () => {
@@ -309,57 +309,57 @@ function ElderMenuPage() {
   }, [cameraSession, screenSession, roomId]);
 
   return (
-      <ElderMenuPageStyle>
-        <KioskHeader>
-          <KioskLeftHeader>
-            <Logo
-                onClick={() => {
-                  handleClick();
-                }}
-            >
-              Pinokio
-            </Logo>
-          </KioskLeftHeader>
-          <KioskRightHeader>
-            <ScreenStyle>
-              {subscribers.length > 0 && <OpenViduVideoComponent streamManager={subscribers[0]} />}
-            </ScreenStyle>
-            {(cameraSession || screenSession) && <Button onClick={handleLeaveRoom}>상담 종료</Button>}
-          </KioskRightHeader>
-        </KioskHeader>
-        <KioskBody>
-          <KioskCategoriesStyle>
-            {categories.length > 0 && selectedCategory && (
-                <ElderMenuCategory
-                    categories={categories}
-                    selectedCategory={selectedCategory}
-                    setSelectedCategory={setSelectedCategory}
-                />
-            )}
-          </KioskCategoriesStyle>
-          <KioskMenusStyle>
-            {menus.length > 0 && selectedCategory && (
-                <MenuMain
-                    selectedCategory={selectedCategory}
-                    setSelectedMenu={setSelectedMenu}
-                    setModal={setModal}
-                    menus={menus}
-                />
-            )}
-          </KioskMenusStyle>
-        </KioskBody>
-        <Cart cartItems={cartItems} setCartItems={setCartItems} isElder={true} />
+    <ElderMenuPageStyle>
+      <KioskHeader>
+        <KioskLeftHeader>
+          <Logo
+            onClick={() => {
+              handleClick();
+            }}
+          >
+            Pinokio
+          </Logo>
+        </KioskLeftHeader>
+        <KioskRightHeader>
+          <ScreenStyle>
+            {subscribers.length > 0 && <OpenViduVideoComponent streamManager={subscribers[0]} />}
+          </ScreenStyle>
+          {(cameraSession || screenSession) && <Button onClick={handleLeaveRoom}>상담 종료</Button>}
+        </KioskRightHeader>
+      </KioskHeader>
+      <KioskBody>
+        <KioskCategoriesStyle>
+          {categories.length > 0 && selectedCategory && (
+            <ElderMenuCategory
+              categories={categories}
+              selectedCategory={selectedCategory}
+              setSelectedCategory={setSelectedCategory}
+            />
+          )}
+        </KioskCategoriesStyle>
+        <KioskMenusStyle>
+          {menus.length > 0 && selectedCategory && (
+            <MenuMain
+              selectedCategory={selectedCategory}
+              setSelectedMenu={setSelectedMenu}
+              setModal={setModal}
+              menus={menus}
+            />
+          )}
+        </KioskMenusStyle>
+      </KioskBody>
+      <Cart cartItems={cartItems} setCartItems={setCartItems} isElder={true} />
 
-        {modal && (
-            <MenuModal
-                item={selectedMenu}
-                cartItems={cartItems}
-                setCartItems={setCartItems}
-                setModal={setModal}
-                isElder={true}
-            ></MenuModal>
-        )}
-      </ElderMenuPageStyle>
+      {modal && (
+        <MenuModal
+          item={selectedMenu}
+          cartItems={cartItems}
+          setCartItems={setCartItems}
+          setModal={setModal}
+          isElder={true}
+        ></MenuModal>
+      )}
+    </ElderMenuPageStyle>
   );
 }
 
