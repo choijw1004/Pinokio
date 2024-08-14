@@ -224,8 +224,8 @@ function ElderMenuPage() {
       const ov = new OpenVidu();
       ov.setAdvancedConfiguration({ openviduServerUrl: OPENVIDU_SERVER_URL });
       setOV(ov);
-      const cameraSessionObj = OV.initSession();
-      const screenSessionObj = OV.initSession();
+      const cameraSessionObj = ov.initSession();
+      const screenSessionObj = .initSession();
 
       setCameraSession(cameraSessionObj);
       setScreenSession(screenSessionObj);
