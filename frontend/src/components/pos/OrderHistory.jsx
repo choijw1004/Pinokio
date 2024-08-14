@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import styled from 'styled-components';
 import RangeDatePicker from './RangeDatePicker';
@@ -35,16 +34,6 @@ const ColumnContent = styled.div`
   justify-content: center;
 `;
 
-const CancelledText = styled.div`
-  text-decoration: line-through;
-`;
-
-const SelectPayment = styled.div`
-  display: flex;
-  justify-content: space-between;
-  font-weight: bolder;
-`;
-
 const FilterContainer = styled.div`
   display: flex;
   justify-content: space-between;
@@ -57,19 +46,6 @@ const SearchBar = styled.input`
 
   font-size: 2rem;
   &:focus {
-    outline: none;
-  }
-`;
-// 날짜 선택기의 입력 필드를 스타일링
-const DateInput = styled.input`
-  width: 318px;
-  padding: 10px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  font-size: 16px;
-  color: #333;
-  &:focus {
-    border-color: #007bff;
     outline: none;
   }
 `;
@@ -91,16 +67,9 @@ const OrderListEach = styled.div`
   margin: 0.2rem 0;
 `;
 
-const Menu = styled.div`
-  margin-top: 15px;
+const Product = styled.div`
+  font-size: 12px;
 `;
-
-const OrderStatus = styled.div`
-  display: flex;
-  justify-content: space-between;
-  margin-top: 15px;
-`;
-
 function OrderHistory({ selectedOrder, setSelectedOrder }) {
   const [orders, setOrders] = useState(null);
   const [dateRange, setDateRange] = useState([new Date(), new Date()]);
@@ -171,24 +140,17 @@ function OrderHistory({ selectedOrder, setSelectedOrder }) {
               <>
                 <ColumnContent>{makeDateFormat(new Date(order.orderTime))}</ColumnContent>
                 <ColumnContent>
-                  {order.items && order.items.length > 0
-                    ? `${order.items[0].itemName} 외  ${order.items.length - 1}건`
-                    : '상품이 없습니다.'}
+                  <Product>
+                    {order.items && order.items.length > 0
+                      ? order.items.length === 1
+                        ? `${order.items[0].itemName}`
+                        : `${order.items[0].itemName} 외 ${order.items.length - 1}건`
+                      : '상품이 없습니다.'}
+                  </Product>
                 </ColumnContent>
                 <ColumnContent>{makeTimeFormat(new Date(order.orderTime))}</ColumnContent>
                 <ColumnContent>{changePriceForm(order.totalAmount)}</ColumnContent>
                 <ColumnContent>{order.status}</ColumnContent>
-                {/* <SelectPayment>
-                    <div>{order.paymentMethod}</div>
-                    <div>{order.totalAmount}원</div>
-                  </SelectPayment>
-                  <Menu>
-                    {order.items.map((item) => `${item.itemName} ${item.quantity}개`).join(', ')}{' '}
-                  </Menu>
-                  <OrderStatus>
-                    <div>주문시간 # {new Date(order.orderTime).toLocaleString()}</div>
-                    <div>결제완료</div>
-                  </OrderStatus> */}
               </>
             </OrderListEach>
           ))}

@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Route, Routes, useNavigate } from 'react-router-dom';
+import { Route, Routes, useNavigate, useLocation } from 'react-router-dom';
 import CarouselPage from './CarouselPage';
 import MenuPage from './younger/MenuPage';
 import PaymentPage from './younger/PaymentPage';
@@ -59,6 +59,7 @@ const WarningMessage = styled.div`
 
 function KioskIndex() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [warning, setWarning] = useState(false);
   const warningTimerRef = useRef(null);
   const navigateTimerRef = useRef(null);
@@ -77,17 +78,20 @@ function KioskIndex() {
       clearTimeout(navigateTimerRef.current);
     }
 
-    // 50초 후 경고 메시지 표시
-    warningTimerRef.current = setTimeout(() => {
-      setWarning(true);
+    // 현재 페이지가 /kiosk가 아닐 때만 타이머 시작
+    if (location.pathname !== '/kiosk') {
+      // 50초 후 경고 메시지 표시
+      warningTimerRef.current = setTimeout(() => {
+        setWarning(true);
 
-      // 10초 후 페이지 이동
-      navigateTimerRef.current = setTimeout(() => {
-        navigate('/kiosk');
-      }, 10000); // 10000ms = 10초
-    }, 50000); // 50000ms = 50초
+        // 10초 후 페이지 이동
+        navigateTimerRef.current = setTimeout(() => {
+          navigate('/kiosk');
+        }, 10000); // 10000ms = 10초
+      }, 50000); // 50000ms = 50초
 
-    idleTimeRef.current = 0; // idleTimeRef 초기화
+      idleTimeRef.current = 0; // idleTimeRef 초기화
+    }
   };
 
   useEffect(() => {
@@ -105,7 +109,7 @@ function KioskIndex() {
       idleTimeRef.current += 1000; // 1초마다 idleTimeRef 증가
 
       // 60초 동안 아무 이벤트도 없으면 페이지 이동
-      if (idleTimeRef.current >= 60000) {
+      if (idleTimeRef.current >= 60000 && location.pathname !== '/kiosk') {
         clearInterval(intervalRef.current);
         navigate('/kiosk');
       }
@@ -126,7 +130,14 @@ function KioskIndex() {
         clearInterval(intervalRef.current);
       }
     };
-  }, [navigate]);
+  }, [navigate, location.pathname]);
+
+  // /kiosk 경로로 이동할 때 타이머 초기화
+  useEffect(() => {
+    if (location.pathname === '/kiosk') {
+      resetTimers();
+    }
+  }, [location.pathname]);
 
   return (
     <KioskForm>

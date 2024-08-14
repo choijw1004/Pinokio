@@ -2,9 +2,9 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import styled from 'styled-components';
-import carouselimage from '../../assets/images/carouselimage.jpg';
-import carouselimage2 from '../../assets/images/carouselimage2.jpg';
-import carouselimage3 from '../../assets/images/carouselimage3.jpg';
+import carouselimage from '../../assets/images/carouselimage.webp';
+import carouselimage2 from '../../assets/images/carouselimage2.webp';
+import carouselimage3 from '../../assets/images/carouselimage3.webp';
 import NumberModal from '../../components/kiosk/modal/NumberModal';
 import axios from 'axios';
 

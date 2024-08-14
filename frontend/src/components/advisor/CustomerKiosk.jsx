@@ -1,6 +1,6 @@
 import React from 'react';
 import styled from 'styled-components';
-import OpenViduVideoComponent from './OpenViduComponent';
+import OpenViduVideoComponent from './OpenViduVideoComponent';
 
 const CustomerKioskContainer = styled.div`
   width: 100%;
@@ -17,22 +17,11 @@ const VideoContainer = styled.div`
 `;
 
 function CustomerKiosk({ streamManager }) {
-  let streamType = 'unknown';
-  if (streamManager) {
-    try {
-      const connectionData = streamManager.stream.connection.data;
-      const [clientData] = connectionData.split('%/%');
-      const parsedClientData = JSON.parse(clientData);
-      streamType = parsedClientData.clientData;
-    } catch (error) {
-      console.error('Error processing connection data:', error);
-    }
-  }
-
+  console.log('CustomerKiosk rendered with streamManager:', streamManager);
   return (
     <CustomerKioskContainer>
       <VideoContainer>
-        {streamManager && streamType === 'screen' ? (
+        {streamManager ? (
           <OpenViduVideoComponent streamManager={streamManager} />
         ) : (
           <p>화면 공유가 시작되지 않았습니다.</p>

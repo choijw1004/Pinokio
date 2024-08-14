@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import styled from 'styled-components';
 import ToggleButton from '../common/Toggle';
-import { postItem } from '../../apis/Item';
+import { postItem, putItem, itemScreenToggle, itemSoldOutToggle } from '../../apis/Item';
 
 const Modal = styled.div`
   position: fixed;
@@ -31,8 +31,9 @@ const ProductModal = ({ product, categories, onClose }) => {
   const [image, setImage] = useState(null);
   const [detail, setDetail] = useState('');
   const [isScreen, setIsScreen] = useState(false);
-  const [isSoldout, setIsSoldout] = useState(false);
+  const [isSoldOut, setIsSoldout] = useState(false);
   const [category, setCategory] = useState('');
+
   useEffect(() => {
     if (product !== null) {
       console.log(product);
@@ -46,7 +47,7 @@ const ProductModal = ({ product, categories, onClose }) => {
         .name;
       setCategory(categoryName);
       setIsScreen(product.isScreen);
-      setIsSoldout(product.isSoldout);
+      setIsSoldout(product.isSoldOut);
     }
   }, []);
   const handleSave = async () => {
@@ -55,39 +56,71 @@ const ProductModal = ({ product, categories, onClose }) => {
       return;
     }
 
-    const categoryId = categories.find((cat) => cat.name === category)?.id;
-
-    const itemRequest = {
-      categoryId,
-      name,
-      price: parseInt(price),
-      amount: parseInt(amount),
-      detail,
-      // isScreen,
-      // isSoldout,
-    };
-
     const formData = new FormData();
-    formData.append(
-      'itemRequest',
-      new Blob([JSON.stringify(itemRequest)], { type: 'application/json' })
-    );
-    if (image) {
-      formData.append('file', image);
-      console.log(image);
+
+    if (product === null) {
+      const categoryId = categories.find((cat) => cat.name === category)?.id;
+
+      const itemRequest = {
+        categoryId,
+        name,
+        price: parseInt(price),
+        amount: parseInt(amount),
+        detail,
+      };
+
+      formData.append(
+        'itemRequest',
+        new Blob([JSON.stringify(itemRequest)], { type: 'application/json' })
+      );
+      if (image) {
+        formData.append('file', image);
+        console.log(image);
+      } else {
+        // URL을 Blob 객체로 변환하여 FormData에 추가
+        const blob = new Blob([], { type: 'image/jpeg' }); // 빈 Blob 객체 생성
+        const fileName = ''; // 파일 이름 설정
+        formData.append('file', blob, fileName); // Blob 객체와 파일 이름을 함께 추가
+        console.log(blob); // 이걸로 확인 가능
+      }
     } else {
-      // URL을 Blob 객체로 변환하여 FormData에 추가
-      const blob = new Blob([], { type: 'image/jpeg' }); // 빈 Blob 객체 생성
-      const fileName = ''; // 파일 이름 설정
-      formData.append('file', blob, fileName); // Blob 객체와 파일 이름을 함께 추가
-      console.log(blob); // 이걸로 확인 가능
+      const categoryId = categories.find((cat) => cat.name === category)?.id;
+
+      const updateItemRequest = {
+        categoryId,
+        name,
+        price: parseInt(price),
+        amount: parseInt(amount),
+        detail,
+        isScreen,
+        isSoldOut,
+      };
+
+      formData.append(
+        'updateItemRequest ',
+        new Blob([JSON.stringify(updateItemRequest)], { type: 'application/json' })
+      );
+      if (image) {
+        formData.append('file', image);
+        console.log(image);
+      } else {
+        // URL을 Blob 객체로 변환하여 FormData에 추가
+        const blob = new Blob([], { type: 'image/jpeg' }); // 빈 Blob 객체 생성
+        const fileName = ''; // 파일 이름 설정
+        formData.append('file', blob, fileName); // Blob 객체와 파일 이름을 함께 추가
+        console.log(blob); // 이걸로 확인 가능
+      }
     }
 
     try {
-      console.log(itemRequest);
-      console.log(image);
-      await postItem(formData);
-      onClose(); // Close the modal and trigger screen update
+      if (product === null) {
+        await postItem(formData);
+        onClose(); // Close the modal and trigger screen update
+      } else {
+        console.log('hello', isScreen, isSoldOut);
+        await putItem(product.itemId, formData);
+        onClose();
+      }
     } catch (error) {
       console.error('Error adding product:', error);
     }
@@ -95,6 +128,24 @@ const ProductModal = ({ product, categories, onClose }) => {
 
   const handleFileChange = (e) => {
     setImage(e.target.files[0]);
+  };
+
+  const handleToggle = async (field) => {
+    try {
+      let updatedProduct;
+      if (field === 'isSoldOut') {
+        await itemSoldOutToggle(product.itemId);
+        setIsSoldout((prev) => !prev); // 상태 업데이트
+        updatedProduct = { ...product, isSoldout: !isSoldOut };
+      } else if (field === 'isScreen') {
+        await itemScreenToggle(product.itemId);
+        setIsScreen((prev) => !prev); // 상태 업데이트
+        updatedProduct = { ...product, isScreen: !isScreen };
+      }
+      console.log(updatedProduct); // 업데이트된 상태 확인
+    } catch (error) {
+      console.error('Toggle failed:', error);
+    }
   };
 
   return (
@@ -133,11 +184,17 @@ const ProductModal = ({ product, categories, onClose }) => {
       </select>
       <div>
         <span>키오스크 노출</span>
-        <ToggleButton value={isScreen} setValue={setIsScreen} />
+        <ToggleButton
+          value={product.isSoldOut === 'YES'}
+          setValue={() => handleToggle(product, 'isSoldOut')}
+        />
       </div>
       <div>
         <span>품절</span>
-        <ToggleButton value={isSoldout} setValue={setIsSoldout} />
+        <ToggleButton
+          value={product.isScreen === 'YES'}
+          setValue={() => handleToggle(product, 'isScreen')}
+        />
       </div>
       <button onClick={handleSave}>확인</button>
       <button onClick={onClose}>취소</button>

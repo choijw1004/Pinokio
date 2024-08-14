@@ -18,6 +18,7 @@ const NavbarContainer = styled.nav`
   border-radius: 1rem;
   box-shadow: 2px 4px 0 rgba(0, 0, 0, 0.25);
   padding: 0 1rem;
+  z-index: 1000;
 `;
 
 const NavbarMenu = styled.div`
@@ -84,7 +85,7 @@ const LogoLocation = styled.div`
 `;
 
 const LogOut = styled.button`
-  margin-top: 25em;
+  margin-top: 23em;
   margin-left: 10em;
   box-shadow: 1px 2px 0 rgb(0 0 0 / 0.25);
   background-color: white;
@@ -115,10 +116,9 @@ function Navbar({ isOpen, toggleNavbar }) {
   };
 
   const items = [
-    { path: '/pos', text: '주문 홈' },
+    { path: '/pos', text: '상품 관리' },
     { path: '/pos/order-list', text: '주문 내역' },
     { path: '/pos/kiosk-management', text: '키오스크 관리' },
-    { path: '/pos/product-management', text: '상품 관리' },
     { path: '/pos/sales-report', text: '매출 리포트' },
   ];
 
