@@ -18,11 +18,10 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.temporal.IsoFields;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -110,55 +109,41 @@ public class SalesStatisticsService {
     }
 
     private List<SalesStatisticsResponse> getSalesStatistics(UUID posId, LocalDate startDate, LocalDate endDate, PeriodType periodType) {
-        int startYear = startDate.getYear();
-        int endYear = endDate.getYear();
+        List<SalesStatisticsResponse> result = new ArrayList<>();
+        LocalDate currentDate = startDate;
 
-        if (periodType == PeriodType.YEARLY) {
-            List<SalesStatistics> salesList = salesStatisticsRepository
-                    .findByPosIdAndPeriodTypeAndYearBetweenOrderByYearAscPeriodAsc(posId, periodType, startYear, endYear);
+        while (!currentDate.isAfter(endDate)) {
+            LocalDate periodEndDate = getEndDate(currentDate.getYear(), getPeriod(currentDate, periodType), periodType);
+            if (periodEndDate.isAfter(endDate)) {
+                periodEndDate = endDate;
+            }
 
-            return salesList.stream()
-                    .map(sales -> new SalesStatisticsResponse(
-                            LocalDate.of(sales.getYear(), 1, 1),
-                            LocalDate.of(sales.getYear(), 12, 31),
-                            sales.getTotalSales()
-                    ))
-                    .collect(Collectors.toList());
+            int year = currentDate.getYear();
+            int period = getPeriod(currentDate, periodType);
+
+            Optional<SalesStatistics> salesStatistics = salesStatisticsRepository
+                    .findByPosIdAndPeriodTypeAndYearAndPeriodOrderByYearAscPeriodAsc(posId, periodType, year, period);
+
+            long totalSales = salesStatistics
+                    .map(sales -> {
+                        Optional<Long> cachedSales = getFromRedisCache(posId, periodType, year, period);
+                        return cachedSales.orElse(sales.getTotalSales());
+                    })
+                    .orElse(0L);
+
+            result.add(new SalesStatisticsResponse(currentDate, periodEndDate, totalSales));
+
+            currentDate = periodEndDate.plusDays(1);
         }
 
-        int startPeriod = getPeriod(startDate, periodType);
-        int endPeriod = getPeriod(endDate, periodType);
-
-        List<SalesStatistics> salesList = salesStatisticsRepository
-                .findByPosIdAndPeriodTypeAndYearAndPeriodBetweenOrderByYearAscPeriodAsc(posId, periodType, startYear, startPeriod, endPeriod);
-
-        return salesList.stream()
-                .map(sales -> {
-                    Optional<Long> cachedSales = getFromRedisCache(posId, periodType, sales.getYear(), sales.getPeriod());
-                    long totalSales = cachedSales.orElse(sales.getTotalSales());
-                    return new SalesStatisticsResponse(
-                            getStartDate(sales.getYear(), sales.getPeriod(), periodType),
-                            getEndDate(sales.getYear(), sales.getPeriod(), periodType),
-                            totalSales
-                    );
-                })
-                .collect(Collectors.toList());
-    }
-
-    private LocalDate getStartDate(int year, int period, PeriodType periodType) {
-        return switch (periodType) {
-            case DAILY -> LocalDate.ofYearDay(year, period);
-            case WEEKLY -> LocalDate.ofYearDay(year, 1).with(IsoFields.WEEK_OF_WEEK_BASED_YEAR, period);
-            case MONTHLY -> LocalDate.of(year, period, 1);
-            case YEARLY -> LocalDate.of(year, 1, 1);
-        };
+        return result;
     }
 
     private LocalDate getEndDate(int year, int period, PeriodType periodType) {
         return switch (periodType) {
-            case DAILY -> getStartDate(year, period, periodType);
-            case WEEKLY -> getStartDate(year, period, periodType).plusDays(6);
-            case MONTHLY -> getStartDate(year, period, periodType).plusMonths(1).minusDays(1);
+            case DAILY -> LocalDate.ofYearDay(year, period);
+            case WEEKLY -> LocalDate.ofYearDay(year, 1).with(IsoFields.WEEK_OF_WEEK_BASED_YEAR, period).plusDays(6);
+            case MONTHLY -> LocalDate.of(year, period, 1).plusMonths(1).minusDays(1);
             case YEARLY -> LocalDate.of(year, 12, 31);
         };
     }
