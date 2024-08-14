@@ -68,7 +68,7 @@ public class OrderController {
     }
 
     @Operation(summary = "특정 고객의 최다 주문 아이템 조회", description = "특정 고객의 최다 주문 아이템 조회")
-    @PreAuthorize("hasRole('ROLE_POS')")
+    @PreAuthorize("hasAnyRole('ROLE_POS', 'ROLE_KIOSK')")
     @GetMapping("/orders/customers/{customerId}/top-order")
     public ResponseEntity<?> getTopOrderItem(
             @PathVariable UUID customerId) {
@@ -83,7 +83,7 @@ public class OrderController {
     }
 
     @Operation(summary = "특정 고객의 최근 주문 아이템 조회", description = "특정 고객의 최근 주문 아이템 조회")
-    @PreAuthorize("hasRole('ROLE_POS')")
+    @PreAuthorize("hasAnyRole('ROLE_POS', 'ROLE_KIOSK')")
     @GetMapping("/orders/customers/{customerId}/recent-items")
     public ResponseEntity<?> getRecentOrderItems(
             @PathVariable UUID customerId) {
