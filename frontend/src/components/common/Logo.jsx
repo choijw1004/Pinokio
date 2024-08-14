@@ -3,12 +3,14 @@ import styled from 'styled-components';
 import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 
-const LogoStyle = styled.div`
+const LogoStyle = styled.text`
   font-size: ${(props) => props.size};
   color: ${(props) => (props.color ? props.color : '#7392ff')};
   font-family: 'Alfa Slab One';
   font-weight: 400;
   font-style: normal;
+  /* text-shadow: -1px 0px grey, 0px 1px grey, 1px 0px grey, 0px -1px grey; */
+  text-shadow: 1px 2px #bdc3c7;
   cursor: pointer; /* 클릭 가능하게 표시 */
 `;
 

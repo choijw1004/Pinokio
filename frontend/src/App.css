@@ -28,6 +28,13 @@
   font-style: normal;
 }
 
+@font-face {
+  font-family: 'goorm-sans-medium';
+  src: url('./assets/fonts/goorm-sans-medium.woff2') format('woff2');
+  font-weight: 100;
+  font-style: 100;
+}
+
 :root {
   --font-CafeOhsquareAir: 'CafeOhsquareAir';
   --font-AlfaSlabOne: 'Alfa Slab One';
