@@ -1,9 +1,9 @@
 package com.example.pinokkio.api.pos;
 
 import com.example.pinokkio.api.auth.dto.response.EmailDuplicationResponse;
-import com.example.pinokkio.api.kiosk.Kiosk;
 import com.example.pinokkio.api.order.OrderService;
-import com.example.pinokkio.api.pos.dto.request.KioskInfoResponse;
+import com.example.pinokkio.api.pos.dto.response.KioskInfoResponse;
+import com.example.pinokkio.api.pos.dto.response.KioskRegisterResponse;
 import com.example.pinokkio.api.pos.dto.response.PosResponse;
 import com.example.pinokkio.api.pos.dto.response.PosStatisticsResponse;
 import com.example.pinokkio.config.jwt.JwtProvider;
@@ -11,7 +11,6 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -77,8 +76,8 @@ public class PosController {
     @PreAuthorize("hasRole('ROLE_POS')")
     @PostMapping("/kiosks/register")
     public ResponseEntity<?> registerKiosk() {
-        posService.registerKiosk();
-        return new ResponseEntity<>(HttpStatus.CREATED);
+        KioskRegisterResponse kioskRegisterResponse = posService.registerKiosk();
+        return ResponseEntity.ok(kioskRegisterResponse);
     }
 
     /**

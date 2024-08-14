@@ -27,7 +27,7 @@ public interface OrderRepository extends JpaRepository<Order, UUID> {
      * @param endDate   종료 날짜
      * @return 지정된 날짜 범위의 Order 리스트
      */
-    List<Order> findAllByPosIdAndCreatedDateBetween(UUID posId, LocalDateTime startDate, LocalDateTime endDate);
+    List<Order> findAllByPosIdAndCreatedDateBetweenOrderByCreatedDate(UUID posId, LocalDateTime startDate, LocalDateTime endDate);
 
     /**
      * 해당 포스의 가장 오래된 주문일자를 반환합니다.

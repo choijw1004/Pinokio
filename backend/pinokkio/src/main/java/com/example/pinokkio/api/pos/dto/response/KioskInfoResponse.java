@@ -1,4 +1,4 @@
-package com.example.pinokkio.api.pos.dto.request;
+package com.example.pinokkio.api.pos.dto.response;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -14,5 +14,4 @@ import java.util.UUID;
 public class KioskInfoResponse {
     private UUID kioskId;
     private String email;
-    private String password;
 }

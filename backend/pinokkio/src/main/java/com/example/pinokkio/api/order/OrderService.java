@@ -283,7 +283,7 @@ public class OrderService {
         LocalDateTime startDateTime = LocalDate.parse(request.getStartDate(), DateTimeFormatter.ISO_DATE).atStartOfDay();
         LocalDateTime endDateTime = LocalDate.parse(request.getEndDate(), DateTimeFormatter.ISO_DATE).atTime(LocalTime.MAX);
 
-        List<Order> orders = orderRepository.findAllByPosIdAndCreatedDateBetween(currentPos.getId(),startDateTime, endDateTime);
+        List<Order> orders = orderRepository.findAllByPosIdAndCreatedDateBetweenOrderByCreatedDate(currentPos.getId(),startDateTime, endDateTime);
 
         if (orders.isEmpty()) {
             log.info("[getOrderItemsByDuration] 해당 기간 동안의 주문이 없습니다.");
