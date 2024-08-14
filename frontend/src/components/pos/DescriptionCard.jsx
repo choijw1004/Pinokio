@@ -5,8 +5,7 @@ const Main = styled.div`
   display: flex;
   flex-direction: column;
   width: 500px;
-  border: 1px solid;
-  height: 300px;
+  height: 5rem;
   text-align: center;
   justify-content: center;
 `;

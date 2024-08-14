@@ -116,7 +116,7 @@ const StyledButton = styled.button`
     transform: translateY(-2px);
   }
   &:active {
-    background-color: #d8ff75;
+    background-color: #c383d9;
   }
 `;
 

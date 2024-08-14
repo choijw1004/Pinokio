@@ -150,7 +150,7 @@ function OrderHistory({ selectedOrder, setSelectedOrder }) {
       {/* <Header>결제 내역</Header> */}
       <FilterContainer>
         <SearchBar />
-        <RangeDatePicker setDateRange={setDateRange} />
+        <RangeDatePicker setDateRange={setDateRange} dateRange={dateRange} />
       </FilterContainer>
       <TableHeader>
         <ColumnTitle>주문 날짜</ColumnTitle>

@@ -7,7 +7,7 @@ const CI = styled.div`
   justify-content: space-between;
   align-items: center;
   background: white;
-  height: 2rem;
+  height: 1.6rem;
   font-size: 0.7rem;
 
   border-bottom: 1px #d9d9d9 solid;

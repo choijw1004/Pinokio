@@ -66,6 +66,9 @@ const MenuDetail = styled.div`
   overflow: auto;
   max-height: 3.5rem;
   min-height: 2.5rem;
+  &::-webkit-scrollbar {
+    display: none;
+  }
 `;
 
 const PriceAndButtons = styled.div`

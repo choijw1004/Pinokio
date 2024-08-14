@@ -3,10 +3,11 @@ import styled from 'styled-components';
 import DescriptionCard from '../../components/pos/DescriptionCard';
 import { Bar } from 'react-chartjs-2';
 import { Chart, registerables } from 'chart.js';
-import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import { ko } from 'date-fns/locale';
 import Navbar from '../../components/pos/Navbar';
+import RangeDatePicker from '../../components/pos/RangeDatePicker';
+import { getSalesStatistics } from '../../apis/Sales';
 
 Chart.register(...registerables);
 
@@ -147,47 +148,190 @@ const Charts = styled.div`
 
 function SalesReportPage() {
   const [isNavbarOpen, setIsNavbarOpen] = useState(false);
-  const [startDate, setStartDate] = useState(new Date());
-  const [endDate, setEndDate] = useState(new Date());
-  const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
 
-  // useEffect(() => {
-  //   setStartDate(new Date());
-  //   setEndDate(new Date());
-  // }, []);
+  const [dateRange, setDateRange] = useState([new Date(), new Date()]);
+  const [startDate, endDate] = dateRange;
 
-  useEffect(() => {}, [startDate]);
-  useEffect(() => {}, [endDate]);
+  const [statisticsData, setStatisticsData] = useState({
+    dailySales: ['1'],
+    weeklySales: ['2'],
+    monthlySales: ['3'],
+    yearlySales: ['4'],
+  });
+
+  const [salesTotal, setSalesTotal] = useState(0);
+  const [noticeMessage, setNoticeMessage] = useState('');
+
+  const [showedData, setShowedData] = useState({
+    labels: ['8월'],
+    datasets: [
+      {
+        label: '매출',
+        backgroundColor: 'rgba(115, 146, 255, 0.2)',
+        borderColor: 'rgba(115, 146, 255, 1)',
+        borderWidth: 1,
+        hoverBackgroundColor: 'rgba(115, 146, 255, 0.4)',
+        hoverBorderColor: 'rgba(115, 146, 255, 1)',
+        data: [1],
+      },
+    ],
+  });
+  const [options, setOptions] = useState({
+    scales: {
+      x: {
+        type: 'category',
+        labels: ['8월'],
+      },
+    },
+  });
+
+  const [graphUnit, setGraphUnit] = useState('day');
+
+  // const makeLabel = () => {
+  //   if (graphUnit === 'day') {
+  //     statisticsData.map(() => {});
+  //   } else if (graphUnit === 'week') {
+  //   } else if (graphUnit === 'month') {
+  //   } else {
+  //   }
+  // };
+
+  // const makeLabelWeekly = () => {};
+
+  const makeDateFormat = (date) => {
+    // 어떤 날짜여도 'YYYY-DD-YY'형식으로 변환!
+    const year = date.getFullYear();
+    const month = ('0' + (date.getMonth() + 1)).slice(-2);
+    const day = ('0' + date.getDate()).slice(-2);
+    const dateStr = `${year}-${month}-${day}`;
+    return dateStr;
+  };
+
+  useEffect(() => {
+    getStatisticsData();
+    console.log('before start date : ', makeDateFormat(getPreviousMonthDate(startDate)));
+    console.log('before end date : ', makeDateFormat(getPreviousMonthDate(endDate)));
+  }, [dateRange]);
+
+  useEffect(() => {
+    console.log('showedData : ', showedData);
+  }, [showedData]);
+  useEffect(() => {
+    console.log('options : ', options);
+  }, [options]);
+
+  const getStatisticsData = async () => {
+    const data = await getSalesStatistics(makeDateFormat(startDate), makeDateFormat(endDate));
+    setStatisticsData(data);
+    console.log('get statistics data : ', data);
+    if (!data || !data.dailySales) {
+      console.log('data or data.dailySales is null or undefined');
+      return;
+    }
+    data.dailySales.sort((a, b) => {
+      return new Date(a.startDate) - new Date(b.startDate);
+    });
+    console.log('dailySales is sorted');
+    let sum = 0;
+    let labelsTemp = [];
+    let dataTemp = [];
+    console.log('dailySales', data.dailySales);
+    for (const dailytotal of data.dailySales) {
+      console.log(dailytotal);
+      sum += dailytotal['totalSales'];
+      labelsTemp.push(dailytotal['startDate']);
+      dataTemp.push(dailytotal['totalSales']);
+    }
+
+    console.log('labelsTemp : ', labelsTemp);
+    console.log('dataTemp : ', dataTemp);
+
+    setShowedData({
+      labels: labelsTemp,
+      datasets: [
+        {
+          label: '매출',
+          backgroundColor: 'rgba(115, 146, 255, 0.2)',
+          borderColor: 'rgba(115, 146, 255, 1)',
+          borderWidth: 1,
+          hoverBackgroundColor: 'rgba(115, 146, 255, 0.4)',
+          hoverBorderColor: 'rgba(115, 146, 255, 1)',
+          data: dataTemp,
+        },
+      ],
+    });
+    setOptions({
+      scales: {
+        x: {
+          type: 'category',
+          labels: labelsTemp,
+        },
+      },
+    });
+    setSalesTotal(sum);
+  };
+
+  const getPreviousMonthDate = (date) => {
+    // 현재 날짜에서 한 달을 뺀 날짜를 생성
+    let previousMonthDate = new Date(date);
+    previousMonthDate.setMonth(previousMonthDate.getMonth() - 1);
+
+    // 현재 일(day)이 계산된 월의 마지막 날짜를 초과하는지 확인
+    if (date.getDate() > getLastDayOfMonth(previousMonthDate)) {
+      // 초과한다면 그 차이를 일(day)로 설정
+      previousMonthDate.setDate(date.getDate() - getLastDayOfMonth(previousMonthDate));
+    } else {
+      // 그렇지 않다면, 동일한 일(day)을 설정
+      previousMonthDate.setDate(date.getDate());
+    }
+
+    return previousMonthDate;
+  };
+
+  function getLastDayOfMonth(date) {
+    return new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
+  }
+
+  const getBeforeStatisticsData = async () => {
+    const data = await getSalesStatistics(
+      makeDateFormat(getPreviousMonthDate(startDate)),
+      makeDateFormat(getPreviousMonthDate(endDate))
+    );
+  };
+
+  useEffect(() => {
+    let noticeMessageTemp = '지난 달 같은 기간 대비';
+  }, [salesTotal]);
+  // useEffect(() => {}, [startDate]);
+  // useEffect(() => {}, [endDate]);
+
+  const getChartLabel = () => {};
 
   const handleTodayClick = () => {
     const today = new Date();
-    setStartDate(today);
-    setEndDate(today);
+    setDateRange([today, today]);
   };
 
   const handleYesterdayClick = () => {
     const yesterday = new Date();
     yesterday.setDate(yesterday.getDate() - 1);
-    setStartDate(yesterday);
-    setEndDate(yesterday);
+    setDateRange([yesterday, yesterday]);
   };
 
   const handleThisWeekClick = () => {
     const today = new Date();
     const firstDayOfWeek = new Date(today);
     firstDayOfWeek.setDate(today.getDate() - today.getDay() + 1);
-    const lastDayOfWeek = new Date(today);
-    lastDayOfWeek.setDate(firstDayOfWeek.getDate() + 6);
-    setStartDate(firstDayOfWeek);
-    setEndDate(lastDayOfWeek);
+    // const lastDayOfWeek = new Date(today);
+    // lastDayOfWeek.setDate(firstDayOfWeek.getDate() + 6);
+    setDateRange([firstDayOfWeek, today]);
   };
 
   const handleThisMonthClick = () => {
     const today = new Date();
     const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-    const lastDayOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
-    setStartDate(firstDayOfMonth);
-    setEndDate(lastDayOfMonth);
+    // const lastDayOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+    setDateRange([firstDayOfMonth, today]);
   };
 
   const formatDate = (date) => {
@@ -202,30 +346,6 @@ function SalesReportPage() {
     console.log('boolean');
     console.log(startDate === endDate);
     console.log(new Date().getDate() - 1);
-  };
-
-  const data = {
-    labels: ['1월', '2월', '3월', '4월', '5월', '6월', '7월'],
-    datasets: [
-      {
-        label: '매출',
-        backgroundColor: 'rgba(54, 162, 235, 0.2)',
-        borderColor: 'rgba(54, 162, 235, 1)',
-        borderWidth: 1,
-        hoverBackgroundColor: 'rgba(54, 162, 235, 0.4)',
-        hoverBorderColor: 'rgba(54, 162, 235, 1)',
-        data: [65, 59, 80, 81, 56, 55, 40],
-      },
-    ],
-  };
-
-  const options = {
-    scales: {
-      x: {
-        type: 'category',
-        labels: ['1월', '2월', '3월', '4월', '5월', '6월', '7월'],
-      },
-    },
   };
 
   return (
@@ -258,7 +378,7 @@ function SalesReportPage() {
               startDate={startDate}
               endDate={endDate}
               configStartDate={new Date().getDate() - new Date().getDay() + 1}
-              configEndDate={new Date().getDate() - new Date().getDay() + 7}
+              configEndDate={new Date().getDate()}
             >
               이번주
             </Button>
@@ -271,58 +391,29 @@ function SalesReportPage() {
                 new Date().getMonth(),
                 1
               ).getDate()}
-              configEndDate={new Date(
-                new Date().getFullYear(),
-                new Date().getMonth() + 1,
-                0
-              ).getDate()}
+              configEndDate={new Date().getDate()}
             >
               이번달
             </Button>
           </Buttons>
-          <DateDisplay onClick={() => setIsDatePickerOpen(!isDatePickerOpen)} tabIndex="0">
-            날짜 {formatDate(startDate)} ~ {formatDate(endDate)}
-          </DateDisplay>
+          <RangeDatePicker setDateRange={setDateRange} dateRange={dateRange} />
         </DateNavBar>
         <MainBody>
-          {isDatePickerOpen && (
-            <DatePickerWrapper>
-              <DatePicker
-                selected={startDate}
-                onChange={(date) => setStartDate(date)}
-                selectsStart
-                startDate={startDate}
-                endDate={endDate}
-                inline
-                locale={ko}
-              />
-              <DatePicker
-                selected={endDate}
-                onChange={(date) => setEndDate(date)}
-                selectsEnd
-                startDate={startDate}
-                endDate={endDate}
-                inline
-                locale={ko}
-              />
-            </DatePickerWrapper>
+          {/* <DescriptionCard
+            title={'선택된 기간 동안의 매출'}
+            contents={salesTotal}
+            notice={noticeMessage}
+          /> */}
+          {/* <DescriptionCard
+            title={'주문건'}
+            contents={'5건'}
+            notice={'지난 주 수요일보다 1건 늘었어요.'}
+          /> */}
+          {statisticsData && statisticsData.dailySales.length > 0 && (
+            <Charts>
+              <Bar data={statisticsData} options={options} />
+            </Charts>
           )}
-          <Descriptions>
-            <DescriptionCard
-              title={'실매출'}
-              contents={'135,000원'}
-              notice={'지난 주 수요일보다 +15,000원 늘었어요.'}
-            />
-            <DescriptionCard
-              title={'주문건'}
-              contents={'5건'}
-              notice={'지난 주 수요일보다 1건 늘었어요.'}
-            />
-            <DescriptionCard title={'할인'} contents={'0원'} notice={''} />
-          </Descriptions>
-          <Charts>
-            <Bar data={data} options={options} />
-          </Charts>
         </MainBody>
       </Main>
     </MainOuter>

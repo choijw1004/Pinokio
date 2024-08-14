@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import styled from 'styled-components';
-import coffeeImage from '../../assets/images/coffee_image_rb.png';
+// import coffeeImage from '../../assets/images/coffee_image_rb.png';
 
 const MMC = styled.div`
   display: flex;

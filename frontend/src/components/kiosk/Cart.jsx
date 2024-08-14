@@ -35,7 +35,7 @@ const ItemContainer = styled.div`
   border-radius: 0.2rem;
   background-color: white;
   width: 100%;
-  height: 7rem;
+  height: 8.5rem;
   margin-top: 0.8rem;
   box-shadow: 2px 4px rgb(0 0 0 / 30%);
   overflow-x: hidden;
