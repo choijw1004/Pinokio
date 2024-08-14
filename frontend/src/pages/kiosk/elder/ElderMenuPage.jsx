@@ -220,12 +220,9 @@ function ElderMenuPage() {
 
       setIsSessionInitialized(true);
 
-      const OPENVIDU_SERVER_URL = 'https://i11a601.p.ssafy.io:8443';
-      const ov = new OpenVidu();
-      ov.setAdvancedConfiguration({ openviduServerUrl: OPENVIDU_SERVER_URL });
-      setOV(ov);
-      const cameraSessionObj = ov.initSession();
-      const screenSessionObj = .initSession();
+      const OV = new OpenVidu();
+      const cameraSessionObj = OV.initSession();
+      const screenSessionObj = OV.initSession();
 
       setCameraSession(cameraSessionObj);
       setScreenSession(screenSessionObj);
