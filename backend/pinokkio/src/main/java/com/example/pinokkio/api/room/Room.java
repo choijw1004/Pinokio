@@ -28,11 +28,15 @@ public class Room extends BaseEntity {
     @ColumnDefault("0")
     private Integer numberOfCustomers;
 
+    @Column(nullable = false)
+    private boolean active;
+
     @Builder
-    public Room(UUID roomId, Teller teller, Integer numberOfCustomers) {
+    public Room(UUID roomId, Teller teller, Integer numberOfCustomers, boolean active) {
         this.roomId = roomId;
         this.teller = teller;
         this.numberOfCustomers = numberOfCustomers;
+        this.active = active;
     }
 
     public void updateNumberOfCustomers(Integer numberOfCustomers) {

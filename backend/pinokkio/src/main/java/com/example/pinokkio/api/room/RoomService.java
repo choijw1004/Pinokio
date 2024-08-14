@@ -25,6 +25,7 @@ import org.springframework.web.socket.TextMessage;
 
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReentrantLock;
 
 @Service
@@ -43,7 +44,7 @@ public class RoomService {
     private final WebSocketService webSocketService;
     private final UserService userService;
 
-    private final ReentrantLock roomLock = new ReentrantLock();
+    private final ConcurrentHashMap<UUID, ReentrantLock> roomLocks = new ConcurrentHashMap<>();
 
     @Value("${openvidu.url}")
     public String OPENVIDU_URL;
@@ -55,6 +56,10 @@ public class RoomService {
     public void init() {
         this.openvidu = new OpenVidu(OPENVIDU_URL, OPENVIDU_SECRET);
         log.info("[init] openVidu {}", this.openvidu);
+    }
+
+    private ReentrantLock getRoomLock(UUID roomId) {
+        return roomLocks.computeIfAbsent(roomId, k -> new ReentrantLock());
     }
 
     @Transactional
@@ -81,6 +86,7 @@ public class RoomService {
         Room newRoom = Room.builder()
                 .teller(teller)
                 .numberOfCustomers(0)
+                .active(true)
                 .build();
         roomRepository.save(newRoom);
 
@@ -100,24 +106,41 @@ public class RoomService {
     @Transactional
     public void deleteRoom() {
         Teller teller = userService.getCurrentTeller();
-        roomRepository.deleteByTeller(teller);
-        log.info("Room deleted for teller: {}", teller.getId());
-    }
-
-    public void acceptInvitation(UUID roomId, UUID kioskId) {
-        if (webSocketService.isTokenIssued(kioskId)) {
-            throw new RoomAccessRestrictedException("Token already issued for kiosk: " + kioskId);
-        }
-
-        Teller teller = userService.getCurrentTeller();
         Room room = roomRepository.findByTeller(teller)
                 .orElseThrow(() -> new RoomNotFoundException("Room not found for teller: " + teller.getId()));
 
-        validateRoomId(roomId, room);
-        validateKioskId(kioskId);
+        UUID roomId = room.getRoomId();
+        ReentrantLock lock = getRoomLock(roomId);
+        lock.lock();
+        try {
+            roomRepository.deleteByTeller(teller);
+            roomLocks.remove(roomId);  // 락 제거
+            log.info("Room deleted for teller: {}", teller.getId());
+        } finally {
+            lock.unlock();
+        }
+    }
 
-        webSocketService.sendRoomId(kioskId, room.getRoomId());
-        log.info("Invitation accepted for room: {}, kiosk: {}, teller: {}", roomId, kioskId, teller.getId());
+    public void acceptInvitation(UUID roomId, UUID kioskId) {
+        ReentrantLock lock = getRoomLock(roomId);
+        lock.lock();
+        try {
+            if (webSocketService.isTokenIssued(kioskId)) {
+                throw new RoomAccessRestrictedException("Token already issued for kiosk: " + kioskId);
+            }
+
+            Teller teller = userService.getCurrentTeller();
+            Room room = roomRepository.findByTeller(teller)
+                    .orElseThrow(() -> new RoomNotFoundException("Room not found for teller: " + teller.getId()));
+
+            validateRoomId(roomId, room);
+            validateKioskId(kioskId);
+
+            webSocketService.sendRoomId(kioskId, room.getRoomId());
+            log.info("Invitation accepted for room: {}, kiosk: {}, teller: {}", roomId, kioskId, teller.getId());
+        } finally {
+            lock.unlock();
+        }
     }
 
     private void validateKioskId(UUID kioskId) {
@@ -139,14 +162,26 @@ public class RoomService {
 
     public void sendRequestToAllActiveTellers() {
         Kiosk curKiosk = userService.getCurrentKiosk();
-        List<Session> activeSessions = openvidu.getActiveSessions();
+        List<Room> activeRooms = roomRepository.findAllByActiveTrue();
 
-        if (activeSessions.isEmpty()) {
-            throw new RoomAccessRestrictedException("No active sessions available");
+        if (activeRooms.isEmpty()) {
+            throw new RoomAccessRestrictedException("No active rooms available");
         }
 
-        for (Session session : activeSessions) {
-            processActiveSession(session, curKiosk);
+        for (Room room : activeRooms) {
+            ReentrantLock lock = getRoomLock(room.getRoomId());
+            lock.lock();
+            try {
+                Session session = openvidu.getActiveSession(room.getRoomId().toString());
+                if (session != null) {
+                    processActiveSession(session, curKiosk);
+                } else {
+                    room.setActive(false);
+                    roomRepository.save(room);
+                }
+            } finally {
+                lock.unlock();
+            }
         }
 
         log.info("Consultation request sent to all active tellers for kiosk: {}", curKiosk.getId());
@@ -180,7 +215,8 @@ public class RoomService {
 
     @Transactional
     public KioskRoomResponse enterRoom(UUID roomId, UUID kioskId) throws OpenViduJavaClientException, OpenViduHttpException {
-        roomLock.lock();
+        ReentrantLock lock = getRoomLock(roomId);
+        lock.lock();
         try {
             Room room = roomRepository.findById(roomId)
                     .orElseThrow(() -> new RoomNotFoundException("Room not found: " + roomId));
@@ -199,15 +235,17 @@ public class RoomService {
 
             return new KioskRoomResponse(room.getRoomId().toString(), videoToken, screenToken);
         } finally {
-            roomLock.unlock();
+            lock.unlock();
         }
     }
 
     @Transactional
     public void leaveRoom(String roomId) {
-        roomLock.lock();
+        UUID roomUUID = UUID.fromString(roomId);
+        ReentrantLock lock = getRoomLock(roomUUID);
+        lock.lock();
         try {
-            Room room = roomRepository.findById(UUID.fromString(roomId))
+            Room room = roomRepository.findById(roomUUID)
                     .orElseThrow(() -> new RoomNotFoundException("Room not found: " + roomId));
 
             if (room.getNumberOfCustomers() > 0) {
@@ -216,7 +254,7 @@ public class RoomService {
             }
             log.info("A customer left room: {}, new number of customers: {}", roomId, room.getNumberOfCustomers());
         } finally {
-            roomLock.unlock();
+            lock.unlock();
         }
     }
 
