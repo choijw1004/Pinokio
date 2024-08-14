@@ -300,19 +300,13 @@ function ElderMenuPage() {
       if (screenSession) {
         screenSession.disconnect();
       }
-      if (publisher) {
-        publisher.stream.disposeWebRtcPeer();
-        publisher.stream.disposeMediaStream();
-      }
       await leaveRoom(roomId);
       setOpenViduConnection(false);
-      setPublisher(null);
-      setSubscribers([]);
       console.log('상담 종료 성공');
     } catch (error) {
       console.error('상담 종료 오류:', error);
     }
-  }, [cameraSession, screenSession, roomId, publisher]);
+  }, [cameraSession, screenSession, roomId]);
 
   return (
     <ElderMenuPageStyle>
