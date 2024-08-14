@@ -227,9 +227,20 @@ function ElderMenuPage() {
       setCameraSession(cameraSessionObj);
       setScreenSession(screenSessionObj);
 
+      // ICE 후보 처리를 위한 이벤트 리스너 추가
+      cameraSessionObj.on('iceCandidate', (event) => {
+        cameraSessionObj.sendIceCandidate(event.candidate);
+      });
+
+      screenSessionObj.on('iceCandidate', (event) => {
+        screenSessionObj.sendIceCandidate(event.candidate);
+      });
+
       cameraSessionObj.on('streamCreated', (event) => {
-        const subscriber = cameraSessionObj.subscribe(event.stream, undefined);
-        setSubscribers((prevSubscribers) => [...prevSubscribers, subscriber]);
+        if (event.stream && event.stream.connection) {
+          const subscriber = cameraSessionObj.subscribe(event.stream, undefined);
+          setSubscribers((prevSubscribers) => [...prevSubscribers, subscriber]);
+        }
       });
 
       cameraSessionObj.on('streamDestroyed', (event) => {
@@ -238,9 +249,25 @@ function ElderMenuPage() {
         );
       });
 
+      // 연결 시도에 타임아웃 설정
+      const connectWithTimeout = (session, token, clientData, timeout = 10000) => {
+        return Promise.race([
+          session.connect(token, clientData),
+          new Promise((_, reject) =>
+            setTimeout(() => reject(new Error('Connection timeout')), timeout)
+          ),
+        ]);
+      };
+
       try {
-        await cameraSessionObj.connect(videoToken, { clientData: userData.typeInfo.kioskId });
-        console.log('카메라 세션 연결 성공');
+        // Promise.all을 사용하여 여러 비동기 작업을 동시에 처리
+        const [cameraConnection, screenConnection] = await Promise.all([
+          connectWithTimeout(cameraSessionObj, videoToken, {
+            clientData: userData.typeInfo.kioskId,
+          }),
+          connectWithTimeout(screenSessionObj, screenToken, { clientData: 'screen' }),
+        ]);
+        console.log('모든 세션 연결 성공');
 
         const publisher = await OV.initPublisherAsync(undefined, {
           audioSource: undefined,
@@ -256,9 +283,6 @@ function ElderMenuPage() {
         await cameraSessionObj.publish(publisher);
         setPublisher(publisher);
         console.log('카메라 스트림 발행 성공');
-
-        await screenSessionObj.connect(screenToken, { clientData: 'screen' });
-        console.log('화면 공유 세션 연결 성공');
 
         const requestScreenShare = async () => {
           try {
@@ -285,11 +309,25 @@ function ElderMenuPage() {
 
         await requestScreenShare();
       } catch (error) {
-        console.error('세션 연결 또는 스트림 발행 오류:', error);
+        console.error('세션 연결 또는 스트림 발행 오류:', error.name, error.message);
       }
     },
     [userData.typeInfo.kioskId]
   );
+
+  // streamPlaying 이벤트 처리
+  const handleStreamPlaying = useCallback((event) => {
+    console.log('Stream is now playing', event);
+  }, []);
+
+  useEffect(() => {
+    if (subscribers.length > 0) {
+      subscribers[0].on('streamPlaying', handleStreamPlaying);
+      return () => {
+        subscribers[0].off('streamPlaying', handleStreamPlaying);
+      };
+    }
+  }, [subscribers, handleStreamPlaying]);
 
   const handleLeaveRoom = useCallback(async () => {
     try {

@@ -218,9 +218,13 @@ const AdvMainPage = () => {
       const session = ov.initSession();
       setSession(session);
 
+      // ICE 후보 처리를 위한 이벤트 리스너 추가
+      session.on('iceCandidate', (event) => {
+        session.sendIceCandidate(event.candidate);
+      });
+
       session.on('streamCreated', (event) => {
         const subscriber = session.subscribe(event.stream, undefined);
-        console.log('subscriber', subscriber);
         subscriber.on('streamPlaying', (e) => {
           console.log('Subscriber stream playing');
         });
@@ -278,8 +282,17 @@ const AdvMainPage = () => {
         console.warn('Exception in session:', exception);
       });
 
+      const connectWithTimeout = (session, token, metadata, timeout = 10000) => {
+        return Promise.race([
+          session.connect(token, metadata),
+          new Promise((_, reject) =>
+            setTimeout(() => reject(new Error('Connection timeout')), timeout)
+          ),
+        ]);
+      };
+
       try {
-        await session.connect(token, { clientData: userData.email });
+        await connectWithTimeout(session, token, { clientData: userData.email });
         console.log('OpenVidu 세션 연결 성공');
 
         const publisher = await ov.initPublisherAsync(undefined, {
@@ -297,12 +310,12 @@ const AdvMainPage = () => {
         setPublisher(publisher);
         console.log('상담원 스트림 발행 성공');
       } catch (error) {
-        console.error('세션 연결 또는 스트림 발행 오류:', error);
+        console.error('세션 연결 또는 스트림 발행 오류:', error.name, error.message);
+        // 여기에 오류 처리 로직 추가 (예: 사용자에게 알림, 재연결 시도 등)
       }
     },
     [userData.email, handleCustomerConnect, handleCustomerDisconnect, connectedKiosks.length]
   );
-
   useEffect(() => {
     if (userData.token && !isConnected) {
       initializeAdvisor();
