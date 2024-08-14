@@ -87,8 +87,8 @@ function KioskIndex() {
         // 10초 후 페이지 이동
         navigateTimerRef.current = setTimeout(() => {
           navigate('/kiosk');
-        }, 5000); // 10000ms = 10초
-      }, 10000); // 50000ms = 50초
+        }, 10000); // 10000ms = 10초
+      }, 50000); // 50000ms = 50초
 
       idleTimeRef.current = 0; // idleTimeRef 초기화
     }
@@ -109,7 +109,7 @@ function KioskIndex() {
       idleTimeRef.current += 1000; // 1초마다 idleTimeRef 증가
 
       // 60초 동안 아무 이벤트도 없으면 페이지 이동
-      if (idleTimeRef.current >= 15000 && location.pathname !== '/kiosk') {
+      if (idleTimeRef.current >= 60000 && location.pathname !== '/kiosk') {
         clearInterval(intervalRef.current);
         navigate('/kiosk');
       }
