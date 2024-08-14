@@ -212,7 +212,9 @@ const AdvMainPage = () => {
 
   const initializeSession = useCallback(
     async (roomId, token) => {
+      const OPENVIDU_SERVER_URL = 'https://i11a601.p.ssafy.io:8443';
       const ov = new OpenVidu();
+      ov.setAdvancedConfiguration({ openviduServerUrl: OPENVIDU_SERVER_URL });
       setOV(ov);
 
       const session = ov.initSession();
