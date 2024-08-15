@@ -8,6 +8,7 @@ import { ko } from 'date-fns/locale';
 import Navbar from '../../components/pos/Navbar';
 import RangeDatePicker from '../../components/pos/RangeDatePicker';
 import { getSalesStatistics } from '../../apis/Sales';
+import { getPosStatistics } from '../../apis/Pos';
 
 Chart.register(...registerables);
 
@@ -48,8 +49,10 @@ const DateNavBar = styled.div`
   flex-direction: row;
   justify-content: space-between;
   align-items: center;
+`;
 
-  /* gap: 10px; */
+const RedText = styled.span`
+  color: #ec7348;
 `;
 
 const Button = styled.button`
@@ -66,60 +69,9 @@ const Button = styled.button`
   font-size: 1rem;
 `;
 
-const DateDisplay = styled.div`
-  border: 1px solid #ddd;
-  cursor: pointer;
-  width: 300px;
-  padding: 10px;
-  text-align: center;
-  user-select: none;
-  border-radius: 10px;
-  background-color: #fff;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-`;
-
-const DatePickerWrapper = styled.div`
+const StatisticsResult = styled.div`
   display: flex;
-  gap: 10px;
-  margin-top: 10px;
-
-  .react-datepicker {
-    box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1);
-  }
-
-  .react-datepicker__header {
-    background-color: white;
-    border-bottom: none;
-  }
-
-  .react-datepicker__day--selected {
-    background-color: #007bff;
-    color: white;
-  }
-
-  .react-datepicker__day--keyboard-selected {
-    background-color: #007bff;
-    color: white;
-  }
-
-  .react-datepicker__day-name,
-  .react-datepicker__day {
-    color: #333;
-  }
-
-  .react-datepicker__day-name:nth-child(1),
-  .react-datepicker__day:nth-child(1) {
-    color: red;
-  }
-
-  .react-datepicker__day-name:nth-child(7),
-  .react-datepicker__day:nth-child(7) {
-    color: #007bff;
-  }
-
-  .react-datepicker__day:hover {
-    background-color: #f0f8ff;
-  }
+  flex-direction: row;
 `;
 
 const MainBody = styled.div`
@@ -155,6 +107,13 @@ function SalesReportPage() {
 
   // const [statisticsData, setStatisticsData] = useState(null);
 
+  const [posStatisticsData, setPosStatisticsData] = useState({
+    // 포스 30일 동안의 매출, 총 포스 수, 등수
+    averageSales: null,
+    posCount: null,
+    currentPosRank: null,
+  });
+
   const [salesTotal, setSalesTotal] = useState(0);
 
   const [showedData, setShowedData] = useState({
@@ -181,17 +140,6 @@ function SalesReportPage() {
     },
   });
 
-  // const makeLabel = () => {
-  //   if (graphUnit === 'day') {
-  //     statisticsData.map(() => {});
-  //   } else if (graphUnit === 'week') {
-  //   } else if (graphUnit === 'month') {
-  //   } else {
-  //   }
-  // };
-
-  // const makeLabelWeekly = () => {};
-
   const makeDateFormat = (date) => {
     // 어떤 날짜여도 'YYYY-DD-YY'형식으로 변환!
     const year = date.getFullYear();
@@ -202,10 +150,23 @@ function SalesReportPage() {
   };
 
   useEffect(() => {
+    getPosStatisticsThirty();
+  }, [posStatisticsData]);
+
+  const getPosStatisticsThirty = async () => {
+    let posStatistics = await getPosStatistics();
+    setPosStatisticsData(posStatistics);
+  };
+
+  useEffect(() => {
     getStatisticsData();
     console.log('before start date : ', makeDateFormat(getPreviousMonthDate(startDate)));
     console.log('before end date : ', makeDateFormat(getPreviousMonthDate(endDate)));
   }, [dateRange]);
+
+  const changePriceForm = (price) => {
+    return '₩' + price.toLocaleString();
+  };
 
   const getStatisticsData = async () => {
     const data = await getSalesStatistics(makeDateFormat(startDate), makeDateFormat(endDate));
@@ -398,17 +359,14 @@ function SalesReportPage() {
           <RangeDatePicker setDateRange={setDateRange} dateRange={dateRange} />
         </DateNavBar>
         <MainBody>
-          {/* <DescriptionCard
-            title={'선택된 기간 동안의 매출'}
-            contents={salesTotal}
-            notice={noticeMessage}
-          /> */}
-          {/* <DescriptionCard
-            title={'주문건'}
-            contents={'5건'}
-            notice={'지난 주 수요일보다 1건 늘었어요.'}
-          /> */}
-
+          <StatisticsResult>
+            최근 30일 동안의 매출은
+            <RedText>{changePriceForm(posStatisticsData.averageSales || '')}</RedText>이고, 전국
+            &nbsp;
+            <RedText>{posStatisticsData.posCount}</RedText>개의 포스 중&nbsp;
+            <RedText>{posStatisticsData.currentPosRank}</RedText>
+            등입니다.
+          </StatisticsResult>
           <Charts>
             <Bar data={showedData} options={options} />
           </Charts>
