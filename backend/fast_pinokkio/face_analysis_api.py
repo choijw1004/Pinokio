@@ -5,18 +5,10 @@ import cv2
 import base64
 import json
 import uuid
-import os
-from dotenv import load_dotenv
 import logging
 from typing import List
-from cryptography.hazmat.primitives import padding
-from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
-from cryptography.hazmat.backends import default_backend
 from insightface.app import FaceAnalysis
 from pydantic import BaseModel
-
-# 환경 변수 로드
-load_dotenv()
 
 # 로깅 설정
 logging.basicConfig(level=logging.INFO)
@@ -54,17 +46,6 @@ def augment_image(image):
     augmentations.append(cv2.convertScaleAbs(image, alpha=0.8, beta=-30))
     return augmentations
 
-def analyze_face(image):
-    preprocessed_face = preprocess_face(image)
-    faces = face_analyzer.get(preprocessed_face)
-    return faces
-
-def get_closest_face(faces, threshold=0.6):
-    valid_faces = [face for face in faces if face.det_score >= threshold]
-    if not valid_faces:
-        return None
-    return max(valid_faces, key=lambda face: (face.bbox[2] - face.bbox[0]) * (face.bbox[3] - face.bbox[1]))
-
 @app.post("/analyze_faces")
 async def analyze_faces(data: ImageData):
     request_id = str(uuid.uuid4())
@@ -81,10 +62,14 @@ async def analyze_faces(data: ImageData):
             nparr = np.frombuffer(image_data, np.uint8)
             img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
 
-            augmented_images = augment_image(img)
+            # 이미지 전처리
+            preprocessed_img = preprocess_face(img)
+
+            # 이미지 증강
+            augmented_images = augment_image(preprocessed_img)
 
             for aug_img in augmented_images:
-                faces = analyze_face(aug_img)
+                faces = face_analyzer.get(aug_img)
                 closest_face = get_closest_face(faces, threshold=0.6)
 
                 if closest_face and closest_face.det_score > best_score:
@@ -119,6 +104,12 @@ async def analyze_faces(data: ImageData):
 @app.get("/fast/health")
 async def health_check():
     return {"status": "healthy"}
+
+def get_closest_face(faces, threshold=0.6):
+    valid_faces = [face for face in faces if face.det_score >= threshold]
+    if not valid_faces:
+        return None
+    return max(valid_faces, key=lambda face: (face.bbox[2] - face.bbox[0]) * (face.bbox[3] - face.bbox[1]))
 
 if __name__ == "__main__":
     import uvicorn
