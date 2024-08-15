@@ -13,13 +13,36 @@ const PageStyle = styled.div`
 
 const Logo = styled.div`
   font-size: 3vh;
-  color: #7392ff;
+  color: ${(props) => (props.isElder ? '#EC7348' : '#7392ff')};
   font-family: 'Alfa Slab One', serif;
   font-weight: 400;
   font-style: normal;
   padding-left: 1vw;
   padding-top: 1vh;
 `;
+
+const KioskLeftHeader = styled.div`
+  width: 30%;
+  height: 100%;
+`;
+
+const KioskRightHeader = styled.div`
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  width: 70%;
+`;
+
+const ScreenStyle = styled.div`
+  background-color: #222222;
+  width: 90%;
+  height: 90%;
+  color: white;
+  text-align: center;
+  line-height: 10rem;
+  font-family: 'CafeOhsquareAir';
+`;
+
 const BackButton = styled.div`
   font-family: 'CafeOhsquareAir';
   display: flex;
@@ -40,12 +63,13 @@ const BackButtonText = styled.div`
   color: #414141;
   line-height: 2rem;
 `;
-
 const KioskHeader = styled.div`
+  display: flex;
+  flex-direction: row;
   border-bottom: 1px #d9d9d9 solid;
   background-color: white;
   width: 100%;
-  height: 5rem;
+  height: 13rem;
 `;
 
 const KioskBody = styled.div`
@@ -108,28 +132,47 @@ const KioskInnerCardNumber = styled.div`
 
 const KioskInnerCardImage = styled.img``;
 
-function ReceiptPage({ isElder }) {
+function ReceiptPage() {
   const navigate = useNavigate();
   const { state } = useLocation();
-  console.log('TETETETETETETETETTE', state);
+
   const finishOrder = () => {
     navigate('/kiosk/');
   };
 
   const goBack = () => {
     // 장바구니에 담아둔 주문 목록 등을 가지고 있어야 한다.
-    navigate('/kiosk/menu');
+    navigate('/kiosk/payment', { state: state });
   };
 
   return (
     <PageStyle>
-      <KioskHeader>
-        <Logo>Pinokio</Logo>
-        <BackButton>
-          <Arrow>{'<'}</Arrow>
-          <BackButtonText onClick={goBack}>뒤로가기</BackButtonText>
-        </BackButton>
-      </KioskHeader>
+      {state.isElder ? (
+        <KioskHeader>
+          <KioskLeftHeader>
+            <Logo isElder={state.isElder}>Pinokio</Logo>
+            <BackButton>
+              <Arrow>{'<'}</Arrow>
+              <BackButtonText onClick={goBack}>뒤로가기</BackButtonText>
+            </BackButton>{' '}
+          </KioskLeftHeader>
+          <KioskRightHeader>
+            <ScreenStyle>
+              {/* {subscribers.length > 0 && <OpenViduVideoComponent streamManager={subscribers[0]} />} */}
+            </ScreenStyle>
+            {/* {(cameraSession || screenSession) && <Button onClick={handleLeaveRoom}>상담 종료</Button>} */}
+          </KioskRightHeader>
+        </KioskHeader>
+      ) : (
+        <KioskHeader>
+          <Logo>Pinokio</Logo>
+          <BackButton>
+            <Arrow>{'<'}</Arrow>
+            <BackButtonText onClick={goBack}>뒤로가기</BackButtonText>
+          </BackButton>
+        </KioskHeader>
+      )}
+
       <KioskBody>
         <KioskCenterCard>
           <KioskCenterCardTitle>결제가 완료되었습니다.</KioskCenterCardTitle>
@@ -140,7 +183,9 @@ function ReceiptPage({ isElder }) {
             </KioskCenterCardButton>
             <KioskCenterCardButton onClick={finishOrder}>
               <KioskInnerCardTitle>주문번호만 받기</KioskInnerCardTitle>
-              <KioskInnerCardNumber>365</KioskInnerCardNumber>
+              <KioskInnerCardNumber isElder={state.isElder}>
+                {Math.floor(100 + Math.random() * 900)}
+              </KioskInnerCardNumber>
             </KioskCenterCardButton>
           </KioskCenterCardContainer>
         </KioskCenterCard>

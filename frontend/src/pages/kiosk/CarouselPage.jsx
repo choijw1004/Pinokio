@@ -227,13 +227,13 @@ function CarouselPage() {
 
   const havingHere = () => {
     navigate('/kiosk/menu', {
-      state: { where: 'having here', customer: customer, orderList: null },
+      state: { where: 'having here', customer: customer, orderList: null, isElder: false },
     });
   };
 
   const takeAway = () => {
     navigate('/kiosk/elder-menu', {
-      state: { where: 'take away', customer: customer, orderList: null },
+      state: { where: 'take away', customer: customer, orderList: null, isElder: true },
     });
   };
 

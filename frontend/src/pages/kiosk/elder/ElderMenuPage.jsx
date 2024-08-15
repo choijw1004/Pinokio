@@ -12,7 +12,8 @@ import useWebSocket from '../../../hooks/useWebSocket';
 import { OpenVidu } from 'openvidu-browser';
 import OpenViduVideoComponent from '../../../components/kiosk/OpenViduComponent';
 import Button from '../../../components/common/Button';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { getFavoriteItem, getRecentItem } from '../../../apis/Order';
 
 const ElderMenuPageStyle = styled.div`
   display: flex;
@@ -112,6 +113,8 @@ function ElderMenuPage() {
 
   const userData = useSelector((store) => store.user);
   const { sendMessage, lastMessage, isConnected, connect } = useWebSocket(userData.token);
+  const { state } = useLocation();
+  const selectedCategoryMounted = useRef(false);
 
   const isFirstRender = useRef(true);
   const navigate = useNavigate();
@@ -171,14 +174,32 @@ function ElderMenuPage() {
   };
 
   useEffect(() => {
+    // payment 페이지로 넘어갔다가 돌아올 때 cartItems를 유지하기 위해
+    console.log('useEffect state cartItems : ', state.cartItems);
+    if (state.cartItems) {
+      setCartItems(state.cartItems);
+    }
+  }, []);
+
+  useEffect(() => {
     if (categories.length > 0 && !selectedCategory) {
       setSelectedCategory(categories[0]);
     }
   }, [categories, selectedCategory]);
 
   useEffect(() => {
-    if (selectedCategory) {
+    if (!selectedCategoryMounted.current) {
+      // mount되었을 때는 안되게, update 되었을 때는 useEffect가 실행되게 하기 위해
+      console.log('selectedCategory mounted : ');
+      selectedCategoryMounted.current = true;
+    } else if (selectedCategory.id !== 'recommended') {
+      // 추천 메뉴일 따로 예외 처리를 해주어야 한다.
+      console.log('selectedCategory updated');
+      console.log(selectedCategory);
       getMenu();
+    } else if (selectedCategory.id === 'recommended') {
+      console.log('selectedCategory Id is recommended');
+      getRecommendedMenu();
     }
   }, [selectedCategory]);
 
@@ -190,6 +211,37 @@ function ElderMenuPage() {
         menu['count'] = 0;
       });
       setMenus(menu_data.responseList);
+    }
+  };
+
+  const getRecommendedMenu = async () => {
+    if (selectedCategory && userData) {
+      let menu_data = [];
+      let favoriteItem = await getFavoriteItem(state.member.customerId);
+      console.log('favoriteItem : ', favoriteItem);
+
+      favoriteItem = { id: favoriteItem[0].itemId, name: favoriteItem[0].itemName };
+      console.log('favoriteItem : ', favoriteItem);
+      menu_data.push(favoriteItem);
+      let recentItems = await getRecentItem(state.member.customerId);
+      console.log('recentItems : ', recentItems);
+
+      (recentItems.orderItems || []).forEach((item) => {
+        if (item.itemId !== favoriteItem.id) {
+          const itemTemp = { id: item.itemId, name: item.itemName };
+          menu_data.push(itemTemp);
+        }
+      });
+
+      console.log('received menus datas : ', menu_data);
+      // 화면에 보여줄 데이터만 필터링 (isScreen이 YES인 경우)
+      const filteredMenus = menu_data
+        .filter((menu) => menu.isScreen === 'YES')
+        .map((menu) => {
+          menu['count'] = 0; // count 초기화
+          return menu;
+        });
+      setMenus(filteredMenus);
     }
   };
 
@@ -348,7 +400,7 @@ function ElderMenuPage() {
           )}
         </KioskMenusStyle>
       </KioskBody>
-      <Cart cartItems={cartItems} setCartItems={setCartItems} isElder={true} />
+      <Cart cartItems={cartItems} setCartItems={setCartItems} />
 
       {modal && (
         <MenuModal
