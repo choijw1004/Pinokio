@@ -58,7 +58,7 @@ default-image:
 
 openvidu:
   #url: https://i11a601.p.ssafy.io:8443/
-  url: https://pinokio-openvidu.duckdns.org/
+  url: https://pinokio-ov.duckdns.org:443/
   secret: MY_SECRET
 
 encryption:
