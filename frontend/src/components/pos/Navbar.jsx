@@ -85,13 +85,17 @@ const LogoLocation = styled.div`
 `;
 
 const LogOut = styled.button`
-  margin-top: 23em;
-  margin-left: 11em;
+  position: absolute;
+  bottom: 1rem; // distance from the bottom
+  right: 1rem; // distance from the right
   color: #ec7348;
-  /* box-shadow: 1px 2px 0 rgb(0 0 0 / 0.25); */
   background-color: white;
-  /* border: 1px solid black; */
   border: none;
+  cursor: pointer;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  transition: color 0.3s ease;
+
   &:hover {
     color: #ffc33f;
   }
