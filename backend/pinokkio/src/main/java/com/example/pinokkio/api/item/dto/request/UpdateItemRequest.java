@@ -38,7 +38,6 @@
         @Schema(description = "아이템 세부 사항", example = "참깨빵 위에 순 쇠고기 패티 두 장 특별한 소스 양상추 치즈 피클 양파까지!")
         private String detail;
 
-        @NotEmpty(message = "useExistingImage는 필수 값입니다.")
         @Schema(description = "이미지 변경 여부", example = "true 시 기존 이미지 유지")
         private Boolean useExistingImage;
 
