@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useCallback, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import styled from 'styled-components';
 import { makeOrder } from '../../../apis/Order';
+import OpenViduVideoComponent from '../../../components/kiosk/OpenViduComponent';
 
 const PageStyle = styled.div`
   display: flex;
@@ -9,10 +10,11 @@ const PageStyle = styled.div`
   align-items: center;
   background-color: #efefef;
   min-width: 27rem;
+  position: relative;
 `;
 const Logo = styled.div`
   font-size: 3vh;
-  color: #7392ff;
+  color: ${(props) => (props.isElder ? '#EC7348' : '#7392ff')};
   font-family: 'Alfa Slab One', serif;
   font-weight: 400;
   font-style: normal;
@@ -20,6 +22,20 @@ const Logo = styled.div`
   padding-top: 1vh;
   cursor: pointer;
 `;
+
+const ScreenStyle = styled.div`
+  position: absolute;
+  background-color: #222222;
+  top: 1rem;
+  right: 1rem;
+  width: 60%;
+  height: 20%;
+  color: white;
+  text-align: center;
+  line-height: 10rem;
+  font-family: 'CafeOhsquareAir';
+`;
+
 const BackButton = styled.div`
   font-family: 'CafeOhsquareAir';
   display: flex;
@@ -97,6 +113,7 @@ const KioskInnerCardTitle = styled.div`
   font-size: 1em;
   margin-bottom: 0.2rem;
 `;
+
 const KioskInnerCardSubTitle = styled.div`
   font-family: 'CafeOhsquareAir';
   color: ${(props) => (props.isElder ? '#EC7348' : '#7392ff')};
@@ -105,38 +122,35 @@ const KioskInnerCardSubTitle = styled.div`
 `;
 const KioskInnerCardImage = styled.img``;
 
-function PaymentPage({ isElder }) {
+function PaymentPage() {
   const navigate = useNavigate();
   const { state } = useLocation();
+  const [subscribers, setSubscribers] = useState([]);
+  const [cameraSession, setCameraSession] = useState(null);
+  const [screenSession, setScreenSession] = useState(null);
 
   const goReceipt = async () => {
     const orderList = state.cartItems.map((item) => {
       return { itemId: item.itemId, quantity: item.count };
     });
-    const res = await makeOrder(state.customer.customerId, orderList);
+    await makeOrder(state.customer.customerId, orderList);
 
     navigate('/kiosk/receipt', { state: state });
   };
 
   const goBack = () => {
     // 장바구니에 담아둔 주문 목록 등을 가지고 있어야 한다.
-    navigate('/kiosk/menu');
-  };
-
-  const handleClick = () => {
-    navigate('/kiosk/menu');
+    if (state.isElder) {
+      navigate('/kiosk/elder-menu', { state: state });
+    } else {
+      navigate('/kiosk/menu', { state: state });
+    }
   };
 
   return (
     <PageStyle>
       <KioskHeader>
-        <Logo
-          onClick={() => {
-            handleClick();
-          }}
-        >
-          Pinokio
-        </Logo>
+        <Logo isElder={state.isElder}>Pinokio</Logo>
         <BackButton>
           <Arrow>{'<'}</Arrow>
           <BackButtonText onClick={goBack}>뒤로가기</BackButtonText>
@@ -148,17 +162,20 @@ function PaymentPage({ isElder }) {
           <KioskCenterCardContainer>
             <KioskCenterCardButton onClick={goReceipt}>
               <KioskInnerCardTitle>신용카드</KioskInnerCardTitle>
-              <KioskInnerCardSubTitle isElder={isElder}>체크카드 / 삼성페이</KioskInnerCardSubTitle>
+              <KioskInnerCardSubTitle isElder={state.isElder}>
+                체크카드 / 삼성페이
+              </KioskInnerCardSubTitle>
               <KioskInnerCardImage src="/CreditCard.svg" width="80rem"></KioskInnerCardImage>
             </KioskCenterCardButton>
             <KioskCenterCardButton onClick={goReceipt}>
               <KioskInnerCardTitle>카카오페이</KioskInnerCardTitle>
-              <KioskInnerCardSubTitle isElder={isElder}>앱 전용</KioskInnerCardSubTitle>
+              <KioskInnerCardSubTitle isElder={state.isElder}>앱 전용</KioskInnerCardSubTitle>
               <KioskInnerCardImage src="/KakaoTalk_logo.svg" width="60rem"></KioskInnerCardImage>
             </KioskCenterCardButton>
           </KioskCenterCardContainer>
         </KioskCenterCard>
       </KioskBody>
+      {state.isElder && <ScreenStyle></ScreenStyle>}
     </PageStyle>
   );
 }

@@ -9,6 +9,7 @@ import { getCategories } from '../../../apis/Category';
 import { getItemsByCategoryId } from '../../../apis/Item';
 import { useNavigate } from 'react-router-dom';
 import { useLocation } from 'react-router-dom';
+import { getFavoriteItem, getRecentItem } from '../../../apis/Order';
 
 const MenuPageStyle = styled.div`
   display: flex;
@@ -48,7 +49,7 @@ const KioskBody = styled.div`
   }
 `;
 
-function MenuPage({ isElder }) {
+function MenuPage() {
   const [categories, setCategories] = useState([]);
   const [menus, setMenus] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState(null);
@@ -61,12 +62,10 @@ function MenuPage({ isElder }) {
   const userData = useSelector((store) => store.user);
   const navigate = useNavigate();
   const { state } = useLocation();
-  // const {  } = state;
 
   useEffect(() => {
     console.log('first rendering');
     getCategory();
-    console.log('THIS IS STATE : ', state);
     console.log('THIS IS STATE : ', state);
 
     // 처음 렌더링 했을 때 순서 getCategory ->  useEffect(categories) -> useEffect(selectedCategory)
@@ -76,8 +75,27 @@ function MenuPage({ isElder }) {
     /* axios를 이용하여 category를 가져온다. */
     const category_data = await getCategories(userData.typeInfo.posId);
     console.log('received categories datas : ', category_data);
+    state['member'] = {
+      customerId: '33e75aab-9707-4f18-9f96-e27383f7171d',
+      age: null,
+      gender: null,
+    }; // 임시 데이터
+    if (state.member.customerId !== 'guest') {
+      category_data.responseList.unshift({
+        id: 'recommended',
+        name: '추천 메뉴',
+      });
+    }
     setCategories(category_data.responseList);
   };
+
+  useEffect(() => {
+    // payment 페이지로 넘어갔다가 돌아올 때 cartItems를 유지하기 위해
+    console.log('useEffect state cartItems : ', state.cartItems);
+    if (state.cartItems) {
+      setCartItems(state.cartItems);
+    }
+  }, []);
 
   useEffect(() => {
     if (!categoriesMounted.current) {
@@ -92,12 +110,17 @@ function MenuPage({ isElder }) {
 
   useEffect(() => {
     if (!selectedCategoryMounted.current) {
+      // mount되었을 때는 안되게, update 되었을 때는 useEffect가 실행되게 하기 위해
       console.log('selectedCategory mounted : ');
       selectedCategoryMounted.current = true;
-    } else {
+    } else if (selectedCategory.id !== 'recommended') {
+      // 추천 메뉴일 따로 예외 처리를 해주어야 한다.
       console.log('selectedCategory updated');
       console.log(selectedCategory);
       getMenu();
+    } else if (selectedCategory.id === 'recommended') {
+      console.log('selectedCategory Id is recommended');
+      getRecommendedMenu();
     }
   }, [selectedCategory]);
 
@@ -112,6 +135,37 @@ function MenuPage({ isElder }) {
           menu['count'] = 0; // count 초기화
           return menu;
         });
+      setMenus(filteredMenus);
+    }
+  };
+  const getRecommendedMenu = async () => {
+    if (selectedCategory && userData) {
+      let menu_data = [];
+      let favoriteItem = await getFavoriteItem(state.member.customerId);
+      console.log('favoriteItem : ', favoriteItem);
+
+      favoriteItem = { id: favoriteItem[0].itemId, name: favoriteItem[0].itemName };
+      console.log('favoriteItem : ', favoriteItem);
+      menu_data.push(favoriteItem);
+      let recentItems = await getRecentItem(state.member.customerId);
+      console.log('recentItems : ', recentItems);
+
+      (recentItems.orderItems || []).forEach((item) => {
+        if (item.itemId !== favoriteItem.id) {
+          const itemTemp = { id: item.itemId, name: item.itemName };
+          menu_data.push(itemTemp);
+        }
+      });
+
+      console.log('received menus datas : ', menu_data);
+      // 화면에 보여줄 데이터만 필터링 (isScreen이 YES인 경우)
+      const filteredMenus = menu_data
+        .filter((menu) => menu.isScreen === 'YES')
+        .map((menu) => {
+          menu['count'] = 0; // count 초기화
+          return menu;
+        });
+      console.log('filteredMenus', filteredMenus);
       setMenus(filteredMenus);
     }
   };
@@ -148,7 +202,12 @@ function MenuPage({ isElder }) {
           />
         )}
       </KioskBody>
-      <Cart cartItems={cartItems} setCartItems={setCartItems} isElder={false} state={state} />
+      <Cart
+        cartItems={cartItems}
+        setCartItems={setCartItems}
+        isElder={state.isElder}
+        state={state}
+      />
 
       {modal && (
         <MenuModal

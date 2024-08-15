@@ -84,6 +84,7 @@ export const postItem = async (formData) => {
 
 // 아이템 수정
 export const putItem = async (itemId, formData) => {
+  console.log(formData);
   try {
     const response = await axios.put(`/api/pos/items/${itemId}`, formData, {
       headers: {

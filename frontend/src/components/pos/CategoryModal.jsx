@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { createCategory } from '../../apis/Category';
 import styled from 'styled-components';
+import RoundButton from '../common/RoundButton';
 
 const Modal = styled.div`
   position: fixed;
@@ -11,6 +12,19 @@ const Modal = styled.div`
   padding: 20px;
   border-radius: 5px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+`;
+
+const ButtonContainer = styled.div`
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-evenly;
+  margin-top: 0.5rem;
+  align-items: center;
 `;
 
 const Input = styled.input`
@@ -27,6 +41,7 @@ const CategoryModal = ({ category, categories, onSave, onClose }) => {
   }, [category]);
 
   const handleSave = async () => {
+    console.log('handleSave');
     if (!name.trim()) {
       alert('카테고리 이름을 입력해주세요.');
       return;
@@ -59,8 +74,10 @@ const CategoryModal = ({ category, categories, onSave, onClose }) => {
         placeholder="카테고리명"
         required
       />
-      <button onClick={handleSave}>확인</button>
-      <button onClick={onClose}>취소</button>
+      <ButtonContainer>
+        <RoundButton onClick={handleSave} theme={'colored'} text={'확인'} />
+        <RoundButton onClick={onClose} theme={'white'} text={'취소'} />
+      </ButtonContainer>
     </Modal>
   );
 };

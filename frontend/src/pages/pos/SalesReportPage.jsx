@@ -151,16 +151,11 @@ function SalesReportPage() {
 
   const [dateRange, setDateRange] = useState([new Date(), new Date()]);
   const [startDate, endDate] = dateRange;
+  // const [graphUnit, setGraphUnit] = useState('day');
 
-  const [statisticsData, setStatisticsData] = useState({
-    dailySales: ['1'],
-    weeklySales: ['2'],
-    monthlySales: ['3'],
-    yearlySales: ['4'],
-  });
+  // const [statisticsData, setStatisticsData] = useState(null);
 
   const [salesTotal, setSalesTotal] = useState(0);
-  const [noticeMessage, setNoticeMessage] = useState('');
 
   const [showedData, setShowedData] = useState({
     labels: ['8월'],
@@ -176,6 +171,7 @@ function SalesReportPage() {
       },
     ],
   });
+  const [statisticsData, setStatisticsData] = useState(null);
   const [options, setOptions] = useState({
     scales: {
       x: {
@@ -184,8 +180,6 @@ function SalesReportPage() {
       },
     },
   });
-
-  const [graphUnit, setGraphUnit] = useState('day');
 
   // const makeLabel = () => {
   //   if (graphUnit === 'day') {
@@ -212,13 +206,6 @@ function SalesReportPage() {
     console.log('before start date : ', makeDateFormat(getPreviousMonthDate(startDate)));
     console.log('before end date : ', makeDateFormat(getPreviousMonthDate(endDate)));
   }, [dateRange]);
-
-  useEffect(() => {
-    console.log('showedData : ', showedData);
-  }, [showedData]);
-  useEffect(() => {
-    console.log('options : ', options);
-  }, [options]);
 
   const getStatisticsData = async () => {
     const data = await getSalesStatistics(makeDateFormat(startDate), makeDateFormat(endDate));
@@ -270,6 +257,18 @@ function SalesReportPage() {
     });
     setSalesTotal(sum);
   };
+
+  useEffect(() => {
+    console.log('showedData : ', showedData);
+  }, [showedData]);
+
+  useEffect(() => {
+    console.log('options : ', options);
+  }, [options]);
+
+  useEffect(() => {
+    console.log('options : ', salesTotal);
+  }, [salesTotal]);
 
   const getPreviousMonthDate = (date) => {
     // 현재 날짜에서 한 달을 뺀 날짜를 생성
@@ -409,11 +408,10 @@ function SalesReportPage() {
             contents={'5건'}
             notice={'지난 주 수요일보다 1건 늘었어요.'}
           /> */}
-          {statisticsData && statisticsData.dailySales.length > 0 && (
-            <Charts>
-              <Bar data={statisticsData} options={options} />
-            </Charts>
-          )}
+
+          <Charts>
+            <Bar data={showedData} options={options} />
+          </Charts>
         </MainBody>
       </Main>
     </MainOuter>

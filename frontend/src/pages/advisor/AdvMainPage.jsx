@@ -153,8 +153,10 @@ const AdvMainPage = () => {
   const [isAccept, setIsAccept] = useState('waiting');
 
   const dispatch = useDispatch();
-  const [showModal, setShowModal] = useState(false);
+  const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState('');
   const [consultationRequest, setConsultationRequest] = useState(null);
+  const [pendingAction, setPendingAction] = useState(null);
   const { sendMessage, lastMessage, isConnected, connect } = useWebSocket(userData.token);
 
   const [OV, setOV] = useState(null);
@@ -333,76 +335,54 @@ const AdvMainPage = () => {
       const data = JSON.parse(lastMessage.data);
       console.log('WebSocket 메시지 수신:', data);
       if (data.type === 'consultationRequest') {
-        handleConsultationRequest(data);
+        setConsultationRequest(data);
+        setToastMessage('상담 요청이 왔습니다. 수락하시겠습니까?');
+        setShowToast(true);
       }
     }
   }, [lastMessage]);
 
-  useEffect(() => {
-    if (isAccept === 'accept') {
-      // 승낙했으니 연결 과정으로 넘어간다.
-      setIsAccept('no request');
-    } else if (isAccept === 'reject') {
-      // 거절에 따른 post를 보낸다.
-      setIsAccept('no request');
-    } else if (isAccept === 'no request') {
-      // waiting request
-    }
-  }, [isAccept]);
+  const handleConsultationRequest = useCallback((accept) => {
+    setPendingAction(accept ? 'accept' : 'reject');
+    setShowToast(false);
+  }, []);
 
   useEffect(() => {
-    if (isAccept === 'accept') {
-      // 승낙했으니 연결 과정으로 넘어간다.
-      setIsAccept('no request');
-    } else if (isAccept === 'reject') {
-      // 거절에 따른 post를 보낸다.
-      setIsAccept('no request');
-    } else if (isAccept === 'no request') {
-      // waiting request
-    }
-  }, [isAccept]);
-
-  const handleConsultationRequest = (data) => {
-    console.log('상담 요청 받음:', data);
-    console.log(isAvailable, currentConnections, maxConnections);
-    if (isAvailable && currentConnections < maxConnections) {
-      setConsultationRequest(data);
-      setShowModal(true);
-    }
-  };
-
-  const handleAcceptMeeting = async () => {
-    try {
-      await acceptMeeting(roomId, consultationRequest.kioskId);
-      const availableRoom = connectedKiosks.find((kiosk) => kiosk.status === 'waiting');
-      if (availableRoom) {
-        dispatch(
-          connectKiosk({
-            id: availableRoom.id,
-            kioskId: consultationRequest.kioskId,
-            status: 'connected',
-          })
-        );
-        console.log('Updated connectedKiosks:', connectedKiosks);
-      } else {
-        console.log('No available room for new kiosk');
+    const handlePendingAction = async () => {
+      if (pendingAction && consultationRequest) {
+        if (pendingAction === 'accept') {
+          try {
+            await acceptMeeting(roomId, consultationRequest.kioskId);
+            const availableRoom = connectedKiosks.find((kiosk) => kiosk.status === 'waiting');
+            if (availableRoom) {
+              dispatch(
+                connectKiosk({
+                  id: availableRoom.id,
+                  kioskId: consultationRequest.kioskId,
+                  status: 'connected',
+                })
+              );
+              console.log('Updated connectedKiosks:', connectedKiosks);
+            } else {
+              console.log('No available room for new kiosk');
+            }
+          } catch (error) {
+            console.error('상담 수락 오류:', error);
+          }
+        } else if (pendingAction === 'reject') {
+          try {
+            await rejectMeeting();
+          } catch (error) {
+            console.error('상담 거절 오류:', error);
+          }
+        }
+        setConsultationRequest(null);
+        setPendingAction(null);
       }
-      setShowModal(false);
-      setConsultationRequest(null);
-    } catch (error) {
-      console.error('상담 수락 오류:', error);
-    }
-  };
+    };
 
-  const handleRejectMeeting = async () => {
-    try {
-      await rejectMeeting();
-    } catch (error) {
-      console.error('상담 거절 오류:', error);
-    }
-    setShowModal(false);
-    setConsultationRequest(null);
-  };
+    handlePendingAction();
+  }, [pendingAction, consultationRequest, roomId, connectedKiosks, dispatch]);
 
   const [activeSubscriber, setActiveSubscriber] = useState(null);
   const [activeScreenSubscriber, setActiveScreenSubscriber] = useState(null);
@@ -510,20 +490,15 @@ const AdvMainPage = () => {
         <RightSection>
           <CustomerKiosk streamManager={activeScreenSubscriber || null} />
         </RightSection>
-        {isAccept !== 'no request' && (
+        {showToast && (
           <Toast
-            message={'서비스 요청이 있습니다. 수락하시겠습니까?'}
-            setAnswer={setIsAccept}
+            message={toastMessage}
+            setAnswer={(answer) => handleConsultationRequest(answer === 'accept')}
+            onClose={() => setShowToast(false)}
             makeButton={true}
-          ></Toast>
+          />
         )}
       </AdvBody>
-      <Modal isOpen={showModal} onRequestClose={handleRejectMeeting} contentLabel="상담 요청">
-        <h2>상담 요청이 왔습니다</h2>
-        <p>수락하시겠습니까?</p>
-        <button onClick={handleAcceptMeeting}>수락</button>
-        <button onClick={handleRejectMeeting}>거절</button>
-      </Modal>
     </AdvMainPageWrapper>
   );
 };

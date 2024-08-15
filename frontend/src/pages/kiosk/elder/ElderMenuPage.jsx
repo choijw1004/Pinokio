@@ -11,8 +11,8 @@ import { requestMeeting, enterRoom, leaveRoom } from '../../../apis/Room';
 import useWebSocket from '../../../hooks/useWebSocket';
 import { OpenVidu } from 'openvidu-browser';
 import OpenViduVideoComponent from '../../../components/kiosk/OpenViduComponent';
-import Button from '../../../components/common/Button';
-import { useNavigate } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
+import { getFavoriteItem, getRecentItem } from '../../../apis/Order';
 
 const ElderMenuPageStyle = styled.div`
   display: flex;
@@ -101,6 +101,9 @@ function ElderMenuPage() {
   const [selectedMenu, setSelectedMenu] = useState(null);
   const [cartItems, setCartItems] = useState([]);
   const [modal, setModal] = useState(false);
+  const selectedCategoryMounted = useRef(false);
+  // 여기까지 기본 키오스크 기능
+
   const [openViduConnection, setOpenViduConnection] = useState(false);
   const [roomId, setRoomId] = useState(null);
   const [OV, setOV] = useState(null);
@@ -109,13 +112,97 @@ function ElderMenuPage() {
   const [screenSession, setScreenSession] = useState(null);
   const [isSessionInitialized, setIsSessionInitialized] = useState(false);
   const [publisher, setPublisher] = useState(null);
+  const { sendMessage, lastMessage, isConnected, connect } = useWebSocket(userData.token);
+  // 여기까지 비디오 기능
 
   const userData = useSelector((store) => store.user);
-  const { sendMessage, lastMessage, isConnected, connect } = useWebSocket(userData.token);
+  // Redux
+
+  const { state } = useLocation();
+  // router 로 넘겨주는 parameter
 
   const isFirstRender = useRef(true);
-  const navigate = useNavigate();
 
+  const getCategory = async () => {
+    /* axios를 이용하여 category를 가져온다. */
+    const category_data = await getCategories(userData.typeInfo.posId);
+    console.log('received categories datas : ', category_data);
+    setCategories(category_data.responseList);
+  };
+
+  useEffect(() => {
+    // payment 페이지로 넘어갔다가 돌아올 때 cartItems를 유지하기 위해
+    console.log('useEffect state cartItems : ', state.cartItems);
+    if (state.cartItems) {
+      setCartItems(state.cartItems);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (categories.length > 0 && !selectedCategory) {
+      setSelectedCategory(categories[0]);
+    }
+  }, [categories, selectedCategory]);
+
+  useEffect(() => {
+    if (!selectedCategoryMounted.current) {
+      // mount되었을 때는 안되게, update 되었을 때는 useEffect가 실행되게 하기 위해
+      console.log('selectedCategory mounted : ');
+      selectedCategoryMounted.current = true;
+    } else if (selectedCategory.id !== 'recommended') {
+      // 추천 메뉴일 따로 예외 처리를 해주어야 한다.
+      console.log('selectedCategory updated');
+      console.log(selectedCategory);
+      getMenu();
+    } else if (selectedCategory.id === 'recommended') {
+      console.log('selectedCategory Id is recommended');
+      getRecommendedMenu();
+    }
+  }, [selectedCategory]);
+
+  const getMenu = async () => {
+    if (selectedCategory && userData) {
+      const menu_data = await getItemsByCategoryId(selectedCategory.id);
+      console.log('received menus datas : ', menu_data);
+      menu_data.responseList.map((menu) => {
+        menu['count'] = 0;
+      });
+      setMenus(menu_data.responseList);
+    }
+  };
+
+  const getRecommendedMenu = async () => {
+    if (selectedCategory && userData) {
+      let menu_data = [];
+      let favoriteItem = await getFavoriteItem(state.member.customerId);
+      console.log('favoriteItem : ', favoriteItem);
+
+      favoriteItem = { id: favoriteItem[0].itemId, name: favoriteItem[0].itemName };
+      console.log('favoriteItem : ', favoriteItem);
+      menu_data.push(favoriteItem);
+      let recentItems = await getRecentItem(state.member.customerId);
+      console.log('recentItems : ', recentItems);
+
+      (recentItems.orderItems || []).forEach((item) => {
+        if (item.itemId !== favoriteItem.id) {
+          const itemTemp = { id: item.itemId, name: item.itemName };
+          menu_data.push(itemTemp);
+        }
+      });
+
+      console.log('received menus datas : ', menu_data);
+      // 화면에 보여줄 데이터만 필터링 (isScreen이 YES인 경우)
+      const filteredMenus = menu_data
+        .filter((menu) => menu.isScreen === 'YES')
+        .map((menu) => {
+          menu['count'] = 0; // count 초기화
+          return menu;
+        });
+      setMenus(filteredMenus);
+    }
+  };
+
+  // 여기서부터 비디오 관련 기능
   const initializeWebSocket = useCallback(() => {
     if (!isConnected) {
       connect();
@@ -162,41 +249,6 @@ function ElderMenuPage() {
       // 여기에 사용자에게 오류를 표시하는 로직을 추가할 수 있습니다.
     }
   }, []);
-
-  const getCategory = async () => {
-    /* axios를 이용하여 category를 가져온다. */
-    const category_data = await getCategories(userData.typeInfo.posId);
-    console.log('received categories datas : ', category_data);
-    setCategories(category_data.responseList);
-  };
-
-  useEffect(() => {
-    if (categories.length > 0 && !selectedCategory) {
-      setSelectedCategory(categories[0]);
-    }
-  }, [categories, selectedCategory]);
-
-  useEffect(() => {
-    if (selectedCategory) {
-      getMenu();
-    }
-  }, [selectedCategory]);
-
-  const getMenu = async () => {
-    if (selectedCategory && userData) {
-      const menu_data = await getItemsByCategoryId(selectedCategory.id);
-      console.log('received menus datas : ', menu_data);
-      menu_data.responseList.map((menu) => {
-        menu['count'] = 0;
-      });
-      setMenus(menu_data.responseList);
-    }
-  };
-
-  const handleClick = () => {
-    navigate('/kiosk/elder-menu');
-  };
-
   useEffect(() => {
     if (roomId && userData.typeInfo.kioskId && !openViduConnection) {
       console.log('enterRoom 호출:', roomId, userData.typeInfo.kioskId);
@@ -312,19 +364,13 @@ function ElderMenuPage() {
     <ElderMenuPageStyle>
       <KioskHeader>
         <KioskLeftHeader>
-          <Logo
-            onClick={() => {
-              handleClick();
-            }}
-          >
-            Pinokio
-          </Logo>
+          <Logo>Pinokio</Logo>
         </KioskLeftHeader>
         <KioskRightHeader>
           <ScreenStyle>
             {subscribers.length > 0 && <OpenViduVideoComponent streamManager={subscribers[0]} />}
           </ScreenStyle>
-          {(cameraSession || screenSession) && <Button onClick={handleLeaveRoom}>상담 종료</Button>}
+          {(cameraSession || screenSession) && <button onClick={handleLeaveRoom}>상담 종료</button>}
         </KioskRightHeader>
       </KioskHeader>
       <KioskBody>
@@ -348,7 +394,7 @@ function ElderMenuPage() {
           )}
         </KioskMenusStyle>
       </KioskBody>
-      <Cart cartItems={cartItems} setCartItems={setCartItems} isElder={true} />
+      <Cart cartItems={cartItems} setCartItems={setCartItems} />
 
       {modal && (
         <MenuModal

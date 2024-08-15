@@ -243,7 +243,7 @@ function Login() {
 
   return (
     <LoginWrapper>
-      <img src="/PSymbol.svg" width="400rem" alt="symbol" />
+      <img src="/PSymbol.svg" width="400rem" alt="symbol" onClick={() => navigate('/')} />
       <LoginForm id="login-form" onSubmit={handleLogin}>
         <Input
           type="text"
