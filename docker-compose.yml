@@ -20,7 +20,7 @@ services:
       - SPRING_DATASOURCE_PASSWORD=ssafy
       - SPRING_JPA_HIBERNATE_DDL_AUTO=create
       - SPRING_REDIS_HOST=localhost
-      - SPRING_REDIS_PORT=6379
+      - SPRING_REDIS_PORT=6380
       - SPRING_MAIL_USERNAME=${EMAIL}
       - SPRING_MAIL_PASSWORD=${EMAIL_PW}
       - JWT_SECRET=${JWT_SECRET}
@@ -77,7 +77,7 @@ services:
     image: redis:latest
     network_mode: host
     ports:
-      - "6379:6379"
+      - "6380:6380"
 
 volumes:
   mysql-data:
