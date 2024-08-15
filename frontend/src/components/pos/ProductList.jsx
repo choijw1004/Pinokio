@@ -88,6 +88,7 @@ const ProductList = ({ setProducts, products, onEdit, onDelete, setToastMessage 
   };
 
   const handleToggle = async (product, field) => {
+    console.log('product : ', product);
     try {
       let updatedProduct;
       if (field === 'isSoldOut') {

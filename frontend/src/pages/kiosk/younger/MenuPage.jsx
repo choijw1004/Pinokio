@@ -165,6 +165,7 @@ function MenuPage() {
           menu['count'] = 0; // count 초기화
           return menu;
         });
+      console.log('filteredMenus', filteredMenus);
       setMenus(filteredMenus);
     }
   };
