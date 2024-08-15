@@ -205,10 +205,10 @@ const Sidebar = styled.div`
 const SidebarDot = styled(ScrollLink)`
   width: 10px;
   height: 10px;
-  background-color: black;
+  background-color: ${({ isActive }) => (isActive ? '#ff6e7f' : 'black')};
   border-radius: 50%;
   position: relative;
-  border: 1px solid light grey;
+  border: 1px solid lightgrey;
   cursor: pointer;
   transition: all 0.3s ease;
 
@@ -379,10 +379,42 @@ function MainPage() {
         </div>
       </FunctionSection>
       <Sidebar>
-        <SidebarDot to="main" smooth={true} duration={500} data-label="Home" />
-        <SidebarDot to="firstFunction" smooth={true} duration={500} data-label="센서 인식" />
-        <SidebarDot to="secondFunction" smooth={true} duration={500} data-label="얼굴 식별" />
-        <SidebarDot to="thirdFunction" smooth={true} duration={500} data-label="화상 상담" />
+        <SidebarDot
+          to="main"
+          smooth={true}
+          duration={500}
+          data-label="Home"
+          isActive={
+            !visibleSections.firstFunction &&
+            !visibleSections.secondFunction &&
+            !visibleSections.thirdFunction
+          }
+        />
+        <SidebarDot
+          to="firstFunction"
+          smooth={true}
+          duration={500}
+          data-label="센서 인식"
+          isActive={
+            visibleSections.firstFunction &&
+            !visibleSections.secondFunction &&
+            !visibleSections.thirdFunction
+          }
+        />
+        <SidebarDot
+          to="secondFunction"
+          smooth={true}
+          duration={500}
+          data-label="얼굴 식별"
+          isActive={visibleSections.secondFunction && !visibleSections.thirdFunction}
+        />
+        <SidebarDot
+          to="thirdFunction"
+          smooth={true}
+          duration={500}
+          data-label="화상 상담"
+          isActive={visibleSections.thirdFunction}
+        />
       </Sidebar>
     </MainContainer>
   );
