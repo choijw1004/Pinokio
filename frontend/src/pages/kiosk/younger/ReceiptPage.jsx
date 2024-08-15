@@ -9,6 +9,7 @@ const PageStyle = styled.div`
   align-items: center;
   background-color: #efefef;
   min-width: 27rem;
+  position: relative;
 `;
 
 const Logo = styled.div`
@@ -34,15 +35,17 @@ const KioskRightHeader = styled.div`
 `;
 
 const ScreenStyle = styled.div`
+  position: absolute;
   background-color: #222222;
-  width: 90%;
-  height: 90%;
+  top: 1rem;
+  right: 1rem;
+  width: 60%;
+  height: 20%;
   color: white;
   text-align: center;
   line-height: 10rem;
   font-family: 'CafeOhsquareAir';
 `;
-
 const BackButton = styled.div`
   font-family: 'CafeOhsquareAir';
   display: flex;
@@ -63,13 +66,12 @@ const BackButtonText = styled.div`
   color: #414141;
   line-height: 2rem;
 `;
+
 const KioskHeader = styled.div`
-  display: flex;
-  flex-direction: row;
   border-bottom: 1px #d9d9d9 solid;
   background-color: white;
   width: 100%;
-  height: 13rem;
+  height: 5rem;
 `;
 
 const KioskBody = styled.div`
@@ -147,32 +149,13 @@ function ReceiptPage() {
 
   return (
     <PageStyle>
-      {state.isElder ? (
-        <KioskHeader>
-          <KioskLeftHeader>
-            <Logo isElder={state.isElder}>Pinokio</Logo>
-            <BackButton>
-              <Arrow>{'<'}</Arrow>
-              <BackButtonText onClick={goBack}>뒤로가기</BackButtonText>
-            </BackButton>{' '}
-          </KioskLeftHeader>
-          <KioskRightHeader>
-            <ScreenStyle>
-              {/* {subscribers.length > 0 && <OpenViduVideoComponent streamManager={subscribers[0]} />} */}
-            </ScreenStyle>
-            {/* {(cameraSession || screenSession) && <Button onClick={handleLeaveRoom}>상담 종료</Button>} */}
-          </KioskRightHeader>
-        </KioskHeader>
-      ) : (
-        <KioskHeader>
-          <Logo>Pinokio</Logo>
-          <BackButton>
-            <Arrow>{'<'}</Arrow>
-            <BackButtonText onClick={goBack}>뒤로가기</BackButtonText>
-          </BackButton>
-        </KioskHeader>
-      )}
-
+      <KioskHeader>
+        <Logo isElder={state.isElder}>Pinokio</Logo>
+        <BackButton>
+          <Arrow>{'<'}</Arrow>
+          <BackButtonText onClick={goBack}>뒤로가기</BackButtonText>
+        </BackButton>
+      </KioskHeader>
       <KioskBody>
         <KioskCenterCard>
           <KioskCenterCardTitle>결제가 완료되었습니다.</KioskCenterCardTitle>
@@ -190,6 +173,7 @@ function ReceiptPage() {
           </KioskCenterCardContainer>
         </KioskCenterCard>
       </KioskBody>
+      {state.isElder && <ScreenStyle></ScreenStyle>}
     </PageStyle>
   );
 }

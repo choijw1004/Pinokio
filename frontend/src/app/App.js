@@ -14,6 +14,7 @@ import AdvIndex from '../pages/advisor/AdvIndex';
 
 import { useSelector } from 'react-redux';
 
+// 특정 Role로 로그인 되어있으면 다른 Role에 해당되는 페이지로 넘어가지 못하게 한다.
 const ProtectedRoute = ({ type }) => {
   const user = useSelector((state) => state.user);
   if (!user || user.type !== type) {

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
 import { deleteCategory, modifyCategory } from '../../apis/Category'; // API 함수 import
+import RoundButton from '../common/RoundButton';
 
 const CategoryTable = styled.table`
   width: 100%;
@@ -52,6 +53,7 @@ const ModalBackground = styled.div`
   display: flex;
   justify-content: center;
   align-items: center;
+  z-index: 10000;
 `;
 
 const ModalContent = styled.div`
@@ -161,8 +163,8 @@ const CategoryList = ({ products, categories, onEdit, onDelete }) => {
           <ModalContent>
             <p>카테고리 이름 수정:</p>
             <input type="text" value={editName} onChange={(e) => setEditName(e.target.value)} />
-            <ModalButton onClick={confirmEdit}>확인</ModalButton>
-            <ModalButton onClick={() => setShowEditModal(false)}>취소</ModalButton>
+            <RoundButton onClick={confirmEdit} text={'확인'} theme="colored" />
+            <RoundButton onClick={() => setShowEditModal(false)} text={'취소'} />
           </ModalContent>
         </ModalBackground>
       )}

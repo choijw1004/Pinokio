@@ -10,6 +10,7 @@ const PageStyle = styled.div`
   align-items: center;
   background-color: #efefef;
   min-width: 27rem;
+  position: relative;
 `;
 const Logo = styled.div`
   font-size: 3vh;
@@ -22,22 +23,13 @@ const Logo = styled.div`
   cursor: pointer;
 `;
 
-const KioskLeftHeader = styled.div`
-  width: 30%;
-  height: 100%;
-`;
-
-const KioskRightHeader = styled.div`
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  width: 70%;
-`;
-
 const ScreenStyle = styled.div`
+  position: absolute;
   background-color: #222222;
-  width: 90%;
-  height: 90%;
+  top: 1rem;
+  right: 1rem;
+  width: 60%;
+  height: 20%;
   color: white;
   text-align: center;
   line-height: 10rem;
@@ -66,12 +58,10 @@ const BackButtonText = styled.div`
 `;
 
 const KioskHeader = styled.div`
-  display: flex;
-  flex-direction: row;
   border-bottom: 1px #d9d9d9 solid;
   background-color: white;
   width: 100%;
-  height: 13rem;
+  height: 5rem;
 `;
 
 const KioskBody = styled.div`
@@ -160,19 +150,11 @@ function PaymentPage() {
   return (
     <PageStyle>
       <KioskHeader>
-        <KioskLeftHeader>
-          <Logo isElder={state.isElder}>Pinokio</Logo>
-          <BackButton>
-            <Arrow>{'<'}</Arrow>
-            <BackButtonText onClick={goBack}>뒤로가기</BackButtonText>
-          </BackButton>{' '}
-        </KioskLeftHeader>
-        <KioskRightHeader>
-          <ScreenStyle>
-            {/* {subscribers.length > 0 && <OpenViduVideoComponent streamManager={subscribers[0]} />} */}
-          </ScreenStyle>
-          {/* {(cameraSession || screenSession) && <Button onClick={handleLeaveRoom}>상담 종료</Button>} */}
-        </KioskRightHeader>
+        <Logo isElder={state.isElder}>Pinokio</Logo>
+        <BackButton>
+          <Arrow>{'<'}</Arrow>
+          <BackButtonText onClick={goBack}>뒤로가기</BackButtonText>
+        </BackButton>
       </KioskHeader>
       <KioskBody>
         <KioskCenterCard>
@@ -193,6 +175,7 @@ function PaymentPage() {
           </KioskCenterCardContainer>
         </KioskCenterCard>
       </KioskBody>
+      {state.isElder && <ScreenStyle></ScreenStyle>}
     </PageStyle>
   );
 }

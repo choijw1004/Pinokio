@@ -11,7 +11,6 @@ import { requestMeeting, enterRoom, leaveRoom } from '../../../apis/Room';
 import useWebSocket from '../../../hooks/useWebSocket';
 import { OpenVidu } from 'openvidu-browser';
 import OpenViduVideoComponent from '../../../components/kiosk/OpenViduComponent';
-import Button from '../../../components/common/Button';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { getFavoriteItem, getRecentItem } from '../../../apis/Order';
 
@@ -376,7 +375,7 @@ function ElderMenuPage() {
           <ScreenStyle>
             {subscribers.length > 0 && <OpenViduVideoComponent streamManager={subscribers[0]} />}
           </ScreenStyle>
-          {(cameraSession || screenSession) && <Button onClick={handleLeaveRoom}>상담 종료</Button>}
+          {(cameraSession || screenSession) && <button onClick={handleLeaveRoom}>상담 종료</button>}
         </KioskRightHeader>
       </KioskHeader>
       <KioskBody>

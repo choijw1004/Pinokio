@@ -25,7 +25,7 @@ const NavbarMenu = styled.div`
   margin: 0;
   margin-left: 2vw;
   padding: 0;
-  position: fixed;
+  position: absolute;
   top: 6rem;
   left: ${(props) => (props.isOpen ? '0' : '-21vw')};
   width: 18vw;
@@ -86,12 +86,14 @@ const LogoLocation = styled.div`
 
 const LogOut = styled.button`
   margin-top: 23em;
-  margin-left: 10em;
-  box-shadow: 1px 2px 0 rgb(0 0 0 / 0.25);
+  margin-left: 11em;
+  color: #ec7348;
+  /* box-shadow: 1px 2px 0 rgb(0 0 0 / 0.25); */
   background-color: white;
-  border: 1px solid black;
+  /* border: 1px solid black; */
+  border: none;
   &:hover {
-    background-color: #ededed;
+    color: #ffc33f;
   }
 `;
 

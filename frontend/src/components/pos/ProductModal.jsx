@@ -150,17 +150,22 @@ const ProductModal = ({ product, categories, onClose }) => {
 
   return (
     <Modal>
-      <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="상품명" required />
+      <Input
+        value={name}
+        onChange={(e) => setName(e.target.value.trim())}
+        placeholder="상품명"
+        required
+      />
       <Input
         value={price}
-        onChange={(e) => setPrice(e.target.value)}
+        onChange={(e) => setPrice(e.target.value.trim())}
         placeholder="가격"
         type="number"
         required
       />
       <Input
         value={amount}
-        onChange={(e) => setAmount(e.target.value)}
+        onChange={(e) => setAmount(e.target.value.trim())}
         placeholder="재고"
         type="number"
         required
@@ -168,7 +173,7 @@ const ProductModal = ({ product, categories, onClose }) => {
       <Input type="file" onChange={handleFileChange} />
       <TextArea
         value={detail}
-        onChange={(e) => setDetail(e.target.value)}
+        onChange={(e) => setDetail(e.target.value.trim())}
         placeholder="상품 설명"
         required
       />
@@ -185,14 +190,14 @@ const ProductModal = ({ product, categories, onClose }) => {
       <div>
         <span>키오스크 노출</span>
         <ToggleButton
-          value={product.isSoldOut === 'YES'}
+          value={product?.isSoldOut === 'YES'}
           setValue={() => handleToggle(product, 'isSoldOut')}
         />
       </div>
       <div>
         <span>품절</span>
         <ToggleButton
-          value={product.isScreen === 'YES'}
+          value={product?.isScreen === 'YES'}
           setValue={() => handleToggle(product, 'isScreen')}
         />
       </div>
