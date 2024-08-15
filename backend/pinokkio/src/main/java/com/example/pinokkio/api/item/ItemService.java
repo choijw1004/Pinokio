@@ -115,6 +115,7 @@ public class ItemService {
     }
 
     private void updateItemDetails(Item item, UpdateItemRequest updateRequest, Category category) {
+
         item.updateCategory(category);
         item.updateAmount(updateRequest.getAmount());
         item.updatePrice(updateRequest.getPrice());
@@ -146,7 +147,7 @@ public class ItemService {
                 // 기존 이미지 삭제
                 if (currentImageUrl != null) {
                     try {
-                        imageService.deleteImage(currentImageUrl);
+//                        imageService.deleteImage(currentImageUrl);
                     } catch (Exception e) {
                         log.warn("기존 이미지 삭제 실패: {}", currentImageUrl, e);
                         // 기존 이미지 삭제 실패를 로그로 남기고 계속 진행
@@ -157,11 +158,15 @@ public class ItemService {
                 newImageUrl = imageService.uploadImage(file);
             }
 
+            log.info("[updateImage] fileName != null : {}", (fileName != null));
+            log.info("[updateImage] fileName.isEmpty() : {}", (fileName.isEmpty()));
+
             // 아이템 이미지 URL 업데이트
             if (newImageUrl != null) {
                 item.updateItemImage(newImageUrl);
             } else if (fileName != null && fileName.isEmpty()) {
                 // 파일이 제공되었지만 비어있는 경우, 이미지 제거로 간주해 default 이미지로 대치
+                log.info("[updateImage] DEFAULT 값으로 대치");
                 item.updateItemImage(DEFAULT_IMAGE_URL);
             }
 
