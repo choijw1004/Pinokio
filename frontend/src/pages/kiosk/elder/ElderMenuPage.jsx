@@ -104,6 +104,9 @@ function ElderMenuPage() {
   const selectedCategoryMounted = useRef(false);
   // 여기까지 기본 키오스크 기능
 
+  const userData = useSelector((store) => store.user);
+  // Redux
+
   const [openViduConnection, setOpenViduConnection] = useState(false);
   const [roomId, setRoomId] = useState(null);
   const [OV, setOV] = useState(null);
@@ -114,9 +117,6 @@ function ElderMenuPage() {
   const [publisher, setPublisher] = useState(null);
   const { sendMessage, lastMessage, isConnected, connect } = useWebSocket(userData.token);
   // 여기까지 비디오 기능
-
-  const userData = useSelector((store) => store.user);
-  // Redux
 
   const { state } = useLocation();
   // router 로 넘겨주는 parameter
