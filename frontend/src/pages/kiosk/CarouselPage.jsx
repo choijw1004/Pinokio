@@ -111,6 +111,11 @@ function CarouselPage() {
 
   useEffect(() => {
     console.log('carousel useEffect start');
+    setCustomer({
+      customerId: '33e75aab-9707-4f18-9f96-e27383f7171d',
+      gender: 'female',
+      age: 23,
+    });
     if (isFirstRender.current) {
       console.log('kioskId : ', kioskId);
       startKiosk(kioskId);
@@ -170,15 +175,9 @@ function CarouselPage() {
       return;
     }
 
-    setTimeout(() => {
-      console.log('1초 기다리기 끝');
-    }, 1000); //1초 기다리기
-
-    setCustomer({
-      customerId: 'a97804be-a882-48d9-bff4-be27f7b043df',
-      gender: 'female',
-      age: 23,
-    });
+    // setTimeout(() => {
+    //   console.log('1초 기다리기 끝');
+    // }, 1000); //1초 기다리기
   }, []);
 
   useEffect(() => {

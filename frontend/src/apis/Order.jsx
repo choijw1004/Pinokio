@@ -36,6 +36,10 @@ export const getRecentItem = async (customerId) => {
 };
 
 export const makeOrder = async (customerId, orderList) => {
+  console.log('print orderlist', {
+    customerId: customerId,
+    orderItems: orderList,
+  });
   try {
     const response = await axios.post(`/api/orders`, {
       customerId: customerId,

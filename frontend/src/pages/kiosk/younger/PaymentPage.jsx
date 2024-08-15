@@ -1,8 +1,10 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import styled from 'styled-components';
 import { makeOrder } from '../../../apis/Order';
 import OpenViduVideoComponent from '../../../components/kiosk/OpenViduComponent';
+import AskRegisterModal from '../../../components/kiosk/modal/AskRegisterModal';
+import NumberModal from '../../../components/kiosk/modal/NumberModal';
 
 const PageStyle = styled.div`
   display: flex;
@@ -123,11 +125,20 @@ const KioskInnerCardSubTitle = styled.div`
 const KioskInnerCardImage = styled.img``;
 
 function PaymentPage() {
+  // 결제가 끝나면 회원 가입을 할 것인지 묻는다.
+  // 회원가입을 하지 않는다면 바로 post order 요청을 보내고,
+  // 가입을 누른다면 전화번호를 입력후 회원 정보로 post order를 보낸다.
   const navigate = useNavigate();
   const { state } = useLocation();
   const [subscribers, setSubscribers] = useState([]);
   const [cameraSession, setCameraSession] = useState(null);
   const [screenSession, setScreenSession] = useState(null);
+  const [turnAskRegisterModal, setTurnAskRegisterModal] = useState(false);
+  const [turnNumberModal, setTurnNumberModal] = useState(false);
+
+  useEffect(() => {
+    console.log('state', state);
+  }, []);
 
   const goReceipt = async () => {
     const orderList = state.cartItems.map((item) => {
@@ -138,12 +149,25 @@ function PaymentPage() {
     navigate('/kiosk/receipt', { state: state });
   };
 
+  const registerNewCustomer = async () => {
+    //가입하고
+    //가입한 계정으로
+    // goReceipt함수 실행
+  };
+
   const goBack = () => {
     // 장바구니에 담아둔 주문 목록 등을 가지고 있어야 한다.
     if (state.isElder) {
       navigate('/kiosk/elder-menu', { state: state });
     } else {
       navigate('/kiosk/menu', { state: state });
+    }
+  };
+  const payForOrder = () => {
+    if (state.customer.customerId === 'guest') {
+      setTurnAskRegisterModal(true);
+    } else {
+      goReceipt();
     }
   };
 
@@ -160,14 +184,14 @@ function PaymentPage() {
         <KioskCenterCard>
           <KioskCenterCardTitle>결제 수단을 선택해주세요.</KioskCenterCardTitle>
           <KioskCenterCardContainer>
-            <KioskCenterCardButton onClick={goReceipt}>
+            <KioskCenterCardButton onClick={payForOrder}>
               <KioskInnerCardTitle>신용카드</KioskInnerCardTitle>
               <KioskInnerCardSubTitle isElder={state.isElder}>
                 체크카드 / 삼성페이
               </KioskInnerCardSubTitle>
               <KioskInnerCardImage src="/CreditCard.svg" width="80rem"></KioskInnerCardImage>
             </KioskCenterCardButton>
-            <KioskCenterCardButton onClick={goReceipt}>
+            <KioskCenterCardButton onClick={payForOrder}>
               <KioskInnerCardTitle>카카오페이</KioskInnerCardTitle>
               <KioskInnerCardSubTitle isElder={state.isElder}>앱 전용</KioskInnerCardSubTitle>
               <KioskInnerCardImage src="/KakaoTalk_logo.svg" width="60rem"></KioskInnerCardImage>
@@ -176,6 +200,15 @@ function PaymentPage() {
         </KioskCenterCard>
       </KioskBody>
       {state.isElder && <ScreenStyle></ScreenStyle>}
+      {turnAskRegisterModal && (
+        <AskRegisterModal
+          setTurnNumberModal={setTurnNumberModal}
+          setTurnAskRegisterModal={setTurnAskRegisterModal}
+        ></AskRegisterModal>
+      )}
+      {turnNumberModal && (
+        <NumberModal setModal={setTurnNumberModal} onComfirm={registerNewCustomer}></NumberModal>
+      )}
     </PageStyle>
   );
 }

@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import styled from 'styled-components';
-import ToggleButton from '../common/Toggle';
 import { postItem, putItem, itemScreenToggle, itemSoldOutToggle } from '../../apis/Item';
 import Toggle from '../common/Toggle';
 import RoundButton from '../common/RoundButton';
@@ -44,6 +43,7 @@ const TextArea = styled.textarea`
 `;
 
 const ProductModal = ({ product, categories, onClose }) => {
+  // modal 내의 toggle이 안됨
   const [name, setName] = useState('');
   const [price, setPrice] = useState('');
   const [amount, setAmount] = useState('');
@@ -123,7 +123,6 @@ const ProductModal = ({ product, categories, onClose }) => {
         'updateItemRequest ',
         new Blob([JSON.stringify(updateItemRequest)], { type: 'application/json' })
       );
-      console.log('image2', image);
       if (image) {
         formData.append('file', image);
         console.log('image', image);
@@ -156,7 +155,7 @@ const ProductModal = ({ product, categories, onClose }) => {
     setImage(e.target.files[0]);
   };
 
-  const handleToggle = async (field) => {
+  const handleToggle = async (product, field) => {
     try {
       let updatedProduct;
       if (field === 'isSoldOut') {
@@ -222,14 +221,14 @@ const ProductModal = ({ product, categories, onClose }) => {
       </select>
       <ToggleContainer>
         <div>키오스크 노출</div>
-        <ToggleButton
+        <Toggle
           value={product?.isSoldOut === 'YES'}
           setValue={() => handleToggle(product, 'isSoldOut')}
         />
       </ToggleContainer>
       <ToggleContainer>
         <div>품절</div>
-        <ToggleButton
+        <Toggle
           value={product?.isScreen === 'YES'}
           setValue={() => handleToggle(product, 'isScreen')}
         />

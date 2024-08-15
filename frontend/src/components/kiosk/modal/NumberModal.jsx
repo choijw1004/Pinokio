@@ -6,7 +6,6 @@ const ModalBg = styled.div`
   background-color: rgba(0, 0, 0, 0.5);
   position: absolute;
   display: flex;
-  top: 1rem;
   width: 27rem;
   height: 47rem;
 `;
@@ -35,7 +34,7 @@ const Title = styled.div`
 `;
 
 const InputDisplay = styled.div`
-  width: 60%;
+  width: 65%;
   text-align: center;
   height: 2rem;
   border-bottom: 2px solid #d9d9d9;
@@ -91,8 +90,9 @@ function NumberModal({ setModal, onConfirm }) {
   };
 
   const handleDelete = () => {
-    setNumber(number.slice(0, -1));
-    if (number.length === 9) {
+    if (number.length === 10) {
+      setNumber(number.slice(0, -2));
+    } else if (number.length > 4) {
       setNumber(number.slice(0, -1));
     }
   };

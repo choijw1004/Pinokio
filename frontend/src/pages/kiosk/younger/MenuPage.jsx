@@ -75,12 +75,8 @@ function MenuPage() {
     /* axios를 이용하여 category를 가져온다. */
     const category_data = await getCategories(userData.typeInfo.posId);
     console.log('received categories datas : ', category_data);
-    state['member'] = {
-      customerId: '33e75aab-9707-4f18-9f96-e27383f7171d',
-      age: null,
-      gender: null,
-    }; // 임시 데이터
-    if (state.member.customerId !== 'guest') {
+
+    if (state.customer.customerId !== 'guest') {
       category_data.responseList.unshift({
         id: 'recommended',
         name: '추천 메뉴',
@@ -141,14 +137,14 @@ function MenuPage() {
   const getRecommendedMenu = async () => {
     if (selectedCategory && userData) {
       let menu_data = [];
-      let favoriteItem = await getFavoriteItem(state.member.customerId);
+      let favoriteItem = await getFavoriteItem(state.customer.customerId);
       if (favoriteItem?.length > 0) {
         favoriteItem = await getItemByItemId(favoriteItem[0].itemId);
         console.log('favoriteItem : ', favoriteItem);
         menu_data.push(favoriteItem);
       }
 
-      let recentItem = await getRecentItem(state.member.customerId);
+      let recentItem = await getRecentItem(state.customer.customerId);
       if (
         recentItem.orderItems[0].itemId !== favoriteItem.itemId &&
         recentItem.orderItems?.length > 0
