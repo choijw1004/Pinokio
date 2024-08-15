@@ -15,7 +15,8 @@ const MMC = styled.div`
 
 const Image = styled.img`
   width: 100%;
-  height: 7rem;
+  min-height: 7rem;
+  max-height: 7rem;
   object-fit: cover;
 `;
 
