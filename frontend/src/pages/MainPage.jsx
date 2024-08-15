@@ -140,7 +140,18 @@ const FunctionSection = styled.div`
     }
 
     h2 {
-      font-size: 32px;
+      margin-top: 0px;
+      margin-bottom: 0px;
+      font-size: 41px;
+    }
+
+    h5 {
+      margin-top: 10px;
+      margin-bottom: 10px;
+    }
+
+    .footer {
+      margin-top: 30px;
     }
   }
 
@@ -156,7 +167,7 @@ const FunctionSection = styled.div`
 
   img {
     width: 100%;
-    margin-top: 18%;
+    margin-top: 23%;
   }
 `;
 
@@ -215,7 +226,7 @@ const SidebarDot = styled(ScrollLink)`
   &:hover::after {
     content: attr(data-label);
     position: absolute;
-    right: 25px;
+    right: 20px;
     top: 50%;
     transform: translateY(-50%);
     background-color: #7392ff;
@@ -334,11 +345,18 @@ function MainPage() {
         bgColor="#f9fafb"
       >
         <div className="content">
-          <h1>고객 인식</h1>
-          <h2>고객 근접 시 거리 센서를 이용해서 서비스를 자동 활성화 시킵니다.</h2>
-          <h2>초음파 센서를 이용해 사용자와의 거리를 측정합니다.</h2>
-          <h2>측정한 거리가 일정 수준 이하면 App Server로 캡쳐 이미지를 전송합니다.</h2>
-          <h2>초음파 센서를 통해 측정한 거리를 1초마다 서버로 전송합니다.</h2>
+          <div className="head">
+            <h1>고객 인식</h1>
+          </div>
+          <div className="body">
+            <h2>고객 근접 시 거리 센서를 이용해서</h2>
+            <h2>서비스를 자동 활성화 시킵니다</h2>
+          </div>
+          <div className="footer">
+            <h5>초음파 센서를 이용해 사용자와의 거리를 측정합니다.</h5>
+            <h5>측정한 거리가 일정 수준 이하면 App Server로 캡쳐 이미지를 전송합니다.</h5>
+            <h5>초음파 센서를 통해 측정한 거리를 1초마다 서버로 전송합니다.</h5>
+          </div>
         </div>
         <div className="picture">
           <img src={distanceSensor} alt="sensor" />
@@ -354,11 +372,19 @@ function MainPage() {
           <img src={faceRecognition} alt="face" />
         </div>
         <div className="content">
-          <h1>얼굴 식별</h1>
-          <h2>고객님의 얼굴을 식별 후 노년층인지 식별하고, 회원 / 비회원 유무를 식별합니다.</h2>
-          <h2>캡쳐한 얼굴 이미지를 App Server로 전송합니다.</h2>
-          <h2>FastApi는 나이, 성별 분석 및 App Server를 거쳐 DB에 저장된 회원인지 조회</h2>
-          <h2>분석 및 조회 결과를 서버를 거쳐 웹에 전달합니다.</h2>
+          <div className="head">
+            <h1>얼굴 식별</h1>
+          </div>
+          <div className="body">
+            <h2>고객님의 얼굴을 식별 후</h2>
+            <h2>노년층인지 식별</h2>
+            <h2>회원 / 비회원 유무를 식별</h2>
+          </div>
+          <div className="footer">
+            <h5>캡쳐한 얼굴 이미지를 App Server로 전송합니다.</h5>
+            <h5>FastApi는 나이, 성별 분석 및 App Server를 거쳐 DB에 저장된 회원인지 조회</h5>
+            <h5>분석 및 조회 결과를 서버를 거쳐 웹에 전달합니다.</h5>
+          </div>
         </div>
       </FunctionSection>
       <FunctionSection
@@ -368,11 +394,18 @@ function MainPage() {
         bgColor="#f9fafb"
       >
         <div className="content">
-          <h1>화상 상담</h1>
-          <h2>1 : 3 화상 상담을 지원해 한명의 상담원이 여러 고객을 상담할 수 있게 지원합니다.</h2>
-          <h2>상담원 한명은 최대 3명의 고객까지 동시 상담 가능합니다.</h2>
-          <h2>상담은 상담원과 고객 간 1:1로 진행합니다.</h2>
-          <h2>상담원은 고객 요청에 응답해 상담 고객 전환 가능합니다.</h2>
+          <div className="head">
+            <h1>화상 상담</h1>
+          </div>
+          <div className="body">
+            <h2>1 : 3 화상 상담을 지원해 한명의 상담원이</h2>
+            <h2>여러 고객을 상담할 수 있게 지원합니다.</h2>
+          </div>
+          <div className="footer">
+            <h5>상담원 한명은 최대 3명의 고객까지 동시 상담 가능합니다.</h5>
+            <h5>상담은 상담원과 고객 간 1:1로 진행합니다.</h5>
+            <h5>상담원은 고객 요청에 응답해 상담 고객 전환 가능합니다.</h5>
+          </div>
         </div>
         <div className="picture">
           <img src={teller} alt="advisor" />
