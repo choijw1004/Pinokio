@@ -114,7 +114,7 @@ function CarouselPage() {
       console.log(kioskId);
       startKiosk(kioskId);
       const connectEventSource = () => {
-        const url = 'https://i11a601.p.ssafy.io/api/customer/face-recognition-events';
+        const url = 'https://localhost/api/customer/face-recognition-events';
         console.log('Connecting to:', url);
 
         const eventSource = new EventSource(url);
