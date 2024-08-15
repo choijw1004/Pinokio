@@ -172,12 +172,14 @@ function Login() {
       dispatch(clearUser());
       // 로그인 API 호출
       if (usertype === 'pos') {
+        console.log('hi');
         res = await postLoginPos(id, password);
         console.log('POS login response:', res);
       } else if (usertype === 'advisor') {
         res = await postLoginAdvisor(id, password);
         console.log('advisor login response:', res);
       } else if (usertype === 'kiosk') {
+        console.log('hi');
         res = await postLoginKiosk(id, password);
         console.log('kiosk login response:', res);
       }
