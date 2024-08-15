@@ -11,7 +11,7 @@ import { requestMeeting, enterRoom, leaveRoom } from '../../../apis/Room';
 import useWebSocket from '../../../hooks/useWebSocket';
 import { OpenVidu } from 'openvidu-browser';
 import OpenViduVideoComponent from '../../../components/kiosk/OpenViduComponent';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import { getFavoriteItem, getRecentItem } from '../../../apis/Order';
 
 const ElderMenuPageStyle = styled.div`
@@ -101,6 +101,9 @@ function ElderMenuPage() {
   const [selectedMenu, setSelectedMenu] = useState(null);
   const [cartItems, setCartItems] = useState([]);
   const [modal, setModal] = useState(false);
+  const selectedCategoryMounted = useRef(false);
+  // 여기까지 기본 키오스크 기능
+
   const [openViduConnection, setOpenViduConnection] = useState(false);
   const [roomId, setRoomId] = useState(null);
   const [OV, setOV] = useState(null);
@@ -109,61 +112,16 @@ function ElderMenuPage() {
   const [screenSession, setScreenSession] = useState(null);
   const [isSessionInitialized, setIsSessionInitialized] = useState(false);
   const [publisher, setPublisher] = useState(null);
+  const { sendMessage, lastMessage, isConnected, connect } = useWebSocket(userData.token);
+  // 여기까지 비디오 기능
 
   const userData = useSelector((store) => store.user);
-  const { sendMessage, lastMessage, isConnected, connect } = useWebSocket(userData.token);
+  // Redux
+
   const { state } = useLocation();
-  const selectedCategoryMounted = useRef(false);
+  // router 로 넘겨주는 parameter
 
   const isFirstRender = useRef(true);
-  const navigate = useNavigate();
-
-  const initializeWebSocket = useCallback(() => {
-    if (!isConnected) {
-      connect();
-    }
-  }, [isConnected, connect]);
-
-  useEffect(() => {
-    initializeWebSocket();
-    return () => {
-      // Cleanup logic if needed
-    };
-  }, [initializeWebSocket]);
-
-  useEffect(() => {
-    if (isConnected) {
-      console.log('WebSocket 연결됨');
-      requestRoomEnter();
-      getCategory();
-      isFirstRender.current = false;
-    }
-  }, [isConnected]);
-
-  useEffect(() => {
-    if (lastMessage) {
-      try {
-        const data = JSON.parse(lastMessage.data);
-        console.log('WebSocket 메시지 수신:', data);
-        if (data.type === 'roomId') {
-          console.log('상담요청 수락, roomId 수신:', data.roomId);
-          setRoomId(data.roomId);
-        }
-      } catch (error) {
-        console.error('WebSocket 메시지 파싱 오류:', error);
-      }
-    }
-  }, [lastMessage]);
-
-  const requestRoomEnter = useCallback(async () => {
-    try {
-      await requestMeeting();
-      console.log('상담 요청 전송 완료');
-    } catch (error) {
-      console.error('상담 요청 실패:', error);
-      // 여기에 사용자에게 오류를 표시하는 로직을 추가할 수 있습니다.
-    }
-  }, []);
 
   const getCategory = async () => {
     /* axios를 이용하여 category를 가져온다. */
@@ -244,10 +202,53 @@ function ElderMenuPage() {
     }
   };
 
-  const handleClick = () => {
-    navigate('/kiosk/elder-menu');
-  };
+  // 여기서부터 비디오 관련 기능
+  const initializeWebSocket = useCallback(() => {
+    if (!isConnected) {
+      connect();
+    }
+  }, [isConnected, connect]);
 
+  useEffect(() => {
+    initializeWebSocket();
+    return () => {
+      // Cleanup logic if needed
+    };
+  }, [initializeWebSocket]);
+
+  useEffect(() => {
+    if (isConnected) {
+      console.log('WebSocket 연결됨');
+      requestRoomEnter();
+      getCategory();
+      isFirstRender.current = false;
+    }
+  }, [isConnected]);
+
+  useEffect(() => {
+    if (lastMessage) {
+      try {
+        const data = JSON.parse(lastMessage.data);
+        console.log('WebSocket 메시지 수신:', data);
+        if (data.type === 'roomId') {
+          console.log('상담요청 수락, roomId 수신:', data.roomId);
+          setRoomId(data.roomId);
+        }
+      } catch (error) {
+        console.error('WebSocket 메시지 파싱 오류:', error);
+      }
+    }
+  }, [lastMessage]);
+
+  const requestRoomEnter = useCallback(async () => {
+    try {
+      await requestMeeting();
+      console.log('상담 요청 전송 완료');
+    } catch (error) {
+      console.error('상담 요청 실패:', error);
+      // 여기에 사용자에게 오류를 표시하는 로직을 추가할 수 있습니다.
+    }
+  }, []);
   useEffect(() => {
     if (roomId && userData.typeInfo.kioskId && !openViduConnection) {
       console.log('enterRoom 호출:', roomId, userData.typeInfo.kioskId);
@@ -363,13 +364,7 @@ function ElderMenuPage() {
     <ElderMenuPageStyle>
       <KioskHeader>
         <KioskLeftHeader>
-          <Logo
-            onClick={() => {
-              handleClick();
-            }}
-          >
-            Pinokio
-          </Logo>
+          <Logo>Pinokio</Logo>
         </KioskLeftHeader>
         <KioskRightHeader>
           <ScreenStyle>

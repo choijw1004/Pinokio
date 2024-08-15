@@ -145,6 +145,7 @@ function KioskIndex() {
               10초 후에 메인 페이지로 이동됩니다.
             </WarningMessage>
           )}
+
           <Routes>
             <Route path="/" element={<CarouselPage />} />
             <Route path="menu" element={<MenuPage />} />
