@@ -9,7 +9,6 @@ const StyledOpenViduVideoComponent = styled.div`
   text-align: center;
   line-height: 10rem;
   font-family: 'CafeOhsquareAir';
-  border-radius: 10px;
 `;
 
 const StyledVideo = styled.video`
@@ -24,6 +23,7 @@ const OpenViduVideoComponent = ({ streamManager }) => {
 
   useEffect(() => {
     if (streamManager && videoRef.current) {
+      streamManager.activateStreamPlayingEventExceptionTimeout(10000); // 10초로 변경
       streamManager.addVideoElement(videoRef.current);
     }
   }, [streamManager]);
