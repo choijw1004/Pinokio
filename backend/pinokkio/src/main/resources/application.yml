@@ -57,7 +57,7 @@ default-image:
     https://pinokkio.s3.ap-northeast-2.amazonaws.com/item/noImage.jpg
 
 openvidu:
-  url: https://openvidu:8443/
+  url: https://i11a601.p.ssafy.io:8443/
   secret: MY_SECRET
 
 encryption:
