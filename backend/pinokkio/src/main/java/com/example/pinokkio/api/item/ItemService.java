@@ -130,6 +130,7 @@ public class ItemService {
 
     private void updateItemImage(Item item, MultipartFile file) {
         try {
+            log.info("[updateImage] file: " + file);
             String currentImageUrl = item.getItemImage();
             String newImageUrl = null;
 
