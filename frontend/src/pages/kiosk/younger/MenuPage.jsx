@@ -6,7 +6,7 @@ import Cart from '../../../components/kiosk/Cart';
 import MenuModal from '../../../components/kiosk/modal/MenuModal';
 import { useSelector } from 'react-redux';
 import { getCategories } from '../../../apis/Category';
-import { getItemsByCategoryId } from '../../../apis/Item';
+import { getItemByItemId, getItemsByCategoryId } from '../../../apis/Item';
 import { useNavigate } from 'react-router-dom';
 import { useLocation } from 'react-router-dom';
 import { getFavoriteItem, getRecentItem } from '../../../apis/Order';
@@ -142,20 +142,15 @@ function MenuPage() {
     if (selectedCategory && userData) {
       let menu_data = [];
       let favoriteItem = await getFavoriteItem(state.member.customerId);
+      favoriteItem = await getItemByItemId(favoriteItem[0].itemId);
       console.log('favoriteItem : ', favoriteItem);
 
-      favoriteItem = { id: favoriteItem[0].itemId, name: favoriteItem[0].itemName };
-      console.log('favoriteItem : ', favoriteItem);
       menu_data.push(favoriteItem);
-      let recentItems = await getRecentItem(state.member.customerId);
-      console.log('recentItems : ', recentItems);
+      let recentItem = await getRecentItem(state.member.customerId);
+      recentItem = await getItemByItemId(recentItem.orderItems[0].itemId);
+      console.log('recentItems : ', recentItem);
 
-      (recentItems.orderItems || []).forEach((item) => {
-        if (item.itemId !== favoriteItem.id) {
-          const itemTemp = { id: item.itemId, name: item.itemName };
-          menu_data.push(itemTemp);
-        }
-      });
+      menu_data.push(recentItem);
 
       console.log('received menus datas : ', menu_data);
       // 화면에 보여줄 데이터만 필터링 (isScreen이 YES인 경우)
@@ -165,7 +160,6 @@ function MenuPage() {
           menu['count'] = 0; // count 초기화
           return menu;
         });
-      console.log('filteredMenus', filteredMenus);
       setMenus(filteredMenus);
     }
   };

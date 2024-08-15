@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { useSelector } from 'react-redux';
 import styled from 'styled-components';
 import { getCategories } from '../../../apis/Category';
-import { getItemsByCategoryId } from '../../../apis/Item';
+import { getItemByItemId, getItemsByCategoryId } from '../../../apis/Item';
 import ElderMenuCategory from '../../../components/kiosk/ElderMenuCategory';
 import MenuMain from '../../../components/kiosk/MenuMain';
 import Cart from '../../../components/kiosk/Cart';
@@ -127,6 +127,17 @@ function ElderMenuPage() {
     /* axios를 이용하여 category를 가져온다. */
     const category_data = await getCategories(userData.typeInfo.posId);
     console.log('received categories datas : ', category_data);
+    state['member'] = {
+      customerId: '33e75aab-9707-4f18-9f96-e27383f7171d',
+      age: null,
+      gender: null,
+    }; // 임시 데이터
+    if (state.member.customerId !== 'guest') {
+      category_data.responseList.unshift({
+        id: 'recommended',
+        name: '추천 메뉴',
+      });
+    }
     setCategories(category_data.responseList);
   };
 
@@ -175,20 +186,15 @@ function ElderMenuPage() {
     if (selectedCategory && userData) {
       let menu_data = [];
       let favoriteItem = await getFavoriteItem(state.member.customerId);
+      favoriteItem = await getItemByItemId(favoriteItem[0].itemId);
       console.log('favoriteItem : ', favoriteItem);
 
-      favoriteItem = { id: favoriteItem[0].itemId, name: favoriteItem[0].itemName };
-      console.log('favoriteItem : ', favoriteItem);
       menu_data.push(favoriteItem);
-      let recentItems = await getRecentItem(state.member.customerId);
-      console.log('recentItems : ', recentItems);
+      let recentItem = await getRecentItem(state.member.customerId);
+      recentItem = await getItemByItemId(recentItem.orderItems[0].itemId);
+      console.log('recentItems : ', recentItem);
 
-      (recentItems.orderItems || []).forEach((item) => {
-        if (item.itemId !== favoriteItem.id) {
-          const itemTemp = { id: item.itemId, name: item.itemName };
-          menu_data.push(itemTemp);
-        }
-      });
+      menu_data.push(recentItem);
 
       console.log('received menus datas : ', menu_data);
       // 화면에 보여줄 데이터만 필터링 (isScreen이 YES인 경우)
