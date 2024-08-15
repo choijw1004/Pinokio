@@ -11,7 +11,7 @@ const useWebSocket = (token) => {
     if (socketRef.current || isConnectingRef.current) return;
 
     isConnectingRef.current = true;
-    const ws = new WebSocket('wss://localhost/ws');
+    const ws = new WebSocket('wss://localhost:8080/ws');
     socketRef.current = ws;
 
     ws.onopen = () => {
