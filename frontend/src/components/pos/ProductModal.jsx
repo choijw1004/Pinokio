@@ -78,7 +78,7 @@ const ProductModal = ({ product, categories, onClose }) => {
     }
 
     const formData = new FormData();
-
+    console.log('product : ', product);
     if (product === null) {
       const categoryId = categories.find((cat) => cat.name === category)?.id;
       const itemRequest = {
@@ -137,6 +137,8 @@ const ProductModal = ({ product, categories, onClose }) => {
     }
 
     try {
+      console.log('product2 : ', product);
+
       if (product === null) {
         await postItem(formData);
         onClose(); // Close the modal and trigger screen update

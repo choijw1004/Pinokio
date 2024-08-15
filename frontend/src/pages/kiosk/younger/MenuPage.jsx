@@ -142,15 +142,21 @@ function MenuPage() {
     if (selectedCategory && userData) {
       let menu_data = [];
       let favoriteItem = await getFavoriteItem(state.member.customerId);
-      favoriteItem = await getItemByItemId(favoriteItem[0].itemId);
-      console.log('favoriteItem : ', favoriteItem);
+      if (favoriteItem?.length > 0) {
+        favoriteItem = await getItemByItemId(favoriteItem[0].itemId);
+        console.log('favoriteItem : ', favoriteItem);
+        menu_data.push(favoriteItem);
+      }
 
-      menu_data.push(favoriteItem);
       let recentItem = await getRecentItem(state.member.customerId);
-      recentItem = await getItemByItemId(recentItem.orderItems[0].itemId);
-      console.log('recentItems : ', recentItem);
-
-      menu_data.push(recentItem);
+      if (
+        recentItem.orderItems[0].itemId !== favoriteItem.itemId &&
+        recentItem.orderItems?.length > 0
+      ) {
+        recentItem = await getItemByItemId(recentItem.orderItems[0].itemId);
+        console.log('recentItems : ', recentItem);
+        menu_data.push(recentItem);
+      }
 
       console.log('received menus datas : ', menu_data);
       // 화면에 보여줄 데이터만 필터링 (isScreen이 YES인 경우)
