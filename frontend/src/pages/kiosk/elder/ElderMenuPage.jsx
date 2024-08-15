@@ -247,8 +247,8 @@ function ElderMenuPage() {
           videoSource: undefined,
           publishAudio: true,
           publishVideo: true,
-          resolution: '640x480',
-          frameRate: 30,
+          resolution: '320x240',
+          frameRate: 15,
           insertMode: 'APPEND',
           mirror: false,
         });
@@ -266,8 +266,8 @@ function ElderMenuPage() {
               videoSource: 'screen',
               publishAudio: false,
               publishVideo: true,
-              resolution: '1280x720',
-              frameRate: 30,
+              resolution: '640x480',
+              frameRate: 5,
               insertMode: 'APPEND',
               mirror: false,
             });

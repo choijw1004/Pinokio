@@ -300,8 +300,8 @@ const AdvMainPage = () => {
           videoSource: undefined,
           publishAudio: true,
           publishVideo: true,
-          resolution: '640x480',
-          frameRate: 30,
+          resolution: '320x240',
+          frameRate: 15,
           insertMode: 'APPEND',
           mirror: false,
         });
