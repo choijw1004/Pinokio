@@ -130,6 +130,8 @@ public class ItemService {
 
     private void updateItemImage(Item item, MultipartFile file) {
         try {
+            log.info("[updateItemImage] file: {}", file);
+
             String currentImageUrl = item.getItemImage();
             String newImageUrl = null;
 
@@ -138,8 +140,7 @@ public class ItemService {
                 // 기존 이미지 삭제
                 if (currentImageUrl != null) {
                     try {
-                        // TODO 더미데이터 적절한 이미지값 추가
-//                        imageService.deleteImage(currentImageUrl);
+                        imageService.deleteImage(currentImageUrl);
                     } catch (Exception e) {
                         log.warn("기존 이미지 삭제 실패: {}", currentImageUrl, e);
                         // 기존 이미지 삭제 실패를 로그로 남기고 계속 진행
@@ -154,8 +155,8 @@ public class ItemService {
             if (newImageUrl != null) {
                 item.updateItemImage(newImageUrl);
             } else if (file != null && file.isEmpty()) {
-                // 파일이 제공되었지만 비어있는 경우, 이미지 제거로 간주
-                item.updateItemImage(null);
+                // 파일이 제공되었지만 비어있는 경우, 이미지 제거로 간주해 default 이미지로 대치
+                item.updateItemImage(DEFAULT_IMAGE_URL);
             }
             // 파일이 null인 경우 기존 이미지 유지 (아무 작업도 하지 않음)
 
