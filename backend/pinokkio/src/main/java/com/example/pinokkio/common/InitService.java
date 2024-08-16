@@ -69,8 +69,8 @@ public class InitService implements ApplicationListener<ContextRefreshedEvent> {
 
     @Override
     public void onApplicationEvent(ContextRefreshedEvent event) {
-        makeInitData();
-        createDummyOrders();
+//        makeInitData();
+//        createDummyOrders();
     }
 
     private void makeInitData() {
