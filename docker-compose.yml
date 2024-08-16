@@ -3,24 +3,24 @@ version: '3'
 services:
 
   backend:
+
     container_name: pinokkio-backend
     build:
       context: ./backend/pinokkio
       dockerfile: Dockerfile
-    network_mode: host
     ports:
       - "8080:8080"
       - "3333:3333"
       - "3334:3334"
       - "465:465"
-      - "587:587"
+      - "587:587"  
     environment:
-      - SPRING_DATASOURCE_URL=jdbc:mysql://localhost:3306/pinokkio?serverTimezone=Asia/Seoul
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/pinokkio?serverTimezone=Asia/Seoul
       - SPRING_DATASOURCE_USERNAME=root
       - SPRING_DATASOURCE_PASSWORD=ssafy
       - SPRING_JPA_HIBERNATE_DDL_AUTO=create
-      - SPRING_REDIS_HOST=localhost
-      - SPRING_REDIS_PORT=6380
+      - SPRING_REDIS_HOST=redis
+      - SPRING_REDIS_PORT=6379
       - SPRING_MAIL_USERNAME=${EMAIL}
       - SPRING_MAIL_PASSWORD=${EMAIL_PW}
       - JWT_SECRET=${JWT_SECRET}
@@ -40,12 +40,11 @@ services:
     build:
       context: ./backend/fast_pinokkio
       dockerfile: Dockerfile
-    network_mode: host
     ports:
       - "5000:5000"
     environment:
-      - REDIS_HOST=localhost
-      - REDIS_PORT=6380
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
     depends_on:
       - redis
 
@@ -53,7 +52,6 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-    network_mode: host
     ports:
       - "80:80"
       - "443:443"
@@ -61,23 +59,19 @@ services:
       - /etc/letsencrypt:/etc/letsencrypt:ro
     depends_on:
       - backend
-
   mysql:
     image: mysql:8.0
     environment:
       MYSQL_ROOT_PASSWORD: ssafy
       MYSQL_DATABASE: pinokkio
-    network_mode: host
     ports:
       - "3306:3306"
     volumes:
       - mysql-data:/var/lib/mysql
-
   redis:
     image: redis:latest
-    network_mode: host
     ports:
-      - "6380:6380"
+      - "6379:6379"
 
 volumes:
   mysql-data:
