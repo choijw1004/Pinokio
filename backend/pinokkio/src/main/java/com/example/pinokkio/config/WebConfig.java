@@ -12,7 +12,7 @@ public class WebConfig implements WebMvcConfigurer {
         registry.addMapping("/**")
                 .allowedOriginPatterns("https://localhost:3000")
                 .allowedOriginPatterns("https://pinokio-openvidu.duckdns.org")
-                .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
+                .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS", "CONNECT")
                 .allowedHeaders("*")
                 .allowCredentials(true)
                 .maxAge(3600);
