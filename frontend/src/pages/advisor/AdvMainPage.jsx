@@ -212,7 +212,9 @@ const AdvMainPage = () => {
 
   const initializeSession = useCallback(
     async (roomId, token) => {
-      const ov = new OpenVidu();
+      const ov = new OpenVidu({
+        streamPlaying_timeout: 15000, // 15초로 설정 (기본값은 4000ms)
+      });
       setOV(ov);
 
       const session = ov.initSession();

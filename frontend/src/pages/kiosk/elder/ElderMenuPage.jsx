@@ -220,7 +220,9 @@ function ElderMenuPage() {
 
       setIsSessionInitialized(true);
 
-      const OV = new OpenVidu();
+      const OV = new OpenVidu({
+        streamPlaying_timeout: 15000, // 15초로 설정 (기본값은 4000ms)
+      });
       const cameraSessionObj = OV.initSession();
       const screenSessionObj = OV.initSession();
 
