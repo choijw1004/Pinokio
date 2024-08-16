@@ -118,7 +118,7 @@ function CarouselPage() {
   };
 
   useEffect(() => {
-    fetchData();
+//     fetchData();
 
     if (isFirstRender.current) {
       console.log('kioskId : ', kioskId);
@@ -178,7 +178,11 @@ function CarouselPage() {
       isFirstRender.current = false;
       return;
     }
-
+    setCustomer({
+          customerId: data.customerId,
+          gender: data.customerGender,
+          age: data.customerAge,
+        });
     // setTimeout(() => {
     //   console.log('1초 기다리기 끝');
     // }, 1000); //1초 기다리기
