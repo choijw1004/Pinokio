@@ -119,3 +119,13 @@ export const itemSoldOutToggle = async (itemId) => {
     throw error;
   }
 };
+
+export const kioskMyInfo = async () => {
+  try {
+    const response = await axios.get(`/api/kiosk/my-info`);
+    return response.data;
+  } catch (error) {
+    console.error('kiosk MyInfo Failed');
+    throw error;
+  }
+};

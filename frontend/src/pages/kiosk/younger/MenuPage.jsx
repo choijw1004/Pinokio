@@ -139,6 +139,8 @@ function MenuPage() {
       let menu_data = [];
       let favoriteItem = await getFavoriteItem(state.customer.customerId);
       if (favoriteItem?.length > 0) {
+        console.log('say hello');
+        console.log('fav', favoriteItem[0]);
         favoriteItem = await getItemByItemId(favoriteItem[0].itemId);
         console.log('favoriteItem : ', favoriteItem);
         menu_data.push(favoriteItem);

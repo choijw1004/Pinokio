@@ -465,9 +465,6 @@ const AdvMainPage = () => {
               setValue={(value) => dispatch(setAvailability(!value))}
               size={'3rem'}
             />
-            <p>
-              연결 거절모드 토글 (현재 연결: {currentConnections}/{maxConnections})
-            </p>
           </ToggleContainer>
         </HeaderRight>
       </AdvHeader>
