@@ -6,6 +6,7 @@ import carouselimage from '../../assets/images/carouselimage.webp';
 import carouselimage2 from '../../assets/images/carouselimage2.webp';
 import carouselimage3 from '../../assets/images/carouselimage3.webp';
 import NumberModal from '../../components/kiosk/modal/NumberModal';
+import { kioskMyInfo } from '../../apis/Item';
 import axios from 'axios';
 
 const CarouselPageStyle = styled.div`
@@ -109,13 +110,16 @@ function CarouselPage() {
     }
   };
 
+  const fetchData = async () => {
+    console.log('first');
+    const result = await kioskMyInfo(); // Promise를 반환하는 함수
+    console.log('customer result:', result);
+    setCustomer({ customerId: result.customerId, gender: 'male', age: 23 });
+  };
+
   useEffect(() => {
-    console.log('carousel useEffect start');
-    setCustomer({
-      customerId: '33e75aab-9707-4f18-9f96-e27383f7171d',
-      gender: 'female',
-      age: 23,
-    });
+    fetchData();
+
     if (isFirstRender.current) {
       console.log('kioskId : ', kioskId);
       startKiosk(kioskId);
@@ -183,7 +187,7 @@ function CarouselPage() {
   useEffect(() => {
     if (customer?.customerId !== null && customer?.gender !== null && customer?.age !== null) {
       console.log('customer 인식 완료');
-
+      console.log('print customer ::::', customer);
       if (customer.customerId === 'guest') {
         console.log('customer는 guest입니다.');
       } else {
