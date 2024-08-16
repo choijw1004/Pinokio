@@ -7,6 +7,10 @@ const CustomerWaitingSection = styled.div`
   background-color: #efefef;
   height: 100%;
   width: 100%;
+  line-height: ${(props) => `${props.height}px`};
+  background-color: #efefef;
+  font-family: 'CafeOhsquareAir';
+  font-size: ${(props) => `calc(${props.height}px / 12)`};
 `;
 const ConnectionText = styled.div`
   font-family: 'CafeOhsquareAir';
@@ -17,9 +21,7 @@ function CustomerWaiting({ connectedKiosks, subscribers, onDisconnect, onSetActi
 
   return (
     <CustomerWaitingSection>
-      <p>
-        대기 인원 ({waitingKiosks.length}/{connectedKiosks.length})
-      </p>
+      대기 인원 ({waitingKiosks.length}/{connectedKiosks.length})
       <CustomerWaitingRooms
         connectedKiosks={waitingKiosks}
         subscribers={subscribers}

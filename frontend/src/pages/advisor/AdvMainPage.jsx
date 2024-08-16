@@ -142,7 +142,7 @@ const AdvMainPage = () => {
 
   const leftmiddlebarRef = useRef();
 
-  /*
+  /*  
   isAccept : 연결 요청에 대한 답변
   요청이 오지 않아 toast가 뜨지 않은 상태는 "no request",
   요청이 들어왔지만 상담원이 아직 승낙/거절을 하지 않은 상태는 "waiting"
@@ -153,8 +153,10 @@ const AdvMainPage = () => {
   const [isAccept, setIsAccept] = useState('waiting');
 
   const dispatch = useDispatch();
-  const [showModal, setShowModal] = useState(false);
+  const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState('');
   const [consultationRequest, setConsultationRequest] = useState(null);
+  const [pendingAction, setPendingAction] = useState(null);
   const { sendMessage, lastMessage, isConnected, connect } = useWebSocket(userData.token);
 
   const [OV, setOV] = useState(null);
@@ -212,21 +214,15 @@ const AdvMainPage = () => {
 
   const initializeSession = useCallback(
     async (roomId, token) => {
-      const ov = new OpenVidu({
-        streamPlaying_timeout: 15000, // 15초로 설정 (기본값은 4000ms)
-      });
+      const ov = new OpenVidu();
       setOV(ov);
 
       const session = ov.initSession();
       setSession(session);
 
-      // ICE 후보 처리를 위한 이벤트 리스너 추가
-      session.on('iceCandidate', (event) => {
-        session.sendIceCandidate(event.candidate);
-      });
-
       session.on('streamCreated', (event) => {
         const subscriber = session.subscribe(event.stream, undefined);
+        console.log('subscriber', subscriber);
         subscriber.on('streamPlaying', (e) => {
           console.log('Subscriber stream playing');
         });
@@ -284,17 +280,8 @@ const AdvMainPage = () => {
         console.warn('Exception in session:', exception);
       });
 
-      const connectWithTimeout = (session, token, metadata, timeout = 10000) => {
-        return Promise.race([
-          session.connect(token, metadata),
-          new Promise((_, reject) =>
-            setTimeout(() => reject(new Error('Connection timeout')), timeout)
-          ),
-        ]);
-      };
-
       try {
-        await connectWithTimeout(session, token, { clientData: userData.email });
+        await session.connect(token, { clientData: userData.email });
         console.log('OpenVidu 세션 연결 성공');
 
         const publisher = await ov.initPublisherAsync(undefined, {
@@ -302,8 +289,8 @@ const AdvMainPage = () => {
           videoSource: undefined,
           publishAudio: true,
           publishVideo: true,
-          resolution: '320x240',
-          frameRate: 15,
+          resolution: '640x480',
+          frameRate: 30,
           insertMode: 'APPEND',
           mirror: false,
         });
@@ -312,12 +299,12 @@ const AdvMainPage = () => {
         setPublisher(publisher);
         console.log('상담원 스트림 발행 성공');
       } catch (error) {
-        console.error('세션 연결 또는 스트림 발행 오류:', error.name, error.message);
-        // 여기에 오류 처리 로직 추가 (예: 사용자에게 알림, 재연결 시도 등)
+        console.error('세션 연결 또는 스트림 발행 오류:', error);
       }
     },
     [userData.email, handleCustomerConnect, handleCustomerDisconnect, connectedKiosks.length]
   );
+
   useEffect(() => {
     if (userData.token && !isConnected) {
       initializeAdvisor();
@@ -348,76 +335,54 @@ const AdvMainPage = () => {
       const data = JSON.parse(lastMessage.data);
       console.log('WebSocket 메시지 수신:', data);
       if (data.type === 'consultationRequest') {
-        handleConsultationRequest(data);
+        setConsultationRequest(data);
+        setToastMessage('상담 요청이 왔습니다. 수락하시겠습니까?');
+        setShowToast(true);
       }
     }
   }, [lastMessage]);
 
-  useEffect(() => {
-    if (isAccept === 'accept') {
-      // 승낙했으니 연결 과정으로 넘어간다.
-      setIsAccept('no request');
-    } else if (isAccept === 'reject') {
-      // 거절에 따른 post를 보낸다.
-      setIsAccept('no request');
-    } else if (isAccept === 'no request') {
-      // waiting request
-    }
-  }, [isAccept]);
+  const handleConsultationRequest = useCallback((accept) => {
+    setPendingAction(accept ? 'accept' : 'reject');
+    setShowToast(false);
+  }, []);
 
   useEffect(() => {
-    if (isAccept === 'accept') {
-      // 승낙했으니 연결 과정으로 넘어간다.
-      setIsAccept('no request');
-    } else if (isAccept === 'reject') {
-      // 거절에 따른 post를 보낸다.
-      setIsAccept('no request');
-    } else if (isAccept === 'no request') {
-      // waiting request
-    }
-  }, [isAccept]);
-
-  const handleConsultationRequest = (data) => {
-    console.log('상담 요청 받음:', data);
-    console.log(isAvailable, currentConnections, maxConnections);
-    if (isAvailable && currentConnections < maxConnections) {
-      setConsultationRequest(data);
-      setShowModal(true);
-    }
-  };
-
-  const handleAcceptMeeting = async () => {
-    try {
-      await acceptMeeting(roomId, consultationRequest.kioskId);
-      const availableRoom = connectedKiosks.find((kiosk) => kiosk.status === 'waiting');
-      if (availableRoom) {
-        dispatch(
-          connectKiosk({
-            id: availableRoom.id,
-            kioskId: consultationRequest.kioskId,
-            status: 'connected',
-          })
-        );
-        console.log('Updated connectedKiosks:', connectedKiosks);
-      } else {
-        console.log('No available room for new kiosk');
+    const handlePendingAction = async () => {
+      if (pendingAction && consultationRequest) {
+        if (pendingAction === 'accept') {
+          try {
+            await acceptMeeting(roomId, consultationRequest.kioskId);
+            const availableRoom = connectedKiosks.find((kiosk) => kiosk.status === 'waiting');
+            if (availableRoom) {
+              dispatch(
+                connectKiosk({
+                  id: availableRoom.id,
+                  kioskId: consultationRequest.kioskId,
+                  status: 'connected',
+                })
+              );
+              console.log('Updated connectedKiosks:', connectedKiosks);
+            } else {
+              console.log('No available room for new kiosk');
+            }
+          } catch (error) {
+            console.error('상담 수락 오류:', error);
+          }
+        } else if (pendingAction === 'reject') {
+          try {
+            await rejectMeeting();
+          } catch (error) {
+            console.error('상담 거절 오류:', error);
+          }
+        }
+        setConsultationRequest(null);
+        setPendingAction(null);
       }
-      setShowModal(false);
-      setConsultationRequest(null);
-    } catch (error) {
-      console.error('상담 수락 오류:', error);
-    }
-  };
+    };
 
-  const handleRejectMeeting = async () => {
-    try {
-      await rejectMeeting();
-    } catch (error) {
-      console.error('상담 거절 오류:', error);
-    }
-    setShowModal(false);
-    setConsultationRequest(null);
-  };
+    handlePendingAction();
+  }, [pendingAction, consultationRequest, roomId, connectedKiosks, dispatch]);
 
   const [activeSubscriber, setActiveSubscriber] = useState(null);
   const [activeScreenSubscriber, setActiveScreenSubscriber] = useState(null);
@@ -500,9 +465,6 @@ const AdvMainPage = () => {
               setValue={(value) => dispatch(setAvailability(!value))}
               size={'3rem'}
             />
-            <p>
-              연결 거절모드 토글 (현재 연결: {currentConnections}/{maxConnections})
-            </p>
           </ToggleContainer>
         </HeaderRight>
       </AdvHeader>
@@ -525,20 +487,15 @@ const AdvMainPage = () => {
         <RightSection>
           <CustomerKiosk streamManager={activeScreenSubscriber || null} />
         </RightSection>
-        {isAccept !== 'no request' && (
+        {showToast && (
           <Toast
-            message={'서비스 요청이 있습니다. 수락하시겠습니까?'}
-            setAnswer={setIsAccept}
+            message={toastMessage}
+            setAnswer={(answer) => handleConsultationRequest(answer === 'accept')}
+            onClose={() => setShowToast(false)}
             makeButton={true}
-          ></Toast>
+          />
         )}
       </AdvBody>
-      <Modal isOpen={showModal} onRequestClose={handleRejectMeeting} contentLabel="상담 요청">
-        <h2>상담 요청이 왔습니다</h2>
-        <p>수락하시겠습니까?</p>
-        <button onClick={handleAcceptMeeting}>수락</button>
-        <button onClick={handleRejectMeeting}>거절</button>
-      </Modal>
     </AdvMainPageWrapper>
   );
 };

@@ -29,16 +29,28 @@ const DatePickerWrapper = styled.div`
   }
 `;
 
-function RangeDatePicker({ setDateRange }) {
+function RangeDatePicker({ setDateRange, dateRange }) {
   // eslint-disable-next-line react-hooks/rules-of-hooks
   const [dateRangeTemp, setDateRangeTemp] = useState([new Date(), new Date()]);
   const [startDateTemp, endDateTemp] = dateRangeTemp;
+  const [startDate, endDate] = dateRange;
+  const [dateRangeIsMounted, setDateRangeIsMounted] = useState(false);
 
   useEffect(() => {
-    if (endDateTemp !== null) {
+    if (endDateTemp !== null && !(startDate === startDateTemp && endDate === endDateTemp)) {
       setDateRange(dateRangeTemp);
     }
   }, [dateRangeTemp]);
+
+  useEffect(() => {
+    if (dateRangeIsMounted) {
+      if (!(startDate === startDateTemp && endDate === endDateTemp)) {
+        setDateRangeTemp([startDate, endDate]);
+      }
+    } else {
+      setDateRangeIsMounted(true);
+    }
+  }, [startDate, endDate]);
 
   return (
     <DatePickerWrapper>
@@ -48,8 +60,8 @@ function RangeDatePicker({ setDateRange }) {
         endDate={endDateTemp}
         maxDate={new Date()}
         onChange={(update) => {
-          console.log('s', startDateTemp);
-          console.log('e ', endDateTemp);
+          console.log('startDateTemp : ', startDateTemp);
+          console.log('endDateTemp : ', endDateTemp);
 
           setDateRangeTemp(update);
         }}

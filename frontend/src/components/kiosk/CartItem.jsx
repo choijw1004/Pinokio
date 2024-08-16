@@ -1,4 +1,5 @@
 import React from 'react';
+import { useLocation } from 'react-router-dom';
 import styled from 'styled-components';
 
 const CI = styled.div`
@@ -7,7 +8,7 @@ const CI = styled.div`
   justify-content: space-between;
   align-items: center;
   background: white;
-  height: 2rem;
+  height: 1.6rem;
   font-size: 0.7rem;
 
   border-bottom: 1px #d9d9d9 solid;
@@ -47,6 +48,8 @@ const DeleteButton = styled.div`
 `;
 
 function CartItem({ item, cartItems, setCartItems }) {
+  // const { state } = useLocation();
+  // console.log('state in cartitem', state);
   const changeCount = (count) => {
     for (var i = 0; i < cartItems.length; i++) {
       if (cartItems[i].name === item.name) {

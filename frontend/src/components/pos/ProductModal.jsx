@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import styled from 'styled-components';
-import ToggleButton from '../common/Toggle';
 import { postItem, putItem, itemScreenToggle, itemSoldOutToggle } from '../../apis/Item';
+import Toggle from '../common/Toggle';
+import RoundButton from '../common/RoundButton';
 
 const Modal = styled.div`
   position: fixed;
@@ -12,6 +13,7 @@ const Modal = styled.div`
   padding: 20px;
   border-radius: 5px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  width: 30%;
 `;
 
 const Input = styled.input`
@@ -19,12 +21,29 @@ const Input = styled.input`
   margin-bottom: 10px;
 `;
 
+const ToggleContainer = styled.div`
+  width: 40%;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  width: 30%;
+  margin: 0.5rem 0;
+`;
+
+const ButtonCotainer = styled.div`
+  display: flex;
+  flex-direction: row;
+  transform: translate(10%, 0);
+`;
+
 const TextArea = styled.textarea`
   width: 100%;
   margin-bottom: 10px;
+  height: 10rem;
 `;
 
 const ProductModal = ({ product, categories, onClose }) => {
+  // modal 내의 toggle이 안됨
   const [name, setName] = useState('');
   const [price, setPrice] = useState('');
   const [amount, setAmount] = useState('');
@@ -33,6 +52,7 @@ const ProductModal = ({ product, categories, onClose }) => {
   const [isScreen, setIsScreen] = useState(false);
   const [isSoldOut, setIsSoldout] = useState(false);
   const [category, setCategory] = useState('');
+  const [useExistingImage, setUseExistingImage] = useState(false);
 
   useEffect(() => {
     if (product !== null) {
@@ -50,6 +70,7 @@ const ProductModal = ({ product, categories, onClose }) => {
       setIsSoldout(product.isSoldOut);
     }
   }, []);
+
   const handleSave = async () => {
     if (!name.trim() || !detail.trim() || !price || price === '0') {
       alert('필수 항목을 모두 입력해주세요.');
@@ -57,22 +78,23 @@ const ProductModal = ({ product, categories, onClose }) => {
     }
 
     const formData = new FormData();
-
+    console.log('product : ', product);
     if (product === null) {
       const categoryId = categories.find((cat) => cat.name === category)?.id;
-
       const itemRequest = {
         categoryId,
         name,
         price: parseInt(price),
         amount: parseInt(amount),
         detail,
+        image,
       };
 
       formData.append(
         'itemRequest',
         new Blob([JSON.stringify(itemRequest)], { type: 'application/json' })
       );
+
       if (image) {
         formData.append('file', image);
         console.log(image);
@@ -85,7 +107,6 @@ const ProductModal = ({ product, categories, onClose }) => {
       }
     } else {
       const categoryId = categories.find((cat) => cat.name === category)?.id;
-
       const updateItemRequest = {
         categoryId,
         name,
@@ -94,7 +115,9 @@ const ProductModal = ({ product, categories, onClose }) => {
         detail,
         isScreen,
         isSoldOut,
+        useExistingImage,
       };
+      console.log('updateItemRequest', updateItemRequest);
 
       formData.append(
         'updateItemRequest ',
@@ -102,7 +125,7 @@ const ProductModal = ({ product, categories, onClose }) => {
       );
       if (image) {
         formData.append('file', image);
-        console.log(image);
+        console.log('image', image);
       } else {
         // URL을 Blob 객체로 변환하여 FormData에 추가
         const blob = new Blob([], { type: 'image/jpeg' }); // 빈 Blob 객체 생성
@@ -113,11 +136,13 @@ const ProductModal = ({ product, categories, onClose }) => {
     }
 
     try {
+      console.log('product2 : ', product);
+
       if (product === null) {
         await postItem(formData);
         onClose(); // Close the modal and trigger screen update
       } else {
-        console.log('hello', isScreen, isSoldOut);
+        console.log('formData', formData);
         await putItem(product.itemId, formData);
         onClose();
       }
@@ -130,7 +155,7 @@ const ProductModal = ({ product, categories, onClose }) => {
     setImage(e.target.files[0]);
   };
 
-  const handleToggle = async (field) => {
+  const handleToggle = async (product, field) => {
     try {
       let updatedProduct;
       if (field === 'isSoldOut') {
@@ -150,25 +175,37 @@ const ProductModal = ({ product, categories, onClose }) => {
 
   return (
     <Modal>
-      <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="상품명" required />
+      <Input
+        value={name}
+        onChange={(e) => setName(e.target.value.trim())}
+        placeholder="상품명"
+        required
+      />
       <Input
         value={price}
-        onChange={(e) => setPrice(e.target.value)}
+        onChange={(e) => setPrice(e.target.value.trim())}
         placeholder="가격"
         type="number"
         required
       />
       <Input
         value={amount}
-        onChange={(e) => setAmount(e.target.value)}
+        onChange={(e) => setAmount(e.target.value.trim())}
         placeholder="재고"
         type="number"
         required
       />
       <Input type="file" onChange={handleFileChange} />
+      <ToggleContainer>
+        <div>사진 유지 여부</div>
+        <Toggle
+          setValue={() => setUseExistingImage(!useExistingImage)}
+          value={useExistingImage}
+        ></Toggle>
+      </ToggleContainer>
       <TextArea
         value={detail}
-        onChange={(e) => setDetail(e.target.value)}
+        onChange={(e) => setDetail(e.target.value.trim())}
         placeholder="상품 설명"
         required
       />
@@ -182,22 +219,24 @@ const ProductModal = ({ product, categories, onClose }) => {
           </option>
         ))}
       </select>
-      <div>
-        <span>키오스크 노출</span>
-        <ToggleButton
-          value={product.isSoldOut === 'YES'}
+      <ToggleContainer>
+        <div>키오스크 노출</div>
+        <Toggle
+          value={product?.isSoldOut === 'YES'}
           setValue={() => handleToggle(product, 'isSoldOut')}
         />
-      </div>
-      <div>
-        <span>품절</span>
-        <ToggleButton
-          value={product.isScreen === 'YES'}
+      </ToggleContainer>
+      <ToggleContainer>
+        <div>품절</div>
+        <Toggle
+          value={product?.isScreen === 'YES'}
           setValue={() => handleToggle(product, 'isScreen')}
         />
-      </div>
-      <button onClick={handleSave}>확인</button>
-      <button onClick={onClose}>취소</button>
+      </ToggleContainer>
+      <ButtonCotainer>
+        <RoundButton onClick={handleSave} text="확인" theme="colored" />
+        <RoundButton onClick={onClose} text="취소" />
+      </ButtonCotainer>
     </Modal>
   );
 };

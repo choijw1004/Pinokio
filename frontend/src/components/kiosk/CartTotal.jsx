@@ -25,7 +25,7 @@ const GoPaymentButton = styled.div`
   opacity: ${(props) => (props.disabled ? '0.5' : null)};
 `;
 
-function CartTotal({ cartItems, isElder }) {
+function CartTotal({ cartItems }) {
   const navigate = useNavigate();
   const { state } = useLocation();
   const [totalPrice, setTotalPrice] = useState(0);
@@ -50,20 +50,20 @@ function CartTotal({ cartItems, isElder }) {
     // 결제 버튼을 누르면 다음 페이지로 이동
     console.log('This is state : ', state);
     state['cartItems'] = cartItems;
-
-    if (!isElder) {
-      navigate('/kiosk/payment', { state: state });
-    } else {
-      navigate('/kiosk/elder-payment', { state: state });
-    }
+    navigate('/kiosk/payment', { state: state });
   };
+
   return (
     <CT>
       <CTtop>
         <text>결제 금액</text>
         <text>{changePriceForm(totalPrice)}</text>
       </CTtop>
-      <GoPaymentButton onClick={goPayment} isElder={isElder} disabled={cartItems.length === 0}>
+      <GoPaymentButton
+        onClick={goPayment}
+        isElder={state?.isElder}
+        disabled={cartItems.length === 0}
+      >
         결제하기
       </GoPaymentButton>
     </CT>

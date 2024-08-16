@@ -15,10 +15,31 @@ export const getOrdersByRange = async (startDate, endDate) => {
   }
 };
 
+export const getFavoriteItem = async (customerId) => {
+  try {
+    const response = await axios.get(`/api/orders/customers/${customerId}/top-order`);
+    return response.data;
+  } catch (error) {
+    console.error('get favorite item error', error);
+    throw error;
+  }
+};
+
+export const getRecentItem = async (customerId) => {
+  try {
+    const response = await axios.get(`/api/orders/customers/${customerId}/recent-items`);
+    return response.data;
+  } catch (error) {
+    console.error('get recently order item error', error);
+    throw error;
+  }
+};
+
 export const makeOrder = async (customerId, orderList) => {
-  console.log('dedeeddddddddddddddddddddddd');
-  console.log(customerId);
-  console.log(orderList);
+  console.log('print orderlist', {
+    customerId: customerId,
+    orderItems: orderList,
+  });
   try {
     const response = await axios.post(`/api/orders`, {
       customerId: customerId,

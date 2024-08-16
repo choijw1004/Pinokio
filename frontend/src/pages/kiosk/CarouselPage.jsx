@@ -6,6 +6,7 @@ import carouselimage from '../../assets/images/carouselimage.webp';
 import carouselimage2 from '../../assets/images/carouselimage2.webp';
 import carouselimage3 from '../../assets/images/carouselimage3.webp';
 import NumberModal from '../../components/kiosk/modal/NumberModal';
+import { kioskMyInfo } from '../../apis/Item';
 import axios from 'axios';
 
 const CarouselPageStyle = styled.div`
@@ -109,12 +110,21 @@ function CarouselPage() {
     }
   };
 
+  const fetchData = async () => {
+    console.log('first');
+    const result = await kioskMyInfo(); // Promise를 반환하는 함수
+    console.log('customer result:', result);
+    setCustomer({ customerId: result.customerId, gender: 'male', age: 23 });
+  };
+
   useEffect(() => {
+    fetchData();
+
     if (isFirstRender.current) {
-      console.log(kioskId);
+      console.log('kioskId : ', kioskId);
       startKiosk(kioskId);
       const connectEventSource = () => {
-        const url = 'https://localhost/api/customer/face-recognition-events';
+        const url = 'https://i11a601.p.ssafy.io/api/customer/face-recognition-events';
         console.log('Connecting to:', url);
 
         const eventSource = new EventSource(url);
@@ -169,12 +179,22 @@ function CarouselPage() {
       return;
     }
 
-    setCustomer({
-      customerId: 'a97804be-a882-48d9-bff4-be27f7b043df',
-      gender: null,
-      age: null,
-    });
+    // setTimeout(() => {
+    //   console.log('1초 기다리기 끝');
+    // }, 1000); //1초 기다리기
   }, []);
+
+  useEffect(() => {
+    if (customer?.customerId !== null && customer?.gender !== null && customer?.age !== null) {
+      console.log('customer 인식 완료');
+      console.log('print customer ::::', customer);
+      if (customer.customerId === 'guest') {
+        console.log('customer는 guest입니다.');
+      } else {
+        console.log('customer는 기존 회원입니다.');
+      }
+    }
+  }, [customer]);
 
   // const connectEventSource = () => {
   //   const url = 'http://localhost:8080/api/customer/face-recognition-events';
@@ -227,30 +247,15 @@ function CarouselPage() {
 
   const havingHere = () => {
     navigate('/kiosk/menu', {
-      state: { where: 'having here', customer: customer, orderList: null },
+      state: { where: 'having here', customer: customer, orderList: null, isElder: false },
     });
   };
 
   const takeAway = () => {
     navigate('/kiosk/elder-menu', {
-      state: { where: 'take away', customer: customer, orderList: null },
+      state: { where: 'take away', customer: customer, orderList: null, isElder: true },
     });
   };
-
-  // const slideAutoPlay = () => {
-  //   const interval = setInterval(() => {
-  //     handleSwipe(1);
-
-  //     if (carouselIndex === $slider.children.length - 1) {
-  //       setTimeout(() => {
-  //         $slider.style.transition = 'none';
-  //         currentIndex = 1;
-  //         moveOffset = (100 / slideAmount) * currentIndex;
-  //         $slider.style.transform = `translateX(-${moveOffset}%)`;
-  //       }, slideSpeed);
-  //     }
-  //   }, 3000);
-  // };
 
   useEffect(() => {
     const interval = setInterval(() => {

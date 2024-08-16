@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import styled from 'styled-components';
-import coffeeImage from '../../assets/images/coffee_image_rb.png';
+// import coffeeImage from '../../assets/images/coffee_image_rb.png';
 
 const MMC = styled.div`
   display: flex;
@@ -15,7 +15,8 @@ const MMC = styled.div`
 
 const Image = styled.img`
   width: 100%;
-  height: 7rem;
+  min-height: 7rem;
+  max-height: 7rem;
   object-fit: cover;
 `;
 

@@ -84,6 +84,7 @@ export const postItem = async (formData) => {
 
 // 아이템 수정
 export const putItem = async (itemId, formData) => {
+  console.log(formData);
   try {
     const response = await axios.put(`/api/pos/items/${itemId}`, formData, {
       headers: {
@@ -115,6 +116,16 @@ export const itemSoldOutToggle = async (itemId) => {
     return response.data;
   } catch (error) {
     console.error('get Kiosk info failed:', error);
+    throw error;
+  }
+};
+
+export const kioskMyInfo = async () => {
+  try {
+    const response = await axios.get(`/api/kiosk/my-info`);
+    return response.data;
+  } catch (error) {
+    console.error('kiosk MyInfo Failed');
     throw error;
   }
 };

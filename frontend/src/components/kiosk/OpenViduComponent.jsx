@@ -15,15 +15,13 @@ const StyledVideo = styled.video`
   width: 100%;
   height: 100%;
   object-fit: cover;
-  border-radius: 10px;
 `;
 
 const OpenViduVideoComponent = ({ streamManager }) => {
   const videoRef = useRef();
 
   useEffect(() => {
-    if (streamManager && videoRef.current) {
-      streamManager.activateStreamPlayingEventExceptionTimeout(10000); // 10초로 변경
+    if (streamManager && !!videoRef) {
       streamManager.addVideoElement(videoRef.current);
     }
   }, [streamManager]);
