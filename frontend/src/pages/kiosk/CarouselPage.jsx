@@ -108,11 +108,11 @@ function CarouselPage() {
       console.error('키오스크 컨트롤러 시작 실패:', error);
     }
   };
-
+  // '33e75aab-9707-4f18-9f96-e27383f7171d'
   useEffect(() => {
     console.log('carousel useEffect start');
     setCustomer({
-      customerId: '33e75aab-9707-4f18-9f96-e27383f7171d',
+      customerId: 'guest',
       gender: 'female',
       age: 23,
     });
