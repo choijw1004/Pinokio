@@ -29,7 +29,8 @@ public class KioskService {
         return new KioskResponse(
                 kiosk.getId().toString(),
                 kiosk.getPos().getId().toString(),
-                kiosk.getEmail()
+                kiosk.getEmail(),
+                kiosk.getPos().getDummyCustomerUUID().toString()
         );
     }
 

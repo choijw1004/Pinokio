@@ -111,10 +111,11 @@ public class ItemService {
         Category category = getCategory(posId, updateRequest.getCategoryId());
 
         updateItemDetails(item, updateRequest, category);
-        updateItemImage(item, file);
+        updateItemImage(item, file, updateRequest.getUseExistingImage());
     }
 
     private void updateItemDetails(Item item, UpdateItemRequest updateRequest, Category category) {
+
         item.updateCategory(category);
         item.updateAmount(updateRequest.getAmount());
         item.updatePrice(updateRequest.getPrice());
@@ -128,17 +129,24 @@ public class ItemService {
         }
     }
 
-    private void updateItemImage(Item item, MultipartFile file) {
+    private void updateItemImage(Item item, MultipartFile file, Boolean useExistingImage) {
         try {
+            log.info("[updateItemImage] file: {}", file.getOriginalFilename());
+            String fileName = file.getOriginalFilename();
+
             String currentImageUrl = item.getItemImage();
             String newImageUrl = null;
 
+            // 이미지 유지시 바로 리턴
+            if (useExistingImage) {
+                return;
+            }
+
             // 새 파일이 제공된 경우에만 이미지 업데이트 진행
-            if (file != null && !file.isEmpty()) {
+            if (fileName != null && !fileName.isEmpty()) {
                 // 기존 이미지 삭제
                 if (currentImageUrl != null) {
                     try {
-                        // TODO 더미데이터 적절한 이미지값 추가
 //                        imageService.deleteImage(currentImageUrl);
                     } catch (Exception e) {
                         log.warn("기존 이미지 삭제 실패: {}", currentImageUrl, e);
@@ -150,14 +158,17 @@ public class ItemService {
                 newImageUrl = imageService.uploadImage(file);
             }
 
+            log.info("[updateImage] fileName != null : {}", (fileName != null));
+            log.info("[updateImage] fileName.isEmpty() : {}", (fileName.isEmpty()));
+
             // 아이템 이미지 URL 업데이트
             if (newImageUrl != null) {
                 item.updateItemImage(newImageUrl);
-            } else if (file != null && file.isEmpty()) {
-                // 파일이 제공되었지만 비어있는 경우, 이미지 제거로 간주
-                item.updateItemImage(null);
+            } else if (fileName != null && fileName.isEmpty()) {
+                // 파일이 제공되었지만 비어있는 경우, 이미지 제거로 간주해 default 이미지로 대치
+                log.info("[updateImage] DEFAULT 값으로 대치");
+                item.updateItemImage(DEFAULT_IMAGE_URL);
             }
-            // 파일이 null인 경우 기존 이미지 유지 (아무 작업도 하지 않음)
 
         } catch (Exception e) {
             log.error("이미지 업데이트 중 오류 발생", e);

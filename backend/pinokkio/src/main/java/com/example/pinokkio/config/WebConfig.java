@@ -10,8 +10,7 @@ public class WebConfig implements WebMvcConfigurer {
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**")
-                .allowedOriginPatterns("https://localhost:3000")
-                .allowedOriginPatterns("https://pinokio-openvidu.duckdns.org")
+                .allowedOriginPatterns("http://localhost:3000")
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS", "CONNECT")
                 .allowedHeaders("*")
                 .allowCredentials(true)

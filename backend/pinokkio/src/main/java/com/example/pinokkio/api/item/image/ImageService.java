@@ -22,6 +22,9 @@ import org.springframework.web.multipart.MultipartFile;
 @RequiredArgsConstructor
 public class ImageService {
 
+    @Value("${default-image}")
+    private String DEFAULT_IMAGE_URL;
+
     @Value("${cloud.aws.s3.bucket}")
     private String bucketName;
 
@@ -53,6 +56,11 @@ public class ImageService {
 
     @Transactional
     public void deleteImage(String filePath) {
+
+        if (filePath.equals(DEFAULT_IMAGE_URL)) {
+            return;
+        }
+
         if (!filePath.startsWith(this.hostName)) {
             throw new RuntimeException();
         } else {

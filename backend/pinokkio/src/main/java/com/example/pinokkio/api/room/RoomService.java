@@ -8,7 +8,10 @@ import com.example.pinokkio.api.teller.Teller;
 import com.example.pinokkio.api.user.UserService;
 import com.example.pinokkio.common.utils.EntityUtils;
 import com.example.pinokkio.exception.domain.kiosk.KioskNotFoundException;
-import com.example.pinokkio.exception.domain.room.*;
+import com.example.pinokkio.exception.domain.room.RoomAccessRestrictedException;
+import com.example.pinokkio.exception.domain.room.RoomNotAvailableException;
+import com.example.pinokkio.exception.domain.room.RoomNotFoundException;
+import com.example.pinokkio.exception.domain.room.TokenCreateFailException;
 import io.openvidu.java.client.*;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
@@ -74,13 +77,13 @@ public class RoomService {
 
     @Transactional
     public RoomResponse createRoomResponseForNewRoom(Teller teller) {
-        try {
-            Room newRoom = Room.builder()
-                    .teller(teller)
-                    .numberOfCustomers(0)
-                    .build();
-            roomRepository.save(newRoom);
+        Room newRoom = Room.builder()
+                .teller(teller)
+                .numberOfCustomers(0)
+                .build();
+        roomRepository.save(newRoom);
 
+        try {
             SessionProperties properties = new SessionProperties.Builder()
                     .customSessionId(newRoom.getRoomId().toString())
                     .build();
@@ -90,9 +93,6 @@ public class RoomService {
         } catch (OpenViduJavaClientException | OpenViduHttpException e) {
             log.error("Error creating new room for teller: {}", teller.getId(), e);
             throw new TokenCreateFailException();
-        } catch (Exception e) {
-            log.error("Error creating new room for teller: {}", teller.getId(), e);
-            throw new RoomCreateFailException();
         }
     }
 
@@ -220,10 +220,10 @@ public class RoomService {
     }
 
     private String createToken(UUID roomId, UUID userId, String userRole) throws OpenViduJavaClientException, OpenViduHttpException {
-        Session findSession = openvidu.getActiveSessions().stream()
-                .filter(session -> session.getSessionId().equals(roomId.toString()))
-                .findFirst()
-                .orElseThrow(() -> new RoomNotFoundException("Active session not found: " + roomId));
+        Session session = openvidu.getActiveSession(roomId.toString());
+        if (session == null) {
+            throw new RoomNotFoundException("Active session not found: " + roomId);
+        }
 
         JSONObject userData = new JSONObject();
         userData.put("userId", userId);
@@ -233,7 +233,7 @@ public class RoomService {
                 .role(OpenViduRole.valueOf(userRole.equals(KIOSK_ROLE) ? "PUBLISHER" : "MODERATOR"))
                 .data(userData.toString())
                 .build();
-        Connection connection = findSession.createConnection(properties);
+        Connection connection = session.createConnection(properties);
         return connection.getToken();
     }
 }

@@ -237,7 +237,7 @@ public class InitService implements ApplicationListener<ContextRefreshedEvent> {
 
     private void addKiosks(Pos pos) {
         String domain = pos.getCode().getName();
-        for (int i = 1; i <= 20; i++) {
+        for (int i = 1; i <= 3; i++) {
             String email = "kiosk" + i + "@" + domain + ".com";
             kioskRepository.save(new Kiosk(pos, email, passwordEncoder.encode("1234")));
         }
@@ -245,7 +245,7 @@ public class InitService implements ApplicationListener<ContextRefreshedEvent> {
 
     private void addTellers(Pos pos) {
         String domain = pos.getCode().getName();
-        for (int i = 1; i <= 20; i++) {
+        for (int i = 1; i <= 4; i++) {
             String email = "teller" + i + "@" + domain + ".com";
             tellerRepository.save(new Teller(pos.getCode(), email, passwordEncoder.encode("1234")));
         }
@@ -451,13 +451,16 @@ public class InitService implements ApplicationListener<ContextRefreshedEvent> {
         LocalDate endDate = LocalDate.now();
 
         List<Pos> allPos = entityManager.createQuery("SELECT p FROM Pos p", Pos.class).getResultList();
-        List<Customer> allCustomers = entityManager.createQuery("SELECT c FROM Customer c", Customer.class).getResultList();
 
         for (LocalDate date = startDate; date.isBefore(endDate.plusDays(1)); date = date.plusDays(1)) {
             int ordersPerDay = 10 + random.nextInt(11); // 10 to 20 orders per day
             for (int i = 0; i < ordersPerDay; i++) {
                 Pos pos = allPos.get(random.nextInt(allPos.size()));
-                Customer customer = allCustomers.get(random.nextInt(allCustomers.size()));
+
+                // Get the customer associated with the selected POS
+                Customer customer = entityManager.createQuery("SELECT c FROM Customer c WHERE c.pos.id = :posId", Customer.class)
+                        .setParameter("posId", pos.getId())
+                        .getSingleResult();
 
                 List<Item> posItems = entityManager.createQuery("SELECT i FROM Item i WHERE i.pos.id = :posId", Item.class)
                         .setParameter("posId", pos.getId())
@@ -504,7 +507,6 @@ public class InitService implements ApplicationListener<ContextRefreshedEvent> {
             entityManager.clear();
         }
     }
-
     private LocalDateTime generateRandomDateTime(LocalDate date) {
         return date.atTime(random.nextInt(24), random.nextInt(60), random.nextInt(60));
     }

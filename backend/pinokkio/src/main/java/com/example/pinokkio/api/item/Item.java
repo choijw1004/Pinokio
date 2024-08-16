@@ -73,7 +73,7 @@ public class Item extends BaseEntity {
     }
 
     public void updateAmount(int amount) {
-        this.amount += amount;
+        this.amount = amount;
     }
 
     public void updateName(String name) {

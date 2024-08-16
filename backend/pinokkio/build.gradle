@@ -36,7 +36,7 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-actuator'
 
 	// OpenVidu
-	implementation group: 'io.openvidu', name: 'openvidu-java-client', version: '2.20.0'
+	implementation group: 'io.openvidu', name: 'openvidu-java-client', version: '2.30.0'
 
 	// LiveKit
 	implementation 'io.livekit:livekit-server:0.5.11'

@@ -67,14 +67,13 @@ public class OrderController {
         return ResponseEntity.ok(orderDetails);
     }
 
-    @Operation(summary = "특정 고객의 최다 주문 아이템 조회", description = "특정 고객의 최다 주문 아이템 조회")
-    @PreAuthorize("hasRole('ROLE_POS')")
+    @Operation(summary = "특정 고객의 최다 주문 아이템 조회", description = "키오스크에서 특정 고객의 최다 주문 아이템 조회")
+    @PreAuthorize("hasRole('ROLE_KIOSK')")
     @GetMapping("/orders/customers/{customerId}/top-order")
     public ResponseEntity<?> getTopOrderItem(
             @PathVariable UUID customerId) {
         List<TopOrderedItemResponse> topItems = orderService.getTopOrderedItemByCustomerId(
-                        customerId,
-                        posService.getPosByEmail(jwtProvider.getCurrentUserEmail()).getId()
+                        customerId
                 )
                 .map(Collections::singletonList)
                 .orElseGet(Collections::emptyList);
@@ -82,15 +81,13 @@ public class OrderController {
         return ResponseEntity.ok(topItems);
     }
 
-    @Operation(summary = "특정 고객의 최근 주문 아이템 조회", description = "특정 고객의 최근 주문 아이템 조회")
-    @PreAuthorize("hasRole('ROLE_POS')")
+    @Operation(summary = "특정 고객의 최근 주문 아이템 조회", description = "키오스크에서 특정 고객의 최근 주문 아이템 조회")
+    @PreAuthorize("hasRole('ROLE_KIOSK')")
     @GetMapping("/orders/customers/{customerId}/recent-items")
     public ResponseEntity<?> getRecentOrderItems(
             @PathVariable UUID customerId) {
         List<OrderItemResponse> orderItemResponses = orderService.getRecentOrderItemsByCustomerId(
-                        customerId,
-                        posService.getPosByEmail(jwtProvider.getCurrentUserEmail()).getId()
-                )
+                        customerId)
                 .stream()
                 .map(OrderItemResponse::new)
                 .collect(Collectors.toList());
