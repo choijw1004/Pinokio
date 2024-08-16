@@ -173,13 +173,7 @@ function MenuPage() {
   return (
     <MenuPageStyle>
       <KioskHeader>
-        <Logo
-          onClick={() => {
-            handleClick();
-          }}
-        >
-          Pinokio
-        </Logo>
+        <Logo>Pinokio</Logo>
         {categories.length > 0 && selectedCategory && (
           <MenuCategory
             categories={categories}

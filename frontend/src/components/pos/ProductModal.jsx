@@ -66,8 +66,8 @@ const ProductModal = ({ product, categories, onClose }) => {
       const categoryName = categories.filter((category) => category.id === product.categoryId)[0]
         .name;
       setCategory(categoryName);
-      setIsScreen(product.isScreen);
-      setIsSoldout(product.isSoldOut);
+      setIsScreen(product.isScreen === 'YES' ? true : false);
+      setIsSoldout(product.isSoldOut === 'YES' ? true : false);
     }
   }, []);
 
@@ -113,8 +113,8 @@ const ProductModal = ({ product, categories, onClose }) => {
         price: parseInt(price),
         amount: parseInt(amount),
         detail,
-        isScreen,
-        isSoldOut,
+        isScreen: isScreen ? 'YES' : 'NO',
+        isSoldOut: isSoldOut ? 'YES' : 'NO',
         useExistingImage,
       };
       console.log('updateItemRequest', updateItemRequest);
@@ -153,24 +153,6 @@ const ProductModal = ({ product, categories, onClose }) => {
 
   const handleFileChange = (e) => {
     setImage(e.target.files[0]);
-  };
-
-  const handleToggle = async (product, field) => {
-    try {
-      let updatedProduct;
-      if (field === 'isSoldOut') {
-        await itemSoldOutToggle(product.itemId);
-        setIsSoldout((prev) => !prev); // 상태 업데이트
-        updatedProduct = { ...product, isSoldout: !isSoldOut };
-      } else if (field === 'isScreen') {
-        await itemScreenToggle(product.itemId);
-        setIsScreen((prev) => !prev); // 상태 업데이트
-        updatedProduct = { ...product, isScreen: !isScreen };
-      }
-      console.log(updatedProduct); // 업데이트된 상태 확인
-    } catch (error) {
-      console.error('Toggle failed:', error);
-    }
   };
 
   return (
@@ -221,17 +203,11 @@ const ProductModal = ({ product, categories, onClose }) => {
       </select>
       <ToggleContainer>
         <div>키오스크 노출</div>
-        <Toggle
-          value={product?.isSoldOut === 'YES'}
-          setValue={() => handleToggle(product, 'isSoldOut')}
-        />
+        <Toggle value={isSoldOut} setValue={setIsSoldout} />
       </ToggleContainer>
       <ToggleContainer>
         <div>품절</div>
-        <Toggle
-          value={product?.isScreen === 'YES'}
-          setValue={() => handleToggle(product, 'isScreen')}
-        />
+        <Toggle value={isScreen} setValue={setIsScreen} />
       </ToggleContainer>
       <ButtonCotainer>
         <RoundButton onClick={handleSave} text="확인" theme="colored" />
