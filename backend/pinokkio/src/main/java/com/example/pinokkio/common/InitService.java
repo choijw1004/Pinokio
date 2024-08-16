@@ -11,6 +11,8 @@ import com.example.pinokkio.api.kiosk.KioskRepository;
 import com.example.pinokkio.api.order.Order;
 import com.example.pinokkio.api.order.OrderRepository;
 import com.example.pinokkio.api.order.orderitem.OrderItem;
+import com.example.pinokkio.api.order.statistics.SalesStatistics;
+import com.example.pinokkio.api.order.statistics.SalesStatisticsService;
 import com.example.pinokkio.api.pos.Pos;
 import com.example.pinokkio.api.pos.PosRepository;
 import com.example.pinokkio.api.pos.code.Code;
@@ -60,6 +62,8 @@ public class InitService implements ApplicationListener<ContextRefreshedEvent> {
     private final TellerRepository tellerRepository;
     private final ItemRepository itemRepository;
     private final OrderRepository orderRepository;
+
+    private final SalesStatisticsService salesStatisticsService;
 
     private final EntityManager entityManager;
 
@@ -506,6 +510,8 @@ public class InitService implements ApplicationListener<ContextRefreshedEvent> {
             }
             entityManager.clear();
         }
+
+        salesStatisticsService.backfillSalesStatistics(startDate, endDate);
     }
     private LocalDateTime generateRandomDateTime(LocalDate date) {
         return date.atTime(random.nextInt(24), random.nextInt(60), random.nextInt(60));
