@@ -135,6 +135,7 @@ function PaymentPage() {
   const [screenSession, setScreenSession] = useState(null);
   const [turnAskRegisterModal, setTurnAskRegisterModal] = useState(false);
   const [turnNumberModal, setTurnNumberModal] = useState(false);
+  const [phoneNumber, setPhoneNumber] = useState('');
 
   useEffect(() => {
     console.log('state', state);
@@ -147,12 +148,6 @@ function PaymentPage() {
     await makeOrder(state.customer.customerId, orderList);
 
     navigate('/kiosk/receipt', { state: state });
-  };
-
-  const registerNewCustomer = async () => {
-    //가입하고
-    //가입한 계정으로
-    // goReceipt함수 실행
   };
 
   const goBack = () => {
@@ -207,7 +202,7 @@ function PaymentPage() {
         ></AskRegisterModal>
       )}
       {turnNumberModal && (
-        <NumberModal setModal={setTurnNumberModal} onComfirm={registerNewCustomer}></NumberModal>
+        <NumberModal setModal={setTurnNumberModal} setPhoneNumber={setPhoneNumber}></NumberModal>
       )}
     </PageStyle>
   );
