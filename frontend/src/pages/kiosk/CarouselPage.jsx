@@ -123,7 +123,7 @@ function CarouselPage() {
           const data = JSON.parse(event.data);
           console.log('Received waitingStatus event:', data);
           setIsWaiting(data.waiting);
-          setShowModal(data.waiting);
+          // setShowModal(data.waiting);
         });
 
         eventSource.addEventListener('faceDetectionResult', (event) => {
@@ -131,7 +131,7 @@ function CarouselPage() {
           console.log('Received faceDetectionResult event:', data);
           if (!data.isFace) {
             setIsWaiting(false);
-            setShowModal(false);
+            // setShowModal(false);
             setResult(null);
           }
         });
@@ -150,7 +150,7 @@ function CarouselPage() {
             faceEmbeddingData: data.faceEmbeddingData,
           });
           setIsWaiting(false);
-          setShowModal(true);
+          // setShowModal(true);
         });
 
         eventSource.onerror = (error) => {
@@ -328,7 +328,7 @@ function CarouselPage() {
         </ButtonContainer>
       </CarouselWindow>
       {/* <ModalButton onClick={() => setShowModal(true)}>번호 입력 모달 열기</ModalButton> */}
-      {showModal && <NumberModal setModal={setShowModal} onConfirm={handleConfirm} />}
+      {/* {showModal && <NumberModal setModal={setShowModal} onConfirm={handleConfirm} />} */}
     </CarouselPageStyle>
   );
 }
