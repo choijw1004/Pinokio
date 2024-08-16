@@ -13,7 +13,14 @@ const CustomerKioskContainer = styled.div`
 const VideoContainer = styled.div`
   width: 100%;
   height: 100%;
-  background-color: #f0f0f0;
+  text-align: center;
+  line-height: ${(props) => `${props.height}px`};
+  background-color: #efefef;
+  font-family: 'CafeOhsquareAir';
+  font-size: 1.5rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 `;
 
 function CustomerKiosk({ streamManager }) {
@@ -24,7 +31,7 @@ function CustomerKiosk({ streamManager }) {
         {streamManager ? (
           <OpenViduVideoComponent streamManager={streamManager} />
         ) : (
-          <p>화면 공유가 시작되지 않았습니다.</p>
+          '화면 공유가 시작되지 않았습니다.'
         )}
       </VideoContainer>
     </CustomerKioskContainer>
