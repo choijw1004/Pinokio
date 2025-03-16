@@ -254,7 +254,7 @@ CMD ["uvicorn", "face_analysis_api:app", "--host", "0.0.0.0", "--port", "5000"]
 - pip install --no-cache-dir -r requirements.txt 복사한 의존성을 설치해줍니다.
 - uvicorn 실행 
 
-여기서 face_analysis_api:app은 face_analysis_api.py 파일 내의 FastAPI 애플리케이션 인스턴스(app)를 의미하고 호스트는 모든 IP에서 접근 가능하도록 0.0.0.0, 포트는 5000으로 설정됩니다.
+여기서 face_analysis_api:app은 face_analysis_api.py 파일 내의 FastAPI 애플리케이션 인스턴스(app)를 의미하고 호스트는 모든 IP에서 접근 가능하도록 0.0.0.0, 포트는 5000으로 설정하였습니다.
 
 ```
 FROM gradle:8.8-jdk21 AS builder
